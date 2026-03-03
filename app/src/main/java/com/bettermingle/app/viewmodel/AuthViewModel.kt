@@ -1,0 +1,144 @@
+package com.bettermingle.app.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.repository.AuthRepository
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class AuthUiState(
+    val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val user: FirebaseUser? = null,
+    val error: String? = null,
+    val passwordResetSent: Boolean = false
+)
+
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+    private val settingsManager = SettingsManager(application)
+    private val repository = AuthRepository(settingsManager)
+
+    private val _uiState = MutableStateFlow(AuthUiState(
+        isLoggedIn = repository.isLoggedIn,
+        user = repository.currentUser
+    ))
+    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.authStateFlow.collect { user ->
+                _uiState.value = _uiState.value.copy(
+                    isLoggedIn = user != null,
+                    user = user
+                )
+            }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            _uiState.value = _uiState.value.copy(error = "Vyplň e-mail a heslo")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.loginWithEmail(email, password)
+            _uiState.value = result.fold(
+                onSuccess = { user ->
+                    _uiState.value.copy(isLoading = false, isLoggedIn = true, user = user)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun register(name: String, email: String, password: String, confirmPassword: String) {
+        if (name.isBlank() || email.isBlank() || password.isBlank()) {
+            _uiState.value = _uiState.value.copy(error = "Vyplň všechna pole")
+            return
+        }
+        if (password != confirmPassword) {
+            _uiState.value = _uiState.value.copy(error = "Hesla se neshodují")
+            return
+        }
+        if (password.length < 6) {
+            _uiState.value = _uiState.value.copy(error = "Heslo musí mít alespoň 6 znaků")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.registerWithEmail(name, email, password)
+            _uiState.value = result.fold(
+                onSuccess = { user ->
+                    _uiState.value.copy(isLoading = false, isLoggedIn = true, user = user)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.signInWithGoogleCredential(idToken)
+            _uiState.value = result.fold(
+                onSuccess = { user ->
+                    _uiState.value.copy(isLoading = false, isLoggedIn = true, user = user)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun sendPasswordReset(email: String) {
+        if (email.isBlank()) {
+            _uiState.value = _uiState.value.copy(error = "Zadej e-mail")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.sendPasswordResetEmail(email)
+            _uiState.value = result.fold(
+                onSuccess = {
+                    _uiState.value.copy(isLoading = false, passwordResetSent = true)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun logout() {
+        repository.logout()
+        _uiState.value = AuthUiState()
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    private fun mapAuthError(e: Throwable): String {
+        return when {
+            e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true -> "Nesprávný e-mail nebo heslo"
+            e.message?.contains("EMAIL_EXISTS") == true -> "Účet s tímto e-mailem už existuje"
+            e.message?.contains("WEAK_PASSWORD") == true -> "Heslo je příliš slabé"
+            e.message?.contains("INVALID_EMAIL") == true -> "Neplatný formát e-mailu"
+            e.message?.contains("USER_NOT_FOUND") == true -> "Účet nenalezen"
+            e.message?.contains("TOO_MANY_ATTEMPTS") == true -> "Příliš mnoho pokusů. Zkus to později."
+            e.message?.contains("NETWORK") == true -> "Chyba připojení. Zkontroluj internet."
+            else -> "Něco se pokazilo: ${e.localizedMessage ?: "neznámá chyba"}"
+        }
+    }
+}

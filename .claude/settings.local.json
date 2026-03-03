@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.color-hex.com)",
+      "WebSearch",
+      "Bash(du:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(chmod +x:*)",
+      "Bash(java:*)",
+      "Bash(export:*)",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/java.exe\":*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(npm:*)",
+      "Bash(firebase:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(adb devices:*)",
+      "Bash(\"$ADB\" uninstall:*)",
+      "Bash(\"$ADB\" install:*)",
+      "Bash(\"$ADB\" shell:*)",
+      "Bash(rm:*)",
+      "Bash(\"C:/Users/lidmi/AppData/Local/Android/Sdk/platform-tools/adb.exe\" uninstall:*)",
+      "Bash(\"C:/Users/lidmi/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(GOOGLE_CLOUD_PROJECT=bettermingle node:*)",
+      "Bash(\"C:/Users/lidmi/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install:*)",
+      "Bash(\"C:/Users/lidmi/AppData/Local/Android/Sdk/platform-tools/adb.exe\":*)",
+      "Bash(\"C:/Users/lidmi/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx firebase:*)",
+      "Bash(grep:*)",
+      "Bash(cmd:*)",
+      "Bash(bash gradlew:*)",
+      "Bash(bash:*)",
+      "Bash(./gradlew.bat assembleDebug:*)",
+      "Bash(where java:*)"
+    ]
+  }
+}

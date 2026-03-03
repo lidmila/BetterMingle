@@ -1,0 +1,143 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users - only own profile
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Events
+    match /events/{eventId} {
+      allow read: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        isEventParticipant(eventId)
+      );
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && isEventOrganizer(eventId);
+
+      // Participants
+      match /participants/{participantId} {
+        allow read: if request.auth != null && (
+          isEventParticipant(eventId) ||
+          resource.data.userId == request.auth.uid
+        );
+        // If event requires approval, only organizer can create participants
+        // Otherwise, any authenticated user can join
+        allow create: if request.auth != null && (
+          !isSecurityEnabled(eventId) ||
+          !requiresApproval(eventId) ||
+          isEventOrganizer(eventId)
+        );
+        allow update, delete: if request.auth != null && (
+          isEventOrganizer(eventId) ||
+          resource.data.userId == request.auth.uid
+        );
+      }
+
+      // Polls
+      match /polls/{pollId} {
+        allow read: if request.auth != null && isEventParticipant(eventId);
+        allow create: if request.auth != null && isEventParticipant(eventId);
+        allow update, delete: if request.auth != null && (
+          isEventOrganizer(eventId) ||
+          resource.data.createdBy == request.auth.uid
+        );
+
+        match /options/{optionId} {
+          allow read: if request.auth != null && isEventParticipant(eventId);
+          allow write: if request.auth != null && isEventParticipant(eventId);
+
+          match /votes/{voteId} {
+            allow read: if request.auth != null && isEventParticipant(eventId);
+            allow write: if request.auth != null && isEventParticipant(eventId);
+          }
+        }
+      }
+
+      // Expenses - restricted read when hideFinancials is enabled
+      match /expenses/{expenseId} {
+        allow read: if request.auth != null && isEventParticipant(eventId) && (
+          !hidesFinancials(eventId) ||
+          isEventOrganizer(eventId) ||
+          resource.data.paidBy == request.auth.uid
+        );
+        allow create: if request.auth != null && isEventParticipant(eventId);
+        allow update, delete: if request.auth != null && (
+          isEventOrganizer(eventId) ||
+          resource.data.paidBy == request.auth.uid
+        );
+
+        match /splits/{splitId} {
+          allow read: if request.auth != null && isEventParticipant(eventId) && (
+            !hidesFinancials(eventId) ||
+            isEventOrganizer(eventId) ||
+            resource.data.userId == request.auth.uid
+          );
+          allow write: if request.auth != null && isEventParticipant(eventId);
+        }
+      }
+
+      // Carpool rides
+      match /carpoolRides/{rideId} {
+        allow read: if request.auth != null && isEventParticipant(eventId);
+        allow create: if request.auth != null && isEventParticipant(eventId);
+        allow update, delete: if request.auth != null && (
+          isEventOrganizer(eventId) ||
+          resource.data.driverId == request.auth.uid
+        );
+
+        match /passengers/{passengerId} {
+          allow read, write: if request.auth != null && isEventParticipant(eventId);
+        }
+      }
+
+      // Rooms, schedule, messages, packing, photos, ratings
+      match /{subcollection}/{docId} {
+        allow read: if request.auth != null && isEventParticipant(eventId);
+        allow write: if request.auth != null && isEventParticipant(eventId);
+      }
+    }
+
+    // Pending join requests for events with approval required
+    match /joinRequests/{requestId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isEventOrganizer(resource.data.eventId)
+      );
+      allow create: if request.auth != null
+                     && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+                     && isEventOrganizer(resource.data.eventId);
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isEventOrganizer(resource.data.eventId)
+      );
+    }
+
+    // Helper functions
+    function isEventParticipant(eventId) {
+      return exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.auth.uid))
+          || get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
+    }
+
+    function isEventOrganizer(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
+    }
+
+    function isSecurityEnabled(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data.securityEnabled == true;
+    }
+
+    function requiresApproval(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data.requireApproval == true;
+    }
+
+    function hidesFinancials(eventId) {
+      return get(/databases/$(database)/documents/events/$(eventId)).data.securityEnabled == true
+          && get(/databases/$(database)/documents/events/$(eventId)).data.hideFinancials == true;
+    }
+  }
+}

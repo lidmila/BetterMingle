@@ -67,7 +67,7 @@
         <!-- Google Places API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAvaaTnWegynBlHM2M5UgkIhznZaOVFiMs"/>
+            android:value="${GEO_API_KEY}"/>
 
         <!-- Google AdMob App ID (placeholder) -->
         <meta-data

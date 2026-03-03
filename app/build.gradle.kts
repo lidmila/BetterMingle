@@ -21,6 +21,7 @@ val localProps = Properties().apply {
 }
 val phApiKey = (localProps["POSTHOG_API_KEY"] as? String) ?: ""
 val phHost = (localProps["POSTHOG_HOST"] as? String) ?: "https://eu.i.posthog.com"
+val geoApiKey = (localProps["GEO_API_KEY"] as? String) ?: ""
 
 android {
     namespace = "com.bettermingle.app"
@@ -37,6 +38,7 @@ android {
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"$phApiKey\"")
         buildConfigField("String", "POSTHOG_HOST", "\"$phHost\"")
+        manifestPlaceholders["GEO_API_KEY"] = geoApiKey
     }
 
     signingConfigs {

@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.component
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.bettermingle.app.BetterMingleApp
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
@@ -35,6 +37,8 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
+
+private const val TAG = "PlacesAutocomplete"
 
 data class PlaceResult(
     val name: String,
@@ -58,13 +62,23 @@ fun PlacesAutocompleteField(
 
     val placesClient = remember {
         try {
-            if (Places.isInitialized()) Places.createClient(context) else null
-        } catch (_: Exception) {
+            if (Places.isInitialized()) {
+                Log.d(TAG, "Places is initialized, creating client (mode=${BetterMingleApp.placesInitMode})")
+                Places.createClient(context)
+            } else {
+                Log.w(TAG, "Places is NOT initialized — client will be null")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create Places client", e)
             null
         }
     }
 
-    if (placesClient == null) placesAvailable = false
+    if (placesClient == null) {
+        placesAvailable = false
+        Log.w(TAG, "placesClient is null — autocomplete disabled")
+    }
 
     // Debounced autocomplete search
     LaunchedEffect(value) {
@@ -79,10 +93,13 @@ fun PlacesAutocompleteField(
                 .setQuery(value)
                 .setCountries("CZ", "SK")
                 .build()
+            Log.d(TAG, "Searching for: '$value'")
             val response = placesClient!!.findAutocompletePredictions(request).await()
             predictions = response.autocompletePredictions.take(5)
             showSuggestions = predictions.isNotEmpty()
-        } catch (_: Exception) {
+            Log.d(TAG, "Got ${predictions.size} predictions")
+        } catch (e: Exception) {
+            Log.e(TAG, "findAutocompletePredictions failed", e)
             predictions = emptyList()
             showSuggestions = false
         }
@@ -98,6 +115,15 @@ fun PlacesAutocompleteField(
             label = label,
             leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) }
         )
+
+        if (!placesAvailable) {
+            Text(
+                text = "Napojení na mapy není dostupné",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = Spacing.md, top = Spacing.xs)
+            )
+        }
 
         AnimatedVisibility(visible = showSuggestions && predictions.isNotEmpty()) {
             BetterMingleCard {
@@ -132,7 +158,8 @@ fun PlacesAutocompleteField(
                                                     )
                                                 )
                                             }
-                                            .addOnFailureListener {
+                                            .addOnFailureListener { e ->
+                                                Log.e(TAG, "fetchPlace failed for placeId=$placeId", e)
                                                 onPlaceSelected(
                                                     PlaceResult(
                                                         name = primaryText,

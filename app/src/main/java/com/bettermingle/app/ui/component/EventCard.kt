@@ -34,6 +34,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.bettermingle.app.data.model.Event
+import com.bettermingle.app.utils.debouncedClick
 import com.bettermingle.app.data.model.EventStatus
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
@@ -78,8 +79,8 @@ fun EventCard(
                         scope.launch {
                             pressScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                         }
-                        onClick()
-                    }
+                    },
+                    onTap = { debouncedClick(action = onClick) }
                 )
             },
         colors = CardDefaults.cardColors(

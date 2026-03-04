@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -50,7 +49,10 @@ import com.bettermingle.app.data.model.EventStatus
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.component.ErrorState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.bettermingle.app.ui.component.EventCard
+import com.bettermingle.app.ui.component.ShimmerEventCard
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -109,104 +111,115 @@ fun EventListScreen(
             }
         }
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PrimaryBlue)
-                }
-            }
-            uiState.events.isEmpty() -> {
-                EmptyState(
-                    icon = Icons.Default.Celebration,
-                    title = "Zatím žádné akce",
-                    description = "Vytvoř svou první akci a pozvi kamarády!",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    action = {
-                        BetterMingleButton(
-                            text = "Nová akce",
-                            onClick = onCreateEvent,
-                            isCta = true
-                        )
-                    }
-                )
-            }
-            else -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    // Search bar
-                    BetterMingleTextField(
-                        value = uiState.searchQuery,
-                        onValueChange = { viewModel.updateSearch(it) },
-                        label = "Hledat akce...",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.screenPadding)
-                            .padding(top = Spacing.sm),
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = null,
-                                tint = PrimaryBlue
-                            )
-                        }
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                uiState.error != null && uiState.events.isEmpty() -> {
+                    ErrorState(
+                        modifier = Modifier.fillMaxSize(),
+                        onRetry = { viewModel.refresh() }
                     )
-
-                    Spacer(modifier = Modifier.height(Spacing.sm))
-
-                    // Filter chips
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        items(statusLabels.entries.toList()) { (status, label) ->
-                            FilterChip(
-                                selected = uiState.statusFilter == status,
-                                onClick = {
-                                    viewModel.updateStatusFilter(
-                                        if (uiState.statusFilter == status) null else status
-                                    )
-                                },
-                                label = { Text(label) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = PrimaryBlue,
-                                    selectedLabelColor = TextOnColor
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(Spacing.sm))
-
-                    // Event list
+                }
+                uiState.isLoading && uiState.events.isEmpty() -> {
+                    // Shimmer loading placeholders
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Spacing.screenPadding),
                         verticalArrangement = Arrangement.spacedBy(Spacing.itemSpacing)
                     ) {
-                        itemsIndexed(uiState.filteredEvents, key = { _, event -> event.id }) { index, event ->
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = index * 50)) +
-                                        scaleIn(
-                                            tween(BetterMingleMotion.STANDARD, delayMillis = index * 50),
-                                            initialScale = 0.92f
-                                        )
-                            ) {
-                                EventCard(
-                                    event = event,
-                                    participantCount = 0,
-                                    onClick = { onEventClick(event.id) }
+                        items(4) {
+                            ShimmerEventCard()
+                        }
+                    }
+                }
+                uiState.events.isEmpty() -> {
+                    EmptyState(
+                        icon = Icons.Default.Celebration,
+                        iconDescription = "Žádné akce",
+                        title = "Zatím žádné akce",
+                        description = "Vytvoř svou první akci a pozvi kamarády!",
+                        modifier = Modifier.fillMaxSize(),
+                        action = {
+                            BetterMingleButton(
+                                text = "Nová akce",
+                                onClick = onCreateEvent,
+                                isCta = true
+                            )
+                        }
+                    )
+                }
+                else -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Search bar
+                        BetterMingleTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.updateSearch(it) },
+                            label = "Hledat akce...",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.screenPadding)
+                                .padding(top = Spacing.sm),
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Hledat",
+                                    tint = PrimaryBlue
                                 )
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        // Filter chips
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = Spacing.screenPadding),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            items(statusLabels.entries.toList()) { (status, label) ->
+                                FilterChip(
+                                    selected = uiState.statusFilter == status,
+                                    onClick = {
+                                        viewModel.updateStatusFilter(
+                                            if (uiState.statusFilter == status) null else status
+                                        )
+                                    },
+                                    label = { Text(label) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryBlue,
+                                        selectedLabelColor = TextOnColor
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        // Event list
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(Spacing.screenPadding),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.itemSpacing)
+                        ) {
+                            itemsIndexed(uiState.filteredEvents, key = { _, event -> event.id }) { index, event ->
+                                AnimatedVisibility(
+                                    visible = true,
+                                    enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = index * 50)) +
+                                            scaleIn(
+                                                tween(BetterMingleMotion.STANDARD, delayMillis = index * 50),
+                                                initialScale = 0.92f
+                                            )
+                                ) {
+                                    EventCard(
+                                        event = event,
+                                        participantCount = 0,
+                                        onClick = { onEventClick(event.id) }
+                                    )
+                                }
                             }
                         }
                     }

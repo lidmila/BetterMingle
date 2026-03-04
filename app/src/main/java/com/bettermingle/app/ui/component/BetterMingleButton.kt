@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import android.view.HapticFeedbackConstants
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.TextOnColor
@@ -30,6 +32,8 @@ fun BetterMingleButton(
     enabled: Boolean = true,
     isCta: Boolean = false
 ) {
+    val view = LocalView.current
+
     if (isCta) {
         Box(
             modifier = modifier
@@ -42,7 +46,10 @@ fun BetterMingleButton(
             contentAlignment = Alignment.Center
         ) {
             Button(
-                onClick = onClick,
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    onClick()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Spacing.touchTarget),

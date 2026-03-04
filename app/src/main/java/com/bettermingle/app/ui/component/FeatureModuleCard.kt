@@ -35,6 +35,7 @@ import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
+import com.bettermingle.app.utils.debouncedClick
 import kotlinx.coroutines.launch
 
 @Composable
@@ -65,8 +66,8 @@ fun FeatureModuleCard(
                             scope.launch {
                                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                             }
-                            onClick()
-                        }
+                        },
+                        onTap = { debouncedClick(action = onClick) }
                     )
                 },
             colors = CardDefaults.cardColors(

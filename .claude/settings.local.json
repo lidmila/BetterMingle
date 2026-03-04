@@ -36,7 +36,8 @@
       "Bash(bash gradlew:*)",
       "Bash(bash:*)",
       "Bash(./gradlew.bat assembleDebug:*)",
-      "Bash(where java:*)"
+      "Bash(where java:*)",
+      "Bash(./gradlew compileDebugKotlin:*)"
     ]
   }
 }

@@ -23,6 +23,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Person
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -34,6 +38,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,7 +55,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -134,6 +143,11 @@ fun TasksScreen(
 
     LaunchedEffect(eventId) { loadTasks() }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    var taskToDelete by remember { mutableStateOf<EventLabel?>(null) }
+    val view = LocalView.current
+    var isRefreshing by remember { mutableStateOf(false) }
+
     if (showCreateDialog) {
         CreateTaskDialog(
             eventId = eventId,
@@ -141,11 +155,42 @@ fun TasksScreen(
             onCreated = {
                 showCreateDialog = false
                 loadTasks()
+                scope.launch { snackbarHostState.showSnackbar("Úkol vytvořen") }
+            }
+        )
+    }
+
+    if (taskToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { taskToDelete = null },
+            title = { Text("Smazat úkol") },
+            text = { Text("Opravdu chceš smazat tento úkol?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val task = taskToDelete!!
+                    taskToDelete = null
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("tasks").document(task.id)
+                                .delete().await()
+                            tasks.removeAll { it.id == task.id }
+                            snackbarHostState.showSnackbar("Úkol smazán")
+                        } catch (_: Exception) { }
+                    }
+                }) {
+                    Text("Smazat", color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { taskToDelete = null }) { Text("Zrušit") }
             }
         )
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Úkoly", style = MaterialTheme.typography.titleMedium) },
@@ -169,20 +214,31 @@ fun TasksScreen(
             }
         }
     ) { innerPadding ->
-        if (tasks.isEmpty()) {
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadTasks()
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+        if (tasks.isEmpty() && !isRefreshing) {
             EmptyState(
                 icon = Icons.AutoMirrored.Filled.Assignment,
+                iconDescription = "Ikona úkolů",
                 title = "Zatím žádné úkoly",
                 description = "Přidej úkoly a přiřaď je účastníkům.",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
@@ -201,12 +257,19 @@ fun TasksScreen(
                                         .update("isCompleted", newCompleted).await()
                                     val idx = tasks.indexOfFirst { it.id == task.id }
                                     if (idx >= 0) tasks[idx] = task.copy(isCompleted = newCompleted)
+                                    if (newCompleted) {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                    } else {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    }
                                 } catch (_: Exception) { }
                             }
-                        }
+                        },
+                        onDelete = { taskToDelete = task }
                     )
                 }
             }
+        }
         }
     }
 }
@@ -217,11 +280,24 @@ private fun TaskCard(
     task: EventLabel,
     eventId: String,
     userNames: Map<String, String>,
-    onToggleCompleted: () -> Unit
+    onToggleCompleted: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val taskColor = taskColors.find { it.name == task.color }?.color ?: PrimaryBlue
 
-    BetterMingleCard {
+    // 2.3 - Animate scale + alpha on completion toggle
+    val targetScale = if (task.isCompleted) 0.97f else 1f
+    val targetAlpha = if (task.isCompleted) 0.7f else 1f
+    val animatedScale by animateFloatAsState(targetValue = targetScale, animationSpec = tween(300), label = "taskScale")
+    val animatedAlpha by animateFloatAsState(targetValue = targetAlpha, animationSpec = tween(300), label = "taskAlpha")
+
+    BetterMingleCard(
+        modifier = Modifier.graphicsLayer {
+            scaleX = animatedScale
+            scaleY = animatedScale
+            alpha = animatedAlpha
+        }
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -267,7 +343,7 @@ private fun TaskCard(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         Icons.Default.Person,
-                                        contentDescription = null,
+                                        contentDescription = "Přiřazeno",
                                         tint = taskColor,
                                         modifier = Modifier.size(12.dp)
                                     )
@@ -282,6 +358,15 @@ private fun TaskCard(
                         }
                     }
                 }
+            }
+
+            // Delete button
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Smazat úkol",
+                    tint = AccentOrange
+                )
             }
 
             // Color indicator

@@ -66,4 +66,80 @@
     <string name="days">dní</string>
     <string name="hours">hodin</string>
     <string name="minutes">minut</string>
+    <string name="back">Zpět</string>
+    <string name="retry">Zkus to znovu</string>
+    <string name="create">Vytvořit</string>
+    <string name="search">Hledat</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Úkoly</string>
+    <string name="tasks_empty_title">Zatím žádné úkoly</string>
+    <string name="tasks_empty_description">Přidej úkoly a přiřaď je účastníkům.</string>
+    <string name="tasks_new">Nový úkol</string>
+    <string name="tasks_created">Úkol vytvořen</string>
+    <string name="tasks_deleted">Úkol smazán</string>
+    <string name="tasks_delete_title">Smazat úkol</string>
+    <string name="tasks_delete_confirm">Opravdu chceš smazat tento úkol?</string>
+    <string name="tasks_name_label">Název úkolu</string>
+    <string name="tasks_color">Barva</string>
+    <string name="tasks_assign">Přiřadit</string>
+    <string name="tasks_deadline">Termín: %1$s</string>
+
+    <!-- Expenses -->
+    <string name="expenses_title">Výdaje</string>
+    <string name="expenses_empty_title">Zatím žádné výdaje</string>
+    <string name="expenses_empty_description">Přidej výdaj a rozděl ho mezi účastníky.</string>
+    <string name="expenses_new">Nový výdaj</string>
+    <string name="expenses_added">Výdaj přidán</string>
+    <string name="expenses_deleted">Výdaj smazán</string>
+    <string name="expenses_delete_title">Smazat výdaj</string>
+    <string name="expenses_delete_confirm">Opravdu chceš smazat tento výdaj?</string>
+    <string name="expenses_description_label">Popis výdaje</string>
+    <string name="expenses_amount_label">Částka (CZK)</string>
+    <string name="expenses_category_label">Kategorie (volitelné)</string>
+    <string name="expenses_paid_by">Zaplatil/a: %1$s</string>
+    <string name="expenses_budget">Rozpočet</string>
+    <string name="expenses_over_budget">Překročeno o %1$s</string>
+    <string name="expenses_tab_expenses">Výdaje</string>
+    <string name="expenses_tab_settlement">Vyrovnání</string>
+    <string name="expenses_settled_title">Vše vyrovnáno</string>
+    <string name="expenses_settled_description">Momentálně nejsou žádné dluhy k vyrovnání.</string>
+    <string name="expenses_settle">Vyrovnat</string>
+    <string name="expenses_add">Přidat</string>
+    <string name="expenses_payer">Platil/a</string>
+    <string name="expenses_payer_label">Plátce</string>
+
+    <!-- Voting -->
+    <string name="voting_title">Hlasování</string>
+    <string name="voting_empty_title">Zatím žádné ankety</string>
+    <string name="voting_empty_description">Vytvoř anketu a nech ostatní hlasovat.</string>
+    <string name="voting_new">Nová anketa</string>
+    <string name="voting_created">Anketa vytvořena</string>
+    <string name="voting_poll_closed">Anketa uzavřena</string>
+    <string name="voting_active">Aktivní</string>
+    <string name="voting_votes">%1$d hlasů</string>
+    <string name="voting_poll_name_label">Název ankety</string>
+    <string name="voting_poll_type">Typ ankety</string>
+    <string name="voting_multiple_answers">Více odpovědí</string>
+    <string name="voting_anonymous">Anonymní</string>
+    <string name="voting_options">Možnosti</string>
+    <string name="voting_option_label">Možnost %1$d</string>
+    <string name="voting_add_option">Přidat možnost</string>
+    <string name="voting_remove_option">Odebrat</string>
+
+    <!-- Error State -->
+    <string name="error_title">Něco se pokazilo</string>
+    <string name="error_description">Zkontroluj připojení k internetu a zkus to znovu.</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_no_events">Žádné akce</string>
+    <string name="a11y_no_tasks">Ikona úkolů</string>
+    <string name="a11y_no_expenses">Žádné výdaje</string>
+    <string name="a11y_no_polls">Žádné ankety</string>
+    <string name="a11y_search">Hledat</string>
+    <string name="a11y_assigned">Přiřazeno</string>
+    <string name="a11y_delete_task">Smazat úkol</string>
+    <string name="a11y_delete_expense">Smazat výdaj</string>
+    <string name="a11y_error">Chyba</string>
+    <string name="a11y_add_to_calendar">Přidat do kalendáře</string>
 </resources>

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,19 +29,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
 
 @Composable
-fun EmptyState(
-    icon: ImageVector,
-    title: String,
-    description: String,
+fun ErrorState(
+    title: String = "Něco se pokazilo",
+    description: String = "Zkontroluj připojení k internetu a zkus to znovu.",
     modifier: Modifier = Modifier,
-    iconDescription: String? = null,
-    action: @Composable (() -> Unit)? = null
+    onRetry: (() -> Unit)? = null
 ) {
     var visible by remember { mutableStateOf(false) }
     val iconScale = remember { Animatable(0.3f) }
@@ -63,12 +63,12 @@ fun EmptyState(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = iconDescription,
+            imageVector = Icons.Default.ErrorOutline,
+            contentDescription = "Chyba",
             modifier = Modifier
                 .size(Spacing.iconXXL)
                 .scale(iconScale.value),
-            tint = TextSecondary.copy(alpha = 0.5f)
+            tint = AccentOrange.copy(alpha = 0.7f)
         )
 
         Spacer(modifier = Modifier.height(Spacing.md))
@@ -96,7 +96,7 @@ fun EmptyState(
             }
         }
 
-        if (action != null) {
+        if (onRetry != null) {
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn(tween(300, delayMillis = 400)) +
@@ -104,7 +104,11 @@ fun EmptyState(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(Spacing.lg))
-                    action()
+                    BetterMingleButton(
+                        text = "Zkus to znovu",
+                        onClick = onRetry,
+                        isCta = true
+                    )
                 }
             }
         }

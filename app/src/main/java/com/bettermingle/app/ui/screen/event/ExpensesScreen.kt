@@ -33,8 +33,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
@@ -60,6 +65,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -97,6 +103,8 @@ fun ExpensesScreen(
     val scope = rememberCoroutineScope()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val firestore = FirebaseFirestore.getInstance()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     fun loadExpenses() {
         scope.launch {
@@ -234,11 +242,13 @@ fun ExpensesScreen(
             onCreated = {
                 showCreateDialog = false
                 loadExpenses()
+                scope.launch { snackbarHostState.showSnackbar("Výdaj přidán") }
             }
         )
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Výdaje", style = MaterialTheme.typography.titleMedium) },
@@ -264,11 +274,21 @@ fun ExpensesScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadExpenses()
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = SurfacePeach.copy(alpha = 0.3f),
@@ -353,7 +373,10 @@ fun ExpensesScreen(
                     expenses = expenses,
                     payerNames = payerNames,
                     currentUserId = currentUserId,
-                    onDelete = { expense -> deleteExpense(expense) }
+                    onDelete = { expense ->
+                        deleteExpense(expense)
+                        scope.launch { snackbarHostState.showSnackbar("Výdaj smazán") }
+                    }
                 )
                 1 -> DebtsList(
                     debts = debts,
@@ -362,9 +385,11 @@ fun ExpensesScreen(
                 )
             }
         }
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExpensesList(
     expenses: List<Expense>,
@@ -375,6 +400,7 @@ private fun ExpensesList(
     if (expenses.isEmpty()) {
         EmptyState(
             icon = Icons.Default.Payments,
+            iconDescription = "Žádné výdaje",
             title = "Zatím žádné výdaje",
             description = "Přidej výdaj a rozděl ho mezi účastníky.",
             modifier = Modifier.fillMaxSize()
@@ -385,12 +411,51 @@ private fun ExpensesList(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             items(expenses, key = { it.id }) { expense ->
-                ExpenseItem(
-                    expense = expense,
-                    payerName = payerNames[expense.paidBy] ?: expense.paidBy.take(8),
-                    currentUserId = currentUserId,
-                    onDelete = onDelete
-                )
+                if (expense.paidBy == currentUserId) {
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                // Trigger the delete dialog through the existing ExpenseItem mechanism
+                                false // Don't actually dismiss, just show dialog
+                            } else false
+                        }
+                    )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .background(AccentOrange.copy(alpha = 0.15f))
+                                    .padding(horizontal = Spacing.md),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Smazat",
+                                    tint = AccentOrange
+                                )
+                            }
+                        },
+                        enableDismissFromStartToEnd = false
+                    ) {
+                        ExpenseItem(
+                            expense = expense,
+                            payerName = payerNames[expense.paidBy] ?: expense.paidBy.take(8),
+                            currentUserId = currentUserId,
+                            onDelete = onDelete
+                        )
+                    }
+                } else {
+                    ExpenseItem(
+                        expense = expense,
+                        payerName = payerNames[expense.paidBy] ?: expense.paidBy.take(8),
+                        currentUserId = currentUserId,
+                        onDelete = onDelete
+                    )
+                }
             }
         }
     }

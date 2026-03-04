@@ -69,6 +69,8 @@ import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -92,6 +94,8 @@ fun VotingScreen(
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     val scope = rememberCoroutineScope()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     fun loadPolls() {
         scope.launch {
@@ -167,11 +171,13 @@ fun VotingScreen(
             onCreated = {
                 showCreateDialog = false
                 loadPolls()
+                scope.launch { snackbarHostState.showSnackbar("Anketa vytvořena") }
             }
         )
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Hlasování", style = MaterialTheme.typography.titleMedium) },
@@ -195,20 +201,31 @@ fun VotingScreen(
             }
         }
     ) { innerPadding ->
-        if (pollsWithOptions.isEmpty()) {
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadPolls()
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+        if (pollsWithOptions.isEmpty() && !isRefreshing) {
             EmptyState(
                 icon = Icons.Default.HowToVote,
+                iconDescription = "Žádné ankety",
                 title = "Zatím žádné ankety",
                 description = "Vytvoř anketu a nech ostatní hlasovat.",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
@@ -232,6 +249,7 @@ fun VotingScreen(
                     )
                 }
             }
+        }
         }
     }
 }

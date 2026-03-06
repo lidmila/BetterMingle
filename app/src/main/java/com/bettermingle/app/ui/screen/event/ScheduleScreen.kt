@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,10 +18,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,18 +57,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.data.model.ScheduleItem
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.component.PlacesAutocompleteField
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
 import com.bettermingle.app.utils.DateFormatUtils
+import com.bettermingle.app.utils.ActivityLogger
+import android.content.Intent
+import android.provider.CalendarContract
+import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -62,8 +89,11 @@ fun ScheduleScreen(
     eventId: String,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val items = remember { mutableStateListOf<ScheduleItem>() }
     var showCreateDialog by remember { mutableStateOf(false) }
+    var itemToDelete by remember { mutableStateOf<ScheduleItem?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun loadSchedule() {
@@ -105,49 +135,97 @@ fun ScheduleScreen(
         )
     }
 
+    if (itemToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { itemToDelete = null },
+            title = { Text(stringResource(R.string.schedule_delete_title)) },
+            text = { Text(stringResource(R.string.schedule_delete_confirm, itemToDelete!!.title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val item = itemToDelete!!
+                    itemToDelete = null
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("schedule").document(item.id)
+                                .delete().await()
+                            items.removeAll { it.id == item.id }
+                            ActivityLogger.log(eventId, "schedule", context.getString(R.string.activity_removed_from_schedule, item.title))
+                        } catch (_: Exception) { }
+                    }
+                }) {
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Harmonogram", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.schedule_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = AccentOrange,
-                contentColor = TextOnColor
+                containerColor = Color.Transparent,
+                contentColor = TextOnColor,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .shadow(8.dp, CircleShape, ambientColor = AccentOrange.copy(alpha = 0.3f), spotColor = AccentOrange.copy(alpha = 0.3f))
+                    .background(AccentOrange, CircleShape)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Přidat bod programu")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.schedule_add))
             }
         }
     ) { innerPadding ->
-        if (items.isEmpty()) {
-            EmptyState(
-                icon = Icons.Default.CalendarMonth,
-                title = "Zatím žádný program",
-                description = "Přidej body programu a vytvoř harmonogram akce.",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(Spacing.screenPadding),
-                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-            ) {
-                items(items, key = { it.id }) { item ->
-                    ScheduleItemCard(item = item)
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadSchedule()
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            if (items.isEmpty() && !isRefreshing) {
+                EmptyState(
+                    icon = Icons.Default.CalendarMonth,
+                    illustration = R.drawable.il_empty_schedule,
+                    title = stringResource(R.string.schedule_empty_title),
+                    description = stringResource(R.string.schedule_empty_description),
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(Spacing.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    items(items, key = { it.id }) { item ->
+                        ScheduleItemCard(
+                            item = item,
+                            onDelete = { itemToDelete = item }
+                        )
+                    }
                 }
             }
         }
@@ -155,14 +233,20 @@ fun ScheduleScreen(
 }
 
 @Composable
-private fun ScheduleItemCard(item: ScheduleItem) {
+private fun ScheduleItemCard(item: ScheduleItem, onDelete: () -> Unit) {
+    val context = LocalContext.current
     BetterMingleCard {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(60.dp)
+                modifier = Modifier.width(80.dp)
             ) {
                 item.startTime?.let { start ->
+                    Text(
+                        text = DateFormatUtils.formatDayMonth(start),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
                     Text(
                         text = DateFormatUtils.formatTime(start),
                         style = MaterialTheme.typography.titleMedium,
@@ -215,47 +299,157 @@ private fun ScheduleItemCard(item: ScheduleItem) {
                     }
                 }
             }
+
+            if (item.startTime != null) {
+                IconButton(onClick = {
+                    val intent = Intent(Intent.ACTION_INSERT).apply {
+                        data = CalendarContract.Events.CONTENT_URI
+                        putExtra(CalendarContract.Events.TITLE, item.title)
+                        putExtra(CalendarContract.Events.DESCRIPTION, item.description)
+                        putExtra(CalendarContract.Events.EVENT_LOCATION, item.location)
+                        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, item.startTime)
+                        item.endTime?.let { putExtra(CalendarContract.EXTRA_EVENT_END_TIME, it) }
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = stringResource(R.string.schedule_add_to_calendar),
+                        tint = PrimaryBlue
+                    )
+                }
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.common_delete),
+                    tint = AccentOrange
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddScheduleItemDialog(
     eventId: String,
     onDismiss: () -> Unit,
     onCreated: () -> Unit
 ) {
+    val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var startTime by remember { mutableStateOf("") }
-    var endTime by remember { mutableStateOf("") }
+    var startTimeMillis by remember { mutableStateOf<Long?>(null) }
+    var endTimeMillis by remember { mutableStateOf<Long?>(null) }
     var location by remember { mutableStateOf("") }
+    var showDatePickerFor by remember { mutableStateOf<String?>(null) } // "start" or "end"
+    var showTimePickerFor by remember { mutableStateOf<String?>(null) } // "start" or "end"
+    var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
     val scope = rememberCoroutineScope()
 
-    fun parseTimeToMillis(time: String): Long? {
-        val parts = time.trim().split(":")
-        if (parts.size != 2) return null
-        val hour = parts[0].toIntOrNull() ?: return null
-        val minute = parts[1].toIntOrNull() ?: return null
-        if (hour !in 0..23 || minute !in 0..59) return null
-        val cal = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+    // DatePicker dialog
+    if (showDatePickerFor != null) {
+        val existing = if (showDatePickerFor == "start") startTimeMillis else endTimeMillis
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = existing)
+        DatePickerDialog(
+            onDismissRequest = { showDatePickerFor = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDateMillis = datePickerState.selectedDateMillis
+                    val target = showDatePickerFor
+                    showDatePickerFor = null
+                    showTimePickerFor = target
+                }) { Text(stringResource(R.string.common_continue)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePickerFor = null }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
-        return cal.timeInMillis
     }
 
-    AlertDialog(
+    // TimePicker dialog
+    if (showTimePickerFor != null) {
+        val existing = if (showTimePickerFor == "start") startTimeMillis else endTimeMillis
+        val cal = Calendar.getInstance().apply {
+            if (existing != null) timeInMillis = existing
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = cal.get(Calendar.HOUR_OF_DAY),
+            initialMinute = cal.get(Calendar.MINUTE),
+            is24Hour = true
+        )
+        Dialog(
+            onDismissRequest = { showTimePickerFor = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier = Modifier.padding(horizontal = Spacing.lg)
+            ) {
+                Column(
+                    modifier = Modifier.padding(Spacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.schedule_select_time),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = Spacing.lg)
+                    )
+                    TimePicker(state = timePickerState)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showTimePickerFor = null }) { Text(stringResource(R.string.common_cancel)) }
+                        TextButton(onClick = {
+                            val calendar = Calendar.getInstance().apply {
+                                if (pendingDateMillis != null) {
+                                    timeInMillis = pendingDateMillis!!
+                                }
+                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(Calendar.MINUTE, timePickerState.minute)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            val result = calendar.timeInMillis
+                            if (showTimePickerFor == "start") {
+                                startTimeMillis = result
+                            } else {
+                                endTimeMillis = result
+                            }
+                            showTimePickerFor = null
+                            pendingDateMillis = null
+                        }) { Text(stringResource(R.string.common_confirm)) }
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Přidat bod programu") },
-        text = {
-            Column {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier.padding(horizontal = Spacing.lg)
+        ) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text(stringResource(R.string.schedule_add), style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
                 BetterMingleTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = "Název"
+                    label = stringResource(R.string.schedule_name_label)
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -263,7 +457,7 @@ private fun AddScheduleItemDialog(
                 BetterMingleTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = "Popis (volitelné)",
+                    label = stringResource(R.string.schedule_description_label),
                     singleLine = false,
                     maxLines = 3
                 )
@@ -274,56 +468,77 @@ private fun AddScheduleItemDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    BetterMingleTextField(
-                        value = startTime,
-                        onValueChange = { startTime = it },
-                        label = "Začátek (HH:mm)",
-                        modifier = Modifier.weight(1f)
-                    )
-                    BetterMingleTextField(
-                        value = endTime,
-                        onValueChange = { endTime = it },
-                        label = "Konec (HH:mm)",
-                        modifier = Modifier.weight(1f)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDatePickerFor = "start" }
+                    ) {
+                        BetterMingleTextField(
+                            value = startTimeMillis?.let { DateFormatUtils.formatDateTime(it) } ?: "",
+                            onValueChange = {},
+                            label = stringResource(R.string.schedule_start_label),
+                            enabled = false,
+                            leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) }
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDatePickerFor = "end" }
+                    ) {
+                        BetterMingleTextField(
+                            value = endTimeMillis?.let { DateFormatUtils.formatDateTime(it) } ?: "",
+                            onValueChange = {},
+                            label = stringResource(R.string.schedule_end_label),
+                            enabled = false,
+                            leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
 
-                BetterMingleTextField(
+                PlacesAutocompleteField(
                     value = location,
                     onValueChange = { location = it },
-                    label = "Místo (volitelné)"
+                    onPlaceSelected = { place -> location = place.name },
+                    label = stringResource(R.string.schedule_location_label)
                 )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        try {
-                            val itemData = hashMapOf<String, Any?>(
-                                "title" to title,
-                                "description" to description,
-                                "startTime" to parseTimeToMillis(startTime),
-                                "endTime" to parseTimeToMillis(endTime),
-                                "location" to location
-                            )
-                            FirebaseFirestore.getInstance()
-                                .collection("events").document(eventId)
-                                .collection("schedule")
-                                .add(itemData).await()
-                            onCreated()
-                        } catch (_: Exception) { }
+
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val itemData = hashMapOf<String, Any?>(
+                                        "title" to title,
+                                        "description" to description,
+                                        "startTime" to startTimeMillis,
+                                        "endTime" to endTimeMillis,
+                                        "location" to location
+                                    )
+                                    FirebaseFirestore.getInstance()
+                                        .collection("events").document(eventId)
+                                        .collection("schedule")
+                                        .add(itemData).await()
+                                    val locationInfo = if (location.isNotBlank()) " ($location)" else ""
+                                    ActivityLogger.log(eventId, "schedule", context.getString(R.string.activity_added_to_schedule, "$title$locationInfo"))
+                                    onCreated()
+                                } catch (_: Exception) { }
+                            }
+                        },
+                        enabled = title.isNotBlank() && startTimeMillis != null
+                    ) {
+                        Text(stringResource(R.string.common_add))
                     }
-                },
-                enabled = title.isNotBlank() && startTime.isNotBlank()
-            ) {
-                Text("Přidat")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Zrušit") }
         }
-    )
+    }
 }

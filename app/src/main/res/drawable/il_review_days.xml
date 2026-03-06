@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Sun -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M55,55 A18,18,0,1,1,55,55.01Z"/>
+    <!-- Sun rays -->
+    <path android:pathData="M55,30 L55,22" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.25"/>
+    <path android:pathData="M55,88 L55,96" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.25"/>
+    <path android:pathData="M30,55 L22,55" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.25"/>
+    <path android:pathData="M80,55 L88,55" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.25"/>
+    <path android:pathData="M37,37 L32,32" android:strokeWidth="2.5" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <path android:pathData="M73,37 L78,32" android:strokeWidth="2.5" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <path android:pathData="M37,73 L32,78" android:strokeWidth="2.5" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <path android:pathData="M73,73 L78,78" android:strokeWidth="2.5" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <!-- Moon -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.25"
+        android:pathData="M105,50 A14,14,0,1,1,105,78 A10,10,0,1,0,105,50 Z"/>
+    <!-- Stars near moon -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M125,40 L126,37 L127,40 L130,41 L127,42 L126,45 L125,42 L122,41 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M130,60 L131,58 L132,60 L134,61 L132,62 L131,64 L130,62 L128,61 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M118,30 L119,28 L120,30 L122,31 L120,32 L119,34 L118,32 L116,31 Z"/>
+    <!-- Horizon line -->
+    <path android:pathData="M10,105 L140,105" android:strokeWidth="2" android:strokeColor="#FFFFFF" android:strokeAlpha="0.15"/>
+</vector>

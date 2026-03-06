@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -14,15 +15,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import android.view.HapticFeedbackConstants
-import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.CornerRadius
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.Spacing
+
+private val PillShape = RoundedCornerShape(CornerRadius.pill)
 
 @Composable
 fun BetterMingleButton(
@@ -38,10 +41,16 @@ fun BetterMingleButton(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(Spacing.touchTarget)
+                .height(52.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = PillShape,
+                    ambientColor = AccentOrange.copy(alpha = 0.3f),
+                    spotColor = AccentOrange.copy(alpha = 0.3f)
+                )
                 .background(
-                    brush = Brush.horizontalGradient(listOf(AccentOrange, AccentGold)),
-                    shape = MaterialTheme.shapes.small
+                    color = AccentOrange,
+                    shape = PillShape
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -52,13 +61,13 @@ fun BetterMingleButton(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(Spacing.touchTarget),
+                    .height(52.dp),
                 enabled = enabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = TextOnColor
                 ),
-                shape = MaterialTheme.shapes.small,
+                shape = PillShape,
                 contentPadding = PaddingValues(horizontal = Spacing.buttonPadding, vertical = 12.dp)
             ) {
                 Text(text = text, style = MaterialTheme.typography.labelLarge)
@@ -69,10 +78,10 @@ fun BetterMingleButton(
             onClick = onClick,
             modifier = modifier
                 .fillMaxWidth()
-                .height(Spacing.touchTarget),
+                .height(52.dp),
             enabled = enabled,
             colors = ButtonDefaults.buttonColors(),
-            shape = MaterialTheme.shapes.small,
+            shape = PillShape,
             contentPadding = PaddingValues(horizontal = Spacing.buttonPadding, vertical = 12.dp)
         ) {
             Text(text = text, style = MaterialTheme.typography.labelLarge)
@@ -91,9 +100,9 @@ fun BetterMingleOutlinedButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(Spacing.touchTarget),
+            .height(52.dp),
         enabled = enabled,
-        shape = MaterialTheme.shapes.small
+        shape = PillShape
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }

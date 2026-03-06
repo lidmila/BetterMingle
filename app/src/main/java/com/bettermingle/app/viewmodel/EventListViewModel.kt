@@ -13,15 +13,19 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Calendar
 
 data class EventListUiState(
     val events: List<Event> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
     val searchQuery: String = "",
-    val statusFilter: EventStatus? = null
+    val statusFilter: EventStatus? = null,
+    val participantCounts: Map<String, Int> = emptyMap(),
+    val yearInReviewDismissed: Boolean = false
 ) {
     val filteredEvents: List<Event>
         get() {
@@ -36,6 +40,9 @@ data class EventListUiState(
             }
             return result
         }
+
+    val groupedEvents: Map<String, List<Event>>
+        get() = filteredEvents.groupBy { it.status.name }
 }
 
 class EventListViewModel(application: Application) : AndroidViewModel(application) {
@@ -49,6 +56,17 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
         loadEvents()
         syncFromCloud()
         syncPremiumFromCloud()
+        checkYearInReviewDismiss()
+    }
+
+    private fun checkYearInReviewDismiss() {
+        viewModelScope.launch {
+            val dismissedYear = settingsManager.getYearInReviewDismissedYear().first()
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            if (dismissedYear >= currentYear) {
+                _uiState.value = _uiState.value.copy(yearInReviewDismissed = true)
+            }
+        }
     }
 
     private fun loadEvents() {
@@ -58,6 +76,21 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
                     events = events,
                     isLoading = false
                 )
+                loadParticipantCounts(events.map { it.id })
+            }
+        }
+    }
+
+    private fun loadParticipantCounts(eventIds: List<String>) {
+        eventIds.forEach { eventId ->
+            viewModelScope.launch {
+                try {
+                    repository.getParticipantCount(eventId).collect { count ->
+                        _uiState.value = _uiState.value.copy(
+                            participantCounts = _uiState.value.participantCounts + (eventId to count)
+                        )
+                    }
+                } catch (_: Exception) { }
             }
         }
     }
@@ -93,6 +126,13 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun updateStatusFilter(status: EventStatus?) {
         _uiState.value = _uiState.value.copy(statusFilter = status)
+    }
+
+    fun dismissYearInReview() {
+        _uiState.value = _uiState.value.copy(yearInReviewDismissed = true)
+        viewModelScope.launch {
+            settingsManager.dismissYearInReview(Calendar.getInstance().get(Calendar.YEAR))
+        }
     }
 
     fun refresh() {

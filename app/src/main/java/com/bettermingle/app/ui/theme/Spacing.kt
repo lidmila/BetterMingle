@@ -11,8 +11,8 @@ object Spacing {
     val xl = 32.dp
     val xxl = 48.dp
 
-    val cardPadding = 18.dp
-    val screenPadding = md
+    val cardPadding = 20.dp
+    val screenPadding = 20.dp
     val sectionSpacing = lg
     val itemSpacing = sm
     val buttonPadding = lg

@@ -37,7 +37,15 @@
       "Bash(bash:*)",
       "Bash(./gradlew.bat assembleDebug:*)",
       "Bash(where java:*)",
-      "Bash(./gradlew compileDebugKotlin:*)"
+      "Bash(./gradlew compileDebugKotlin:*)",
+      "Bash(python:*)",
+      "Bash(keytool:*)",
+      "Bash(sort:*)",
+      "Bash(sed:*)",
+      "WebFetch(domain:dribbble.com)",
+      "Bash(cat:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(pip show:*)"
     ]
   }
 }

@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,9 +28,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import android.content.Intent
@@ -53,14 +58,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
+import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.viewmodel.ProfileViewModel
 import com.bettermingle.app.ui.theme.AccentGold
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
@@ -76,19 +85,30 @@ fun ProfileScreen(
     onUpgrade: () -> Unit = {},
     onSettings: () -> Unit = {},
     onHelp: () -> Unit = {},
+    onEditProfile: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                profileViewModel.refreshProfile()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Profil", style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineSmall)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -119,36 +139,28 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(PrimaryBlue, AccentPink)
-                        )
-                    )
+                    .background(PrimaryBlue)
                     .padding(vertical = Spacing.lg, horizontal = Spacing.md),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
                             .scale(avatarScale.value)
-                            .clip(CircleShape)
-                            .border(3.dp, TextOnColor, CircleShape)
-                            .background(TextOnColor.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
+                            .border(3.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                            .clickable { onEditProfile() }
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = TextOnColor,
-                            modifier = Modifier.size(Spacing.iconLG)
+                        UserAvatar(
+                            avatarUrl = profileState.userAvatarUrl,
+                            displayName = profileState.userName,
+                            size = 80.dp
                         )
                     }
 
                     Spacer(modifier = Modifier.height(Spacing.sm))
 
                     Text(
-                        text = profileState.userName.ifBlank { "Uživatel" },
+                        text = profileState.userName.ifBlank { stringResource(R.string.profile_default_user) },
                         style = MaterialTheme.typography.titleMedium,
                         color = TextOnColor
                     )
@@ -157,6 +169,90 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = TextOnColor.copy(alpha = 0.8f)
                     )
+
+                    if (profileState.bio.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = profileState.bio,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextOnColor.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // Edit profile button
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 50)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 50)) { it / 3 }
+            ) {
+                BetterMingleCard(onClick = onEditProfile) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.profile_edit),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            // Contact info cards (only show if filled)
+            val hasContactInfo = profileState.contactEmail.isNotEmpty()
+                    || profileState.phone.isNotEmpty()
+                    || profileState.department.isNotEmpty()
+
+            if (hasContactInfo) {
+                Spacer(modifier = Modifier.height(Spacing.md))
+
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 100)) +
+                            slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 100)) { it / 3 }
+                ) {
+                    BetterMingleCard {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            if (profileState.contactEmail.isNotEmpty()) {
+                                ContactInfoRow(
+                                    icon = Icons.Default.Email,
+                                    label = stringResource(R.string.profile_contact_email),
+                                    value = profileState.contactEmail
+                                )
+                            }
+                            if (profileState.phone.isNotEmpty()) {
+                                ContactInfoRow(
+                                    icon = Icons.Default.Phone,
+                                    label = stringResource(R.string.profile_phone),
+                                    value = profileState.phone
+                                )
+                            }
+                            if (profileState.department.isNotEmpty()) {
+                                ContactInfoRow(
+                                    icon = Icons.Default.Business,
+                                    label = stringResource(R.string.profile_department),
+                                    value = profileState.department
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -165,14 +261,14 @@ fun ProfileScreen(
             // Premium card
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 100)) +
-                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 100)) { it / 3 }
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 150)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 150)) { it / 3 }
             ) {
             BetterMingleCard(
                 onClick = onUpgrade,
                 modifier = Modifier.border(
                     2.dp,
-                    Brush.linearGradient(listOf(AccentGold, AccentOrange, AccentPink)),
+                    AccentGold,
                     MaterialTheme.shapes.medium
                 )
             ) {
@@ -189,11 +285,11 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.width(Spacing.md))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Mingle Pro",
+                            text = stringResource(R.string.profile_premium),
                             style = MaterialTheme.typography.titleSmall
                         )
                         Text(
-                            text = "Odemkni neomezené akce a funkce",
+                            text = stringResource(R.string.profile_premium_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -218,13 +314,13 @@ fun ProfileScreen(
             Column {
             ProfileMenuItem(
                 icon = Icons.Default.Settings,
-                title = "Nastavení",
+                title = stringResource(R.string.profile_settings),
                 iconTint = PrimaryBlue,
                 onClick = onSettings
             )
             ProfileMenuItem(
                 icon = Icons.Default.Notifications,
-                title = "Notifikace",
+                title = stringResource(R.string.profile_notifications),
                 iconTint = AccentGold,
                 onClick = {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -235,7 +331,7 @@ fun ProfileScreen(
             )
             ProfileMenuItem(
                 icon = Icons.AutoMirrored.Filled.HelpOutline,
-                title = "Nápověda",
+                title = stringResource(R.string.profile_help),
                 iconTint = AccentPink,
                 onClick = onHelp
             )
@@ -244,12 +340,40 @@ fun ProfileScreen(
 
             ProfileMenuItem(
                 icon = Icons.AutoMirrored.Filled.ExitToApp,
-                title = "Odhlásit se",
+                title = stringResource(R.string.profile_logout),
                 iconTint = AccentOrange,
                 onClick = onLogout
             )
             }
             }
+        }
+    }
+}
+
+@Composable
+private fun ContactInfoRow(
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = PrimaryBlue,
+            modifier = Modifier.size(Spacing.iconSM)
+        )
+        Spacer(modifier = Modifier.width(Spacing.sm))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

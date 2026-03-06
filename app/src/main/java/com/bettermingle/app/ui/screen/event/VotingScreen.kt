@@ -1,5 +1,7 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,9 +26,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HowToVote
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -53,8 +64,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bettermingle.app.utils.performHapticClick
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.data.model.Poll
 import com.bettermingle.app.data.model.PollOption
@@ -62,6 +77,7 @@ import com.bettermingle.app.data.model.PollType
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -73,6 +89,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.bettermingle.app.data.preferences.PremiumTier
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.utils.ActivityLogger
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -88,12 +109,17 @@ data class PollWithOptions(
 @Composable
 fun VotingScreen(
     eventId: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hapticView = LocalView.current
     val pollsWithOptions = remember { mutableStateListOf<PollWithOptions>() }
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     val scope = rememberCoroutineScope()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var showPollLimitDialog by remember { mutableStateOf(false) }
+    var editingPoll by remember { mutableStateOf<PollWithOptions?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -164,6 +190,25 @@ fun VotingScreen(
 
     LaunchedEffect(eventId) { loadPolls() }
 
+    if (showPollLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showPollLimitDialog = false },
+            title = { Text(stringResource(R.string.voting_limit_title)) },
+            text = {
+                Text(stringResource(R.string.voting_limit_message))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPollLimitDialog = false
+                    onNavigateToUpgrade()
+                }) { Text(stringResource(R.string.voting_limit_upgrade)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPollLimitDialog = false }) { Text(stringResource(R.string.common_back)) }
+            }
+        )
+    }
+
     if (showCreateDialog) {
         CreatePollDialog(
             eventId = eventId,
@@ -171,7 +216,20 @@ fun VotingScreen(
             onCreated = {
                 showCreateDialog = false
                 loadPolls()
-                scope.launch { snackbarHostState.showSnackbar("Anketa vytvořena") }
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.voting_created)) }
+            }
+        )
+    }
+
+    if (editingPoll != null) {
+        EditPollDialog(
+            eventId = eventId,
+            pollData = editingPoll!!,
+            onDismiss = { editingPoll = null },
+            onSaved = {
+                editingPoll = null
+                loadPolls()
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.voting_updated)) }
             }
         )
     }
@@ -180,24 +238,39 @@ fun VotingScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Hlasování", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.voting_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showCreateDialog = true },
-                containerColor = AccentOrange,
-                contentColor = TextOnColor
+                onClick = {
+                    scope.launch {
+                        val settingsManager = SettingsManager(context)
+                        val settings = settingsManager.settingsFlow.first()
+                        val maxPolls = TierLimits.maxPolls(settings.premiumTier)
+                        if (pollsWithOptions.size >= maxPolls) {
+                            showPollLimitDialog = true
+                        } else {
+                            showCreateDialog = true
+                        }
+                    }
+                },
+                containerColor = Color.Transparent,
+                contentColor = TextOnColor,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .shadow(8.dp, CircleShape, ambientColor = AccentOrange.copy(alpha = 0.3f), spotColor = AccentOrange.copy(alpha = 0.3f))
+                    .background(AccentOrange, CircleShape)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nová anketa")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.voting_new))
             }
         }
     ) { innerPadding ->
@@ -218,9 +291,10 @@ fun VotingScreen(
         if (pollsWithOptions.isEmpty() && !isRefreshing) {
             EmptyState(
                 icon = Icons.Default.HowToVote,
-                iconDescription = "Žádné ankety",
-                title = "Zatím žádné ankety",
-                description = "Vytvoř anketu a nech ostatní hlasovat.",
+                illustration = R.drawable.il_empty_voting,
+                iconDescription = stringResource(R.string.voting_empty_icon),
+                title = stringResource(R.string.voting_empty_title),
+                description = stringResource(R.string.voting_empty_description),
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -234,15 +308,17 @@ fun VotingScreen(
                         pollData = pollData,
                         eventId = eventId,
                         currentUserId = currentUserId,
-                        onVoted = { optionId ->
-                            // Update local state after vote
-                            val idx = pollsWithOptions.indexOfFirst { it.poll.id == pollData.poll.id }
-                            if (idx >= 0) {
-                                val old = pollsWithOptions[idx]
-                                val newVoteCounts = old.voteCounts.toMutableMap()
-                                newVoteCounts[optionId] = (newVoteCounts[optionId] ?: 0) + 1
-                                val newUserVotes = old.userVotes + optionId
-                                pollsWithOptions[idx] = old.copy(voteCounts = newVoteCounts, userVotes = newUserVotes)
+                        onVoted = { loadPolls() },
+                        onEdit = { editingPoll = pollData },
+                        onClose = {
+                            scope.launch {
+                                try {
+                                    FirebaseFirestore.getInstance()
+                                        .collection("events").document(eventId)
+                                        .collection("polls").document(pollData.poll.id)
+                                        .update("isClosed", true).await()
+                                    loadPolls()
+                                } catch (_: Exception) { }
                             }
                         },
                         scope = scope
@@ -259,9 +335,15 @@ private fun PollCard(
     pollData: PollWithOptions,
     eventId: String,
     currentUserId: String,
-    onVoted: (String) -> Unit,
+    onVoted: () -> Unit,
+    onEdit: () -> Unit,
+    onClose: () -> Unit,
     scope: kotlinx.coroutines.CoroutineScope
 ) {
+    val hapticView = LocalView.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isCreator = pollData.poll.createdBy == currentUserId
+
     BetterMingleCard {
         Column {
             Row(
@@ -276,37 +358,60 @@ private fun PollCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                PollTypeBadge(type = pollData.poll.pollType)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isCreator && !pollData.poll.isClosed) {
+                        IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = stringResource(R.string.voting_close_description),
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.voting_edit_description),
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    PollTypeBadge(type = pollData.poll.pollType)
+                }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.sm))
+            Spacer(modifier = Modifier.height(Spacing.xs))
 
-            if (pollData.poll.isClosed) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            // Selection mode indicator
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (pollData.poll.isClosed) {
                     Icon(
                         Icons.Default.CheckCircle,
                         contentDescription = null,
                         tint = Success,
-                        modifier = Modifier.height(16.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Anketa uzavřena",
+                        text = stringResource(R.string.voting_poll_closed),
                         style = MaterialTheme.typography.bodySmall,
                         color = Success
                     )
+                } else {
+                    Text(
+                        text = if (pollData.poll.allowMultiple) stringResource(R.string.voting_multiple_answers) else stringResource(R.string.voting_single_answer),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrimaryBlue
+                    )
                 }
-            } else {
-                Text(
-                    text = "Aktivní",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PrimaryBlue
-                )
             }
 
             Spacer(modifier = Modifier.height(Spacing.md))
 
             val totalVotes = pollData.voteCounts.values.sum()
+            val hasVoted = pollData.userVotes.isNotEmpty()
+
             for (option in pollData.options) {
                 val voteCount = pollData.voteCounts[option.id] ?: 0
                 val isSelected = option.id in pollData.userVotes
@@ -315,20 +420,58 @@ private fun PollCard(
                     voteCount = voteCount,
                     totalVotes = totalVotes,
                     isSelected = isSelected,
+                    allowMultiple = pollData.poll.allowMultiple,
                     onVote = {
                         if (!pollData.poll.isClosed && !isSelected) {
-                            scope.launch {
-                                try {
-                                    val voteId = UUID.randomUUID().toString()
-                                    FirebaseFirestore.getInstance()
-                                        .collection("events").document(eventId)
-                                        .collection("polls").document(pollData.poll.id)
-                                        .collection("options").document(option.id)
-                                        .collection("votes").document(voteId)
-                                        .set(mapOf("userId" to currentUserId, "value" to 1))
-                                        .await()
-                                    onVoted(option.id)
-                                } catch (_: Exception) { }
+                            hapticView.performHapticClick()
+                            // For single-select: check if user already voted
+                            if (!pollData.poll.allowMultiple && hasVoted) {
+                                // Remove existing vote first, then add new one
+                                scope.launch {
+                                    try {
+                                        val firestore = FirebaseFirestore.getInstance()
+                                        val pollRef = firestore.collection("events").document(eventId)
+                                            .collection("polls").document(pollData.poll.id)
+
+                                        // Remove all existing votes by this user
+                                        for (existingOptionId in pollData.userVotes) {
+                                            val existingVotes = pollRef.collection("options")
+                                                .document(existingOptionId)
+                                                .collection("votes")
+                                                .get().await()
+                                            for (voteDoc in existingVotes.documents) {
+                                                if ((voteDoc.data?.get("userId") as? String) == currentUserId) {
+                                                    voteDoc.reference.delete().await()
+                                                }
+                                            }
+                                        }
+
+                                        // Add new vote
+                                        val voteId = UUID.randomUUID().toString()
+                                        pollRef.collection("options").document(option.id)
+                                            .collection("votes").document(voteId)
+                                            .set(mapOf("userId" to currentUserId, "value" to 1))
+                                            .await()
+                                        ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
+                                        onVoted()
+                                    } catch (_: Exception) { }
+                                }
+                            } else {
+                                // Multi-select or first vote
+                                scope.launch {
+                                    try {
+                                        val voteId = UUID.randomUUID().toString()
+                                        FirebaseFirestore.getInstance()
+                                            .collection("events").document(eventId)
+                                            .collection("polls").document(pollData.poll.id)
+                                            .collection("options").document(option.id)
+                                            .collection("votes").document(voteId)
+                                            .set(mapOf("userId" to currentUserId, "value" to 1))
+                                            .await()
+                                        ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
+                                        onVoted()
+                                    } catch (_: Exception) { }
+                                }
                             }
                         }
                     }
@@ -342,11 +485,11 @@ private fun PollCard(
 @Composable
 private fun PollTypeBadge(type: PollType) {
     val (text, color) = when (type) {
-        PollType.DATE -> "Datum" to PrimaryBlue
-        PollType.LOCATION -> "Místo" to AccentPink
-        PollType.ACTIVITY -> "Aktivita" to Success
-        PollType.PRICE -> "Cena" to AccentGold
-        PollType.CUSTOM -> "Vlastní" to TextSecondary
+        PollType.DATE -> stringResource(R.string.voting_type_date) to PrimaryBlue
+        PollType.LOCATION -> stringResource(R.string.voting_type_location) to AccentPink
+        PollType.ACTIVITY -> stringResource(R.string.voting_type_activity) to Success
+        PollType.PRICE -> stringResource(R.string.voting_type_price) to AccentGold
+        PollType.CUSTOM -> stringResource(R.string.voting_type_custom) to TextSecondary
     }
 
     Box(
@@ -369,6 +512,7 @@ fun PollOptionItem(
     voteCount: Int,
     totalVotes: Int,
     isSelected: Boolean,
+    allowMultiple: Boolean = false,
     onVote: () -> Unit
 ) {
     val progress = if (totalVotes > 0) voteCount.toFloat() / totalVotes else 0f
@@ -380,15 +524,30 @@ fun PollOptionItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = option.label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    Icon(
+                        imageVector = if (allowMultiple) {
+                            if (isSelected) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank
+                        } else {
+                            if (isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked
+                        },
+                        contentDescription = null,
+                        tint = if (isSelected) PrimaryBlue else TextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(
+                        text = option.label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
 
                 Text(
-                    text = "$voteCount hlasů",
+                    text = "$voteCount ${stringResource(R.string.voting_votes_count)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
@@ -416,6 +575,7 @@ private fun CreatePollDialog(
     onDismiss: () -> Unit,
     onCreated: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var title by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(PollType.CUSTOM) }
     var allowMultiple by remember { mutableStateOf(false) }
@@ -424,18 +584,18 @@ private fun CreatePollDialog(
     val scope = rememberCoroutineScope()
 
     val pollTypes = listOf(
-        PollType.DATE to "Datum",
-        PollType.LOCATION to "Místo",
-        PollType.ACTIVITY to "Aktivita",
-        PollType.PRICE to "Cena",
-        PollType.CUSTOM to "Vlastní"
+        PollType.DATE to stringResource(R.string.voting_type_date),
+        PollType.LOCATION to stringResource(R.string.voting_type_location),
+        PollType.ACTIVITY to stringResource(R.string.voting_type_activity),
+        PollType.PRICE to stringResource(R.string.voting_type_price),
+        PollType.CUSTOM to stringResource(R.string.voting_type_custom)
     )
 
     val isValid = title.isNotBlank() && options.count { it.isNotBlank() } >= 2
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nová anketa") },
+        title = { Text(stringResource(R.string.voting_new)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
@@ -443,13 +603,13 @@ private fun CreatePollDialog(
                 BetterMingleTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = "Název ankety"
+                    label = stringResource(R.string.voting_poll_name_label)
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Text(
-                    text = "Typ ankety",
+                    text = stringResource(R.string.voting_poll_type),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextSecondary
                 )
@@ -463,6 +623,7 @@ private fun CreatePollDialog(
                             selected = selectedType == type,
                             onClick = { selectedType = type },
                             label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                            shape = RoundedCornerShape(100.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
                                 selectedLabelColor = PrimaryBlue
@@ -478,7 +639,14 @@ private fun CreatePollDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Více odpovědí", style = MaterialTheme.typography.bodyMedium)
+                    Column {
+                        Text(stringResource(R.string.voting_multiple_answers), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = if (allowMultiple) stringResource(R.string.voting_multiple_hint) else stringResource(R.string.voting_single_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
                     Switch(
                         checked = allowMultiple,
                         onCheckedChange = { allowMultiple = it },
@@ -491,7 +659,7 @@ private fun CreatePollDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Anonymní", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.voting_anonymous), style = MaterialTheme.typography.bodyMedium)
                     Switch(
                         checked = isAnonymous,
                         onCheckedChange = { isAnonymous = it },
@@ -502,7 +670,7 @@ private fun CreatePollDialog(
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Text(
-                    text = "Možnosti",
+                    text = stringResource(R.string.voting_options),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextSecondary
                 )
@@ -516,12 +684,12 @@ private fun CreatePollDialog(
                         BetterMingleTextField(
                             value = option,
                             onValueChange = { options[index] = it },
-                            label = "Možnost ${index + 1}",
+                            label = stringResource(R.string.voting_option_label, index + 1),
                             modifier = Modifier.weight(1f)
                         )
                         if (options.size > 2) {
                             IconButton(onClick = { options.removeAt(index) }) {
-                                Icon(Icons.Default.Close, contentDescription = "Odebrat", tint = TextSecondary)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = TextSecondary)
                             }
                         }
                     }
@@ -534,7 +702,7 @@ private fun CreatePollDialog(
                 TextButton(onClick = { options.add("") }) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Přidat možnost")
+                    Text(stringResource(R.string.voting_add_option))
                 }
             }
         },
@@ -566,17 +734,138 @@ private fun CreatePollDialog(
                                 )
                                 pollRef.collection("options").add(optionData).await()
                             }
+                            ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_created_poll, title))
                             onCreated()
                         } catch (_: Exception) { }
                     }
                 },
                 enabled = isValid
             ) {
-                Text("Vytvořit")
+                Text(stringResource(R.string.common_create))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Zrušit") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    )
+}
+
+@Composable
+private fun EditPollDialog(
+    eventId: String,
+    pollData: PollWithOptions,
+    onDismiss: () -> Unit,
+    onSaved: () -> Unit
+) {
+    val existingOptions = remember { mutableStateListOf<String>().apply {
+        addAll(pollData.options.map { it.label })
+    }}
+    val newOptions = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.voting_edit_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = pollData.poll.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.md))
+
+                Text(
+                    text = stringResource(R.string.voting_existing_options),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextSecondary
+                )
+                Spacer(modifier = Modifier.height(Spacing.xs))
+
+                existingOptions.forEachIndexed { index, label ->
+                    BetterMingleTextField(
+                        value = label,
+                        onValueChange = {},
+                        label = stringResource(R.string.voting_option_label, index + 1),
+                        enabled = false
+                    )
+                    if (index < existingOptions.lastIndex || newOptions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                    }
+                }
+
+                if (newOptions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    Text(
+                        text = stringResource(R.string.voting_new_options),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = PrimaryBlue
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+
+                    newOptions.forEachIndexed { index, option ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            BetterMingleTextField(
+                                value = option,
+                                onValueChange = { newOptions[index] = it },
+                                label = stringResource(R.string.voting_new_option_label, index + 1),
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { newOptions.removeAt(index) }) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = TextSecondary)
+                            }
+                        }
+                        if (index < newOptions.lastIndex) {
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                TextButton(onClick = { newOptions.add("") }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.voting_add_option))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        try {
+                            val firestore = FirebaseFirestore.getInstance()
+                            val pollRef = firestore.collection("events").document(eventId)
+                                .collection("polls").document(pollData.poll.id)
+
+                            val validNew = newOptions.filter { it.isNotBlank() }
+                            val nextSortOrder = pollData.options.maxOfOrNull { it.sortOrder }?.plus(1) ?: pollData.options.size
+
+                            validNew.forEachIndexed { index, label ->
+                                val optionData = hashMapOf(
+                                    "label" to label,
+                                    "description" to "",
+                                    "sortOrder" to (nextSortOrder + index)
+                                )
+                                pollRef.collection("options").add(optionData).await()
+                            }
+                            onSaved()
+                        } catch (_: Exception) { }
+                    }
+                },
+                enabled = newOptions.any { it.isNotBlank() }
+            ) {
+                Text(stringResource(R.string.common_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

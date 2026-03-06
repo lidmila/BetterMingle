@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,6 +41,9 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -74,7 +78,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import com.bettermingle.app.data.model.EventModule
+import com.bettermingle.app.data.model.PREDEFINED_THEMES
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
@@ -82,6 +92,7 @@ import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.PlacesAutocompleteField
 import com.bettermingle.app.ui.component.PlaceResult
 import com.bettermingle.app.ui.theme.AccentGold
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -97,15 +108,70 @@ import java.util.UUID
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import com.bettermingle.app.data.preferences.PremiumTier
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.viewmodel.EventListViewModel
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEventScreen(
     onEventCreated: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: CreateEventViewModel = viewModel()
+    onNavigateToUpgrade: () -> Unit = {},
+    viewModel: CreateEventViewModel = viewModel(),
+    eventListViewModel: EventListViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val eventListState by eventListViewModel.uiState.collectAsState()
+
+    // Tier limit check
+    val premiumTier = viewModel.premiumTier.collectAsState(initial = PremiumTier.FREE).value
+    val maxEvents = TierLimits.maxEvents(premiumTier)
+    val currentEventCount = eventListState.events.size
+    var showLimitDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentEventCount, maxEvents) {
+        if (currentEventCount >= maxEvents) {
+            showLimitDialog = true
+        }
+    }
+
+    if (showLimitDialog && premiumTier != PremiumTier.BUSINESS) {
+        val (dialogText, buttonText) = when (premiumTier) {
+            PremiumTier.FREE -> stringResource(R.string.create_event_limit_free, maxEvents) to stringResource(R.string.create_event_limit_free_button)
+            PremiumTier.PRO -> stringResource(R.string.create_event_limit_pro, maxEvents) to stringResource(R.string.create_event_limit_pro_button)
+            PremiumTier.BUSINESS -> "" to "" // unreachable
+        }
+        AlertDialog(
+            onDismissRequest = { showLimitDialog = false; onNavigateBack() },
+            title = { Text(stringResource(R.string.create_event_limit_title)) },
+            text = { Text(dialogText) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLimitDialog = false
+                    onNavigateToUpgrade()
+                }) { Text(buttonText) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLimitDialog = false
+                    onNavigateBack()
+                }) { Text(stringResource(R.string.common_back)) }
+            }
+        )
+    }
 
     LaunchedEffect(uiState.createdEventId) {
         uiState.createdEventId?.let { onEventCreated(it) }
@@ -113,9 +179,13 @@ fun CreateEventScreen(
     var currentStep by remember { mutableIntStateOf(0) }
     val totalSteps = 3
 
+    // Template state
+    var showTemplateSelection by remember { mutableStateOf(true) }
+
     // Step 1 state
     var eventName by remember { mutableStateOf("") }
     var eventDescription by remember { mutableStateOf("") }
+    var eventIntroText by remember { mutableStateOf("") }
     var eventTheme by remember { mutableStateOf("") }
     var eventLocation by remember { mutableStateOf("") }
     var startDateMillis by remember { mutableStateOf<Long?>(null) }
@@ -123,6 +193,8 @@ fun CreateEventScreen(
     var locationLat by remember { mutableStateOf<Double?>(null) }
     var locationLng by remember { mutableStateOf<Double?>(null) }
     var locationAddress by remember { mutableStateOf("") }
+    var coverImageUri by remember { mutableStateOf<Uri?>(null) }
+    var coverImageUrl by remember { mutableStateOf("") }
 
     // Step 2 state
     var inviteEmail by remember { mutableStateOf("") }
@@ -140,6 +212,27 @@ fun CreateEventScreen(
     var screenshotProtection by remember { mutableStateOf(false) }
     var autoDeleteDays by remember { mutableIntStateOf(0) }
     var requireApproval by remember { mutableStateOf(false) }
+    val createScope = rememberCoroutineScope()
+    val createContext = androidx.compose.ui.platform.LocalContext.current
+
+    // Template selection before wizard
+    if (showTemplateSelection) {
+        TemplateSelectionScreen(
+            premiumTier = premiumTier,
+            onTemplateSelected = { template ->
+                if (template != null) {
+                    eventTheme = template.theme
+                    eventDescription = createContext.getString(template.descriptionHintResId)
+                    selectedModules.clear()
+                    selectedModules.addAll(template.modules)
+                }
+                showTemplateSelection = false
+            },
+            onNavigateBack = onNavigateBack,
+            onNavigateToUpgrade = onNavigateToUpgrade
+        )
+        return
+    }
 
     Scaffold(
         topBar = {
@@ -147,9 +240,9 @@ fun CreateEventScreen(
                 title = {
                     Text(
                         when (currentStep) {
-                            0 -> "Nová akce"
-                            1 -> "Pozvat účastníky"
-                            2 -> "Vybrat moduly"
+                            0 -> stringResource(R.string.create_event_step_basics)
+                            1 -> stringResource(R.string.create_event_step_invite)
+                            2 -> stringResource(R.string.create_event_step_modules)
                             else -> ""
                         },
                         style = MaterialTheme.typography.titleMedium
@@ -161,12 +254,12 @@ fun CreateEventScreen(
                     }) {
                         Icon(
                             imageVector = if (currentStep > 0) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Close,
-                            contentDescription = "Zpět"
+                            contentDescription = stringResource(R.string.common_back)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -213,6 +306,8 @@ fun CreateEventScreen(
                         onNameChange = { eventName = it },
                         description = eventDescription,
                         onDescriptionChange = { eventDescription = it },
+                        introText = eventIntroText,
+                        onIntroTextChange = { eventIntroText = it },
                         theme = eventTheme,
                         onThemeChange = { eventTheme = it },
                         location = eventLocation,
@@ -227,6 +322,8 @@ fun CreateEventScreen(
                         onStartDateChanged = { startDateMillis = it },
                         endDateMillis = endDateMillis,
                         onEndDateChanged = { endDateMillis = it },
+                        coverImageUri = coverImageUri,
+                        onCoverImageSelected = { coverImageUri = it },
                         onNext = { currentStep = 1 }
                     )
                     1 -> StepInvite(
@@ -265,18 +362,39 @@ fun CreateEventScreen(
                         requireApproval = requireApproval,
                         onRequireApprovalChange = { requireApproval = it },
                         onCreate = {
-                            viewModel.createEvent(
-                                name = eventName,
-                                description = eventDescription,
-                                theme = eventTheme,
-                                location = eventLocation,
-                                locationLat = locationLat,
-                                locationLng = locationLng,
-                                locationAddress = locationAddress,
-                                startDate = startDateMillis,
-                                endDate = endDateMillis,
-                                enabledModules = selectedModules.toList()
-                            )
+                            createScope.launch {
+                                // Upload cover image if selected
+                                var uploadedUrl = ""
+                                if (coverImageUri != null) {
+                                    try {
+                                        val ref = FirebaseStorage.getInstance().reference
+                                            .child("covers/${UUID.randomUUID()}.jpg")
+                                        ref.putFile(coverImageUri!!).await()
+                                        uploadedUrl = ref.downloadUrl.await().toString()
+                                    } catch (_: Exception) { }
+                                }
+                                coverImageUrl = uploadedUrl
+                                viewModel.createEvent(
+                                    name = eventName,
+                                    description = eventDescription,
+                                    theme = eventTheme,
+                                    location = eventLocation,
+                                    locationLat = locationLat,
+                                    locationLng = locationLng,
+                                    locationAddress = locationAddress,
+                                    startDate = startDateMillis,
+                                    endDate = endDateMillis,
+                                    enabledModules = selectedModules.toList(),
+                                    introText = eventIntroText,
+                                    securityEnabled = securityEnabled,
+                                    eventPin = eventPin,
+                                    hideFinancials = hideFinancials,
+                                    screenshotProtection = screenshotProtection,
+                                    autoDeleteDays = autoDeleteDays,
+                                    requireApproval = requireApproval,
+                                    invitedEmails = invitedEmails.toList()
+                                )
+                            }
                         }
                     )
                 }
@@ -285,13 +403,15 @@ fun CreateEventScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun StepBasicInfo(
     name: String,
     onNameChange: (String) -> Unit,
     description: String,
     onDescriptionChange: (String) -> Unit,
+    introText: String,
+    onIntroTextChange: (String) -> Unit,
     theme: String,
     onThemeChange: (String) -> Unit,
     location: String,
@@ -301,9 +421,15 @@ private fun StepBasicInfo(
     onStartDateChanged: (Long?) -> Unit,
     endDateMillis: Long?,
     onEndDateChanged: (Long?) -> Unit,
+    coverImageUri: Uri?,
+    onCoverImageSelected: (Uri?) -> Unit,
     onNext: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("d. M. yyyy HH:mm", Locale("cs", "CZ")) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> if (uri != null) onCoverImageSelected(uri) }
 
     // Date picker state
     var showDatePickerFor by remember { mutableStateOf<String?>(null) } // "start" or "end"
@@ -322,10 +448,10 @@ private fun StepBasicInfo(
                     val target = showDatePickerFor
                     showDatePickerFor = null
                     showTimePickerFor = target
-                }) { Text("Pokračovat") }
+                }) { Text(stringResource(R.string.create_event_datepicker_continue)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePickerFor = null }) { Text("Zrušit") }
+                TextButton(onClick = { showDatePickerFor = null }) { Text(stringResource(R.string.create_event_datepicker_cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -343,48 +469,60 @@ private fun StepBasicInfo(
             initialMinute = cal.get(Calendar.MINUTE),
             is24Hour = true
         )
-        AlertDialog(
+        Dialog(
             onDismissRequest = {
                 showTimePickerFor = null
                 pendingDateMillis = null
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    val datePart = pendingDateMillis ?: System.currentTimeMillis()
-                    val calendar = Calendar.getInstance().apply {
-                        timeInMillis = datePart
-                        set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                        set(Calendar.MINUTE, timePickerState.minute)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }
-                    val result = calendar.timeInMillis
-                    if (showTimePickerFor == "start") {
-                        onStartDateChanged(result)
-                    } else {
-                        onEndDateChanged(result)
-                    }
-                    showTimePickerFor = null
-                    pendingDateMillis = null
-                }) { Text("Potvrdit") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showTimePickerFor = null
-                    pendingDateMillis = null
-                }) { Text("Zrušit") }
-            },
-            title = { Text("Vyberte čas") },
-            icon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
-            text = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier = Modifier.padding(horizontal = Spacing.lg)
+            ) {
+                Column(
+                    modifier = Modifier.padding(Spacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(
+                        text = stringResource(R.string.create_event_timepicker_title),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = Spacing.lg)
+                    )
                     TimePicker(state = timePickerState)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = {
+                            showTimePickerFor = null
+                            pendingDateMillis = null
+                        }) { Text(stringResource(R.string.create_event_timepicker_cancel)) }
+                        TextButton(onClick = {
+                            val datePart = pendingDateMillis ?: System.currentTimeMillis()
+                            val calendar = Calendar.getInstance().apply {
+                                timeInMillis = datePart
+                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(Calendar.MINUTE, timePickerState.minute)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            val result = calendar.timeInMillis
+                            if (showTimePickerFor == "start") {
+                                onStartDateChanged(result)
+                            } else {
+                                onEndDateChanged(result)
+                            }
+                            showTimePickerFor = null
+                            pendingDateMillis = null
+                        }) { Text(stringResource(R.string.create_event_timepicker_confirm)) }
+                    }
                 }
             }
-        )
+        }
     }
 
     Column(
@@ -393,13 +531,48 @@ private fun StepBasicInfo(
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg)
     ) {
-        Text("Základní informace", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.create_event_basics_title), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(Spacing.lg))
+
+        // Cover image picker
+        if (coverImageUri != null) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = coverImageUri,
+                    contentDescription = stringResource(R.string.create_event_cover_description),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(
+                    onClick = { onCoverImageSelected(null) },
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_cover_remove), tint = androidx.compose.ui.graphics.Color.White)
+                }
+            }
+        } else {
+            BetterMingleCard(onClick = { imagePickerLauncher.launch("image/*") }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.AddPhotoAlternate, contentDescription = null, tint = PrimaryBlue)
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(stringResource(R.string.create_event_cover_add), color = PrimaryBlue)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
 
         BetterMingleTextField(
             value = name,
             onValueChange = onNameChange,
-            label = "Název akce"
+            label = stringResource(R.string.create_event_name_label)
         )
 
         Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -407,9 +580,32 @@ private fun StepBasicInfo(
         BetterMingleTextField(
             value = description,
             onValueChange = onDescriptionChange,
-            label = "Popis",
+            label = stringResource(R.string.create_event_description_label),
             singleLine = false,
-            maxLines = 3
+            maxLines = 5
+        )
+
+        Text(
+            text = stringResource(R.string.create_event_formatting_hint),
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary,
+            modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
+
+        BetterMingleTextField(
+            value = introText,
+            onValueChange = onIntroTextChange,
+            label = stringResource(R.string.create_event_intro_label),
+            singleLine = false,
+            maxLines = 6
+        )
+        Text(
+            text = stringResource(R.string.create_event_intro_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary,
+            modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
         )
 
         Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -418,7 +614,7 @@ private fun StepBasicInfo(
             value = location,
             onValueChange = onLocationChange,
             onPlaceSelected = onPlaceSelected,
-            label = "Místo"
+            label = stringResource(R.string.create_event_location_label)
         )
 
         Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -426,14 +622,34 @@ private fun StepBasicInfo(
         BetterMingleTextField(
             value = theme,
             onValueChange = onThemeChange,
-            label = "Téma akce (nepovinné)"
+            label = stringResource(R.string.create_event_theme_label)
         )
+
+        Spacer(modifier = Modifier.height(Spacing.sm))
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
+            PREDEFINED_THEMES.forEach { t ->
+                FilterChip(
+                    selected = theme == t,
+                    onClick = { onThemeChange(if (theme == t) "" else t) },
+                    label = { Text(t) },
+                    shape = RoundedCornerShape(100.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentPink.copy(alpha = 0.12f),
+                        selectedLabelColor = AccentPink
+                    )
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(Spacing.lg))
 
         // Date & Time section
         Text(
-            "Datum a čas",
+            stringResource(R.string.create_event_section_datetime),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -444,13 +660,13 @@ private fun StepBasicInfo(
             BetterMingleTextField(
                 value = startDateMillis?.let { dateFormat.format(Date(it)) } ?: "",
                 onValueChange = {},
-                label = "Začátek",
+                label = stringResource(R.string.create_event_start_label),
                 enabled = false,
                 leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
                 trailingIcon = if (startDateMillis != null) {
                     {
                         IconButton(onClick = { onStartDateChanged(null) }) {
-                            Icon(Icons.Default.Close, contentDescription = "Smazat", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_date_clear), modifier = Modifier.size(18.dp))
                         }
                     }
                 } else null
@@ -464,13 +680,13 @@ private fun StepBasicInfo(
             BetterMingleTextField(
                 value = endDateMillis?.let { dateFormat.format(Date(it)) } ?: "",
                 onValueChange = {},
-                label = "Konec",
+                label = stringResource(R.string.create_event_end_label),
                 enabled = false,
                 leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
                 trailingIcon = if (endDateMillis != null) {
                     {
                         IconButton(onClick = { onEndDateChanged(null) }) {
-                            Icon(Icons.Default.Close, contentDescription = "Smazat", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_date_clear), modifier = Modifier.size(18.dp))
                         }
                     }
                 } else null
@@ -479,8 +695,10 @@ private fun StepBasicInfo(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        Spacer(modifier = Modifier.height(Spacing.xl))
+
         BetterMingleButton(
-            text = "Pokračovat",
+            text = stringResource(R.string.create_event_invite_continue),
             onClick = onNext,
             enabled = name.isNotBlank(),
             isCta = true
@@ -504,10 +722,10 @@ private fun StepInvite(
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg)
     ) {
-        Text("Pozvi účastníky", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.create_event_invite_title), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
-            "Pozvánky můžeš poslat i později.",
+            stringResource(R.string.create_event_invite_subtitle),
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary
         )
@@ -517,12 +735,12 @@ private fun StepInvite(
             BetterMingleTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = "E-mail účastníka",
+                label = stringResource(R.string.create_event_invite_email),
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(Spacing.sm))
             BetterMingleButton(
-                text = "Přidat",
+                text = stringResource(R.string.create_event_invite_add),
                 onClick = onAddEmail,
                 modifier = Modifier.width(100.dp)
             )
@@ -543,7 +761,7 @@ private fun StepInvite(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { onRemoveEmail(invitedEmail) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Odebrat", tint = TextSecondary)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_invite_remove), tint = TextSecondary)
                 }
             }
         }
@@ -551,7 +769,7 @@ private fun StepInvite(
         Spacer(modifier = Modifier.weight(1f))
 
         BetterMingleButton(
-            text = "Pokračovat",
+            text = stringResource(R.string.create_event_invite_continue),
             onClick = onNext,
             isCta = true
         )
@@ -559,7 +777,7 @@ private fun StepInvite(
         Spacer(modifier = Modifier.height(Spacing.sm))
 
         BetterMingleOutlinedButton(
-            text = "Přeskočit",
+            text = stringResource(R.string.create_event_invite_skip),
             onClick = onSkip
         )
     }
@@ -591,13 +809,13 @@ private fun StepModules(
     onCreate: () -> Unit
 ) {
     val moduleOptions = listOf(
-        ModuleOption(EventModule.VOTING, "Hlasování", Icons.Default.HowToVote),
-        ModuleOption(EventModule.EXPENSES, "Výdaje", Icons.Default.Payments),
-        ModuleOption(EventModule.CARPOOL, "Spolujízda", Icons.Default.DirectionsCar),
-        ModuleOption(EventModule.ROOMS, "Ubytování", Icons.Default.Hotel),
-        ModuleOption(EventModule.CHAT, "Chat", Icons.AutoMirrored.Filled.Chat),
-        ModuleOption(EventModule.SCHEDULE, "Harmonogram", Icons.Default.CalendarMonth),
-        ModuleOption(EventModule.TASKS, "Úkoly", Icons.AutoMirrored.Filled.Assignment)
+        ModuleOption(EventModule.VOTING, stringResource(R.string.create_event_module_voting), Icons.Default.HowToVote),
+        ModuleOption(EventModule.EXPENSES, stringResource(R.string.create_event_module_expenses), Icons.Default.Payments),
+        ModuleOption(EventModule.CARPOOL, stringResource(R.string.create_event_module_carpool), Icons.Default.DirectionsCar),
+        ModuleOption(EventModule.ROOMS, stringResource(R.string.create_event_module_rooms), Icons.Default.Hotel),
+        ModuleOption(EventModule.CHAT, stringResource(R.string.create_event_module_chat), Icons.AutoMirrored.Filled.Chat),
+        ModuleOption(EventModule.SCHEDULE, stringResource(R.string.create_event_module_schedule), Icons.Default.CalendarMonth),
+        ModuleOption(EventModule.TASKS, stringResource(R.string.create_event_module_tasks), Icons.AutoMirrored.Filled.Assignment)
     )
 
     Column(
@@ -606,10 +824,10 @@ private fun StepModules(
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg)
     ) {
-        Text("Vyber moduly", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.create_event_modules_title), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
-            "Vyber, co tvoje akce potřebuje. Můžeš změnit kdykoliv.",
+            stringResource(R.string.create_event_modules_subtitle),
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary
         )
@@ -632,6 +850,7 @@ private fun StepModules(
                             modifier = Modifier.size(18.dp)
                         )
                     },
+                    shape = RoundedCornerShape(100.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
                         selectedLabelColor = PrimaryBlue,
@@ -664,7 +883,7 @@ private fun StepModules(
         Spacer(modifier = Modifier.height(Spacing.xl))
 
         BetterMingleButton(
-            text = "Vytvořit akci",
+            text = stringResource(R.string.create_event_create_button),
             onClick = onCreate,
             isCta = true
         )
@@ -706,12 +925,12 @@ private fun SecuritySection(
                     Spacer(modifier = Modifier.width(Spacing.sm))
                     Column {
                         Text(
-                            text = "Zvýšená ochrana",
+                            text = stringResource(R.string.create_event_security_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Pro firemní a citlivé akce",
+                            text = stringResource(R.string.create_event_security_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -732,14 +951,14 @@ private fun SecuritySection(
                 BetterMingleTextField(
                     value = eventPin,
                     onValueChange = { if (it.length <= 6) onEventPinChange(it) },
-                    label = "PIN pro vstup (4–6 číslic)",
+                    label = stringResource(R.string.create_event_security_pin_label),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     visualTransformation = if (pinVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { pinVisible = !pinVisible }) {
                             Icon(
                                 if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (pinVisible) "Skrýt" else "Zobrazit"
+                                contentDescription = if (pinVisible) stringResource(R.string.create_event_security_pin_hide) else stringResource(R.string.create_event_security_pin_show)
                             )
                         }
                     },
@@ -753,8 +972,8 @@ private fun SecuritySection(
                 // Security toggles
                 SecurityToggle(
                     icon = Icons.Default.VisibilityOff,
-                    title = "Skrýt finance",
-                    description = "Finanční detaily vidí jen organizátor",
+                    title = stringResource(R.string.create_event_security_hide_financials),
+                    description = stringResource(R.string.create_event_security_hide_financials_desc),
                     checked = hideFinancials,
                     onCheckedChange = onHideFinancialsChange
                 )
@@ -763,8 +982,8 @@ private fun SecuritySection(
 
                 SecurityToggle(
                     icon = Icons.Default.ScreenshotMonitor,
-                    title = "Ochrana obrazovky",
-                    description = "Blokovat snímky obrazovky",
+                    title = stringResource(R.string.create_event_security_screenshot),
+                    description = stringResource(R.string.create_event_security_screenshot_desc),
                     checked = screenshotProtection,
                     onCheckedChange = onScreenshotProtectionChange
                 )
@@ -773,8 +992,8 @@ private fun SecuritySection(
 
                 SecurityToggle(
                     icon = Icons.Default.VerifiedUser,
-                    title = "Schvalování účastníků",
-                    description = "Noví účastníci musí být schváleni",
+                    title = stringResource(R.string.create_event_security_approval),
+                    description = stringResource(R.string.create_event_security_approval_desc),
                     checked = requireApproval,
                     onCheckedChange = onRequireApprovalChange
                 )
@@ -795,14 +1014,14 @@ private fun SecuritySection(
                     Spacer(modifier = Modifier.width(Spacing.sm))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Automatické smazání dat",
+                            text = stringResource(R.string.create_event_security_auto_delete),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = when (autoDeleteDays) {
-                                0 -> "Vypnuto"
-                                else -> "$autoDeleteDays dní po konci akce"
+                                0 -> stringResource(R.string.create_event_security_auto_delete_off)
+                                else -> stringResource(R.string.create_event_security_auto_delete_days, autoDeleteDays)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
@@ -822,14 +1041,15 @@ private fun SecuritySection(
                             label = {
                                 Text(
                                     when (days) {
-                                        0 -> "Nikdy"
-                                        7 -> "7 dní"
-                                        30 -> "30 dní"
-                                        90 -> "90 dní"
-                                        else -> "$days dní"
+                                        0 -> stringResource(R.string.create_event_security_auto_delete_never)
+                                        7 -> stringResource(R.string.create_event_security_auto_delete_7)
+                                        30 -> stringResource(R.string.create_event_security_auto_delete_30)
+                                        90 -> stringResource(R.string.create_event_security_auto_delete_90)
+                                        else -> stringResource(R.string.create_event_security_auto_delete_days, days)
                                     }
                                 )
                             },
+                            shape = RoundedCornerShape(100.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
                                 selectedLabelColor = PrimaryBlue
@@ -838,6 +1058,123 @@ private fun SecuritySection(
                     }
                 }
             }
+        }
+    }
+}
+
+private data class EventTemplate(
+    val nameResId: Int,
+    val emoji: String,
+    val theme: String,
+    val descriptionHintResId: Int,
+    val modules: List<EventModule>,
+    val isPremium: Boolean = false
+)
+
+private val eventTemplates = listOf(
+    EventTemplate(R.string.create_event_template_wedding, "\uD83D\uDC8D", "Svatba", R.string.create_event_template_wedding_desc,
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.SCHEDULE, EventModule.TASKS, EventModule.CARPOOL, EventModule.ROOMS, EventModule.PACKING_LIST)),
+    EventTemplate(R.string.create_event_template_birthday, "\uD83C\uDF82", "Narozeniny", R.string.create_event_template_birthday_desc,
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST)),
+    EventTemplate(R.string.create_event_template_teambuilding, "\uD83E\uDD1D", "Teambuilding", R.string.create_event_template_teambuilding_desc,
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS)),
+    EventTemplate(R.string.create_event_template_trip, "\uD83C\uDFD5\uFE0F", "Výlet", R.string.create_event_template_trip_desc,
+        listOf(EventModule.CARPOOL, EventModule.ROOMS, EventModule.SCHEDULE, EventModule.PACKING_LIST, EventModule.EXPENSES)),
+    EventTemplate(R.string.create_event_template_festival, "\uD83C\uDFB5", "Festival", R.string.create_event_template_festival_desc,
+        listOf(EventModule.SCHEDULE, EventModule.CARPOOL, EventModule.EXPENSES, EventModule.CHAT), isPremium = true),
+    EventTemplate(R.string.create_event_template_corporate, "\uD83C\uDFE2", "Firemní akce", R.string.create_event_template_corporate_desc,
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS), isPremium = true),
+    EventTemplate(R.string.create_event_template_party, "\uD83C\uDF89", "Oslava", R.string.create_event_template_party_desc,
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST), isPremium = true)
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TemplateSelectionScreen(
+    premiumTier: PremiumTier,
+    onTemplateSelected: (EventTemplate?) -> Unit,
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.create_event_template_picker_title), style = MaterialTheme.typography.titleMedium) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundPrimary)
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = Spacing.lg)
+        ) {
+            Text(
+                text = stringResource(R.string.create_event_template_picker_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+            Spacer(modifier = Modifier.height(Spacing.lg))
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(eventTemplates) { template ->
+                    val isLocked = template.isPremium && premiumTier == PremiumTier.FREE
+                    BetterMingleCard(
+                        onClick = {
+                            if (isLocked) {
+                                onNavigateToUpgrade()
+                            } else {
+                                onTemplateSelected(template)
+                            }
+                        }
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = template.emoji,
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            Text(
+                                text = stringResource(template.nameResId),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            if (isLocked) {
+                                Spacer(modifier = Modifier.height(Spacing.xs))
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = stringResource(R.string.create_event_template_premium_badge),
+                                    tint = AccentGold,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            BetterMingleOutlinedButton(
+                text = stringResource(R.string.create_event_template_custom),
+                onClick = { onTemplateSelected(null) }
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.lg))
         }
     }
 }

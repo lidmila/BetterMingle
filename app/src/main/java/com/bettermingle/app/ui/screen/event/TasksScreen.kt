@@ -1,5 +1,7 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,14 +28,25 @@ import androidx.compose.material.icons.filled.Person
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,8 +69,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -70,6 +85,7 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -78,18 +94,19 @@ import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
 import com.bettermingle.app.utils.DateFormatUtils
+import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-data class TaskColor(val name: String, val color: Color)
+data class TaskColor(val name: String, val color: Color, val nameResId: Int)
 
 val taskColors = listOf(
-    TaskColor("Modrá", PrimaryBlue),
-    TaskColor("Růžová", AccentPink),
-    TaskColor("Oranžová", AccentOrange),
-    TaskColor("Zlatá", AccentGold),
-    TaskColor("Zelená", Success)
+    TaskColor("Modrá", PrimaryBlue, R.string.tasks_color_blue),
+    TaskColor("Růžová", AccentPink, R.string.tasks_color_pink),
+    TaskColor("Oranžová", AccentOrange, R.string.tasks_color_orange),
+    TaskColor("Zlatá", AccentGold, R.string.tasks_color_gold),
+    TaskColor("Zelená", Success, R.string.tasks_color_green)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,6 +115,7 @@ fun TasksScreen(
     eventId: String,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val tasks = remember { mutableStateListOf<EventLabel>() }
     val userNames = remember { mutableMapOf<String, String>() }
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -155,7 +173,7 @@ fun TasksScreen(
             onCreated = {
                 showCreateDialog = false
                 loadTasks()
-                scope.launch { snackbarHostState.showSnackbar("Úkol vytvořen") }
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.tasks_created)) }
             }
         )
     }
@@ -163,8 +181,8 @@ fun TasksScreen(
     if (taskToDelete != null) {
         AlertDialog(
             onDismissRequest = { taskToDelete = null },
-            title = { Text("Smazat úkol") },
-            text = { Text("Opravdu chceš smazat tento úkol?") },
+            title = { Text(stringResource(R.string.tasks_delete_title)) },
+            text = { Text(stringResource(R.string.tasks_delete_confirm)) },
             confirmButton = {
                 TextButton(onClick = {
                     val task = taskToDelete!!
@@ -176,15 +194,16 @@ fun TasksScreen(
                                 .collection("tasks").document(task.id)
                                 .delete().await()
                             tasks.removeAll { it.id == task.id }
-                            snackbarHostState.showSnackbar("Úkol smazán")
+                            ActivityLogger.log(eventId, "task", context.getString(R.string.activity_deleted_task, task.name))
+                            snackbarHostState.showSnackbar(context.getString(R.string.tasks_deleted))
                         } catch (_: Exception) { }
                     }
                 }) {
-                    Text("Smazat", color = AccentOrange)
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { taskToDelete = null }) { Text("Zrušit") }
+                TextButton(onClick = { taskToDelete = null }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -193,24 +212,28 @@ fun TasksScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Úkoly", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.tasks_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = AccentOrange,
-                contentColor = TextOnColor
+                containerColor = Color.Transparent,
+                contentColor = TextOnColor,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .shadow(8.dp, CircleShape, ambientColor = AccentOrange.copy(alpha = 0.3f), spotColor = AccentOrange.copy(alpha = 0.3f))
+                    .background(AccentOrange, CircleShape)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nový úkol")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.tasks_new))
             }
         }
     ) { innerPadding ->
@@ -231,9 +254,10 @@ fun TasksScreen(
         if (tasks.isEmpty() && !isRefreshing) {
             EmptyState(
                 icon = Icons.AutoMirrored.Filled.Assignment,
-                iconDescription = "Ikona úkolů",
-                title = "Zatím žádné úkoly",
-                description = "Přidej úkoly a přiřaď je účastníkům.",
+                illustration = R.drawable.il_empty_tasks,
+                iconDescription = stringResource(R.string.tasks_empty_icon),
+                title = stringResource(R.string.tasks_empty_title),
+                description = stringResource(R.string.tasks_empty_description),
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -258,6 +282,7 @@ fun TasksScreen(
                                     val idx = tasks.indexOfFirst { it.id == task.id }
                                     if (idx >= 0) tasks[idx] = task.copy(isCompleted = newCompleted)
                                     if (newCompleted) {
+                                        ActivityLogger.log(eventId, "task", context.getString(R.string.activity_completed_task, task.name))
                                         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                     } else {
                                         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
@@ -320,8 +345,9 @@ private fun TaskCard(
                 )
 
                 task.deadline?.let { deadline ->
+                    val formattedDate = DateFormatUtils.formatDate(deadline)
                     Text(
-                        text = "Termín: ${DateFormatUtils.formatDate(deadline)}",
+                        text = stringResource(R.string.tasks_deadline, formattedDate),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (!task.isCompleted && deadline < System.currentTimeMillis()) AccentOrange else TextSecondary
                     )
@@ -343,7 +369,7 @@ private fun TaskCard(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         Icons.Default.Person,
-                                        contentDescription = "Přiřazeno",
+                                        contentDescription = stringResource(R.string.a11y_assigned),
                                         tint = taskColor,
                                         modifier = Modifier.size(12.dp)
                                     )
@@ -364,7 +390,7 @@ private fun TaskCard(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Smazat úkol",
+                    contentDescription = stringResource(R.string.tasks_delete_title),
                     tint = AccentOrange
                 )
             }
@@ -380,17 +406,20 @@ private fun TaskCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateTaskDialog(
     eventId: String,
     onDismiss: () -> Unit,
     onCreated: () -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf("Modrá") }
     val selectedParticipants = remember { mutableStateListOf<String>() }
     val participants = remember { mutableStateListOf<Participant>() }
+    var deadlineMillis by remember { mutableStateOf<Long?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(eventId) {
@@ -413,21 +442,48 @@ private fun CreateTaskDialog(
         } catch (_: Exception) { }
     }
 
-    AlertDialog(
+    // DatePicker dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = deadlineMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    deadlineMillis = datePickerState.selectedDateMillis
+                    showDatePicker = false
+                }) { Text(stringResource(R.string.common_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nový úkol") },
-        text = {
-            Column {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier.padding(horizontal = Spacing.lg)
+        ) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text(stringResource(R.string.tasks_new), style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
                 BetterMingleTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = "Název úkolu"
+                    label = stringResource(R.string.tasks_name_label)
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Text(
-                    text = "Barva",
+                    text = stringResource(R.string.tasks_color),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextSecondary
                 )
@@ -440,7 +496,8 @@ private fun CreateTaskDialog(
                         FilterChip(
                             selected = selectedColor == tc.name,
                             onClick = { selectedColor = tc.name },
-                            label = { Text(tc.name, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(tc.nameResId), style = MaterialTheme.typography.labelSmall) },
+                            shape = RoundedCornerShape(100.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = tc.color.copy(alpha = 0.12f),
                                 selectedLabelColor = tc.color
@@ -452,7 +509,7 @@ private fun CreateTaskDialog(
                 if (participants.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(Spacing.sm))
                     Text(
-                        text = "Přiřadit",
+                        text = stringResource(R.string.tasks_assign),
                         style = MaterialTheme.typography.labelMedium,
                         color = TextSecondary
                     )
@@ -470,6 +527,7 @@ private fun CreateTaskDialog(
                                     else selectedParticipants.add(p.userId)
                                 },
                                 label = { Text(p.displayName.ifEmpty { p.userId.take(8) }, style = MaterialTheme.typography.labelSmall) },
+                                shape = RoundedCornerShape(100.dp),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
                                     selectedLabelColor = PrimaryBlue
@@ -478,35 +536,60 @@ private fun CreateTaskDialog(
                         }
                     }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        try {
-                            val taskData = hashMapOf(
-                                "name" to name,
-                                "color" to selectedColor,
-                                "assignedTo" to selectedParticipants.toList(),
-                                "isCompleted" to false,
-                                "createdAt" to System.currentTimeMillis()
-                            )
-                            FirebaseFirestore.getInstance()
-                                .collection("events").document(eventId)
-                                .collection("tasks")
-                                .add(taskData).await()
-                            onCreated()
-                        } catch (_: Exception) { }
+
+                Spacer(modifier = Modifier.height(Spacing.sm))
+
+                Box(modifier = Modifier.clickable { showDatePicker = true }) {
+                    BetterMingleTextField(
+                        value = deadlineMillis?.let { DateFormatUtils.formatDate(it) } ?: "",
+                        onValueChange = {},
+                        label = stringResource(R.string.tasks_deadline_optional),
+                        enabled = false,
+                        leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+                        trailingIcon = if (deadlineMillis != null) {
+                            {
+                                IconButton(onClick = { deadlineMillis = null }) {
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_delete), modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        } else null
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val taskData = hashMapOf<String, Any?>(
+                                        "name" to name,
+                                        "color" to selectedColor,
+                                        "assignedTo" to selectedParticipants.toList(),
+                                        "deadline" to deadlineMillis,
+                                        "isCompleted" to false,
+                                        "createdAt" to System.currentTimeMillis()
+                                    )
+                                    FirebaseFirestore.getInstance()
+                                        .collection("events").document(eventId)
+                                        .collection("tasks")
+                                        .add(taskData).await()
+                                    ActivityLogger.log(eventId, "task", context.getString(R.string.activity_created_task, name))
+                                    onCreated()
+                                } catch (_: Exception) { }
+                            }
+                        },
+                        enabled = name.isNotBlank()
+                    ) {
+                        Text(stringResource(R.string.common_create))
                     }
-                },
-                enabled = name.isNotBlank()
-            ) {
-                Text("Vytvořit")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Zrušit") }
         }
-    )
+    }
 }

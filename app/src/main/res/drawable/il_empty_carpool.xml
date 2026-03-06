@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Car body -->
+    <path android:fillColor="#4346DE" android:pathData="M15,75 L25,55 Q28,50,35,50 L115,50 Q122,50,125,55 L135,75 L140,75 Q145,75,145,80 L145,105 Q145,110,140,110 L10,110 Q5,110,5,105 L5,80 Q5,75,10,75Z"/>
+    <!-- Car roof / windows -->
+    <path android:fillColor="#F0CDC6" android:pathData="M30,55 L40,40 Q42,38,45,38 L105,38 Q108,38,110,40 L120,55Z"/>
+    <!-- Window divider -->
+    <path android:pathData="M75,38 L75,55" android:strokeWidth="2" android:strokeColor="#4346DE"/>
+    <!-- Windshield -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3" android:pathData="M30,55 L40,40 L72,40 L72,55Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3" android:pathData="M78,55 L78,40 L110,40 L120,55Z"/>
+    <!-- People heads in windows -->
+    <path android:fillColor="#F884BD" android:pathData="M50,47 A5,5,0,1,1,50,47.01Z"/>
+    <path android:fillColor="#D84D35" android:pathData="M95,47 A5,5,0,1,1,95,47.01Z"/>
+    <path android:fillColor="#F884BD" android:pathData="M88,47 A4,4,0,1,1,88,47.01Z"/>
+    <!-- Headlights -->
+    <path android:fillColor="#F0CDC6" android:pathData="M12,80 L22,80 L22,90 L12,90Z"/>
+    <path android:fillColor="#F0CDC6" android:pathData="M128,80 L138,80 L138,90 L128,90Z"/>
+    <!-- Wheels -->
+    <path android:fillColor="#3335B0" android:pathData="M35,110 A12,12,0,1,1,35,110.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M35,110 A5,5,0,1,1,35,110.01Z"/>
+    <path android:fillColor="#3335B0" android:pathData="M115,110 A12,12,0,1,1,115,110.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M115,110 A5,5,0,1,1,115,110.01Z"/>
+    <!-- Road -->
+    <path android:pathData="M0,125 L150,125" android:strokeWidth="2" android:strokeColor="#F0CDC6"/>
+    <path android:pathData="M30,125 L45,125" android:strokeWidth="2" android:strokeColor="#D84D35" android:strokeLineCap="round"/>
+    <path android:pathData="M70,125 L85,125" android:strokeWidth="2" android:strokeColor="#D84D35" android:strokeLineCap="round"/>
+    <path android:pathData="M110,125 L125,125" android:strokeWidth="2" android:strokeColor="#D84D35" android:strokeLineCap="round"/>
+</vector>

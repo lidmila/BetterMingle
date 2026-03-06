@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- House body -->
+    <path android:fillColor="#F0CDC6" android:pathData="M20,70 L20,135 L130,135 L130,70Z"/>
+    <!-- Roof -->
+    <path android:fillColor="#4346DE" android:pathData="M10,70 L75,25 L140,70Z"/>
+    <!-- Door -->
+    <path android:fillColor="#4346DE" android:pathData="M60,85 L90,85 Q93,85,93,88 L93,135 L57,135 L57,88 Q57,85,60,85Z"/>
+    <!-- Door handle -->
+    <path android:fillColor="#D84D35" android:pathData="M85,112 A3,3,0,1,1,85,112.01Z"/>
+    <!-- Window left -->
+    <path android:fillColor="#FFFFFF" android:pathData="M28,82 L48,82 L48,105 L28,105Z"/>
+    <path android:pathData="M28,82 L48,82 L48,105 L28,105Z" android:strokeWidth="2" android:strokeColor="#4346DE"/>
+    <path android:pathData="M38,82 L38,105" android:strokeWidth="1.5" android:strokeColor="#4346DE"/>
+    <path android:pathData="M28,93 L48,93" android:strokeWidth="1.5" android:strokeColor="#4346DE"/>
+    <!-- Window right -->
+    <path android:fillColor="#FFFFFF" android:pathData="M102,82 L122,82 L122,105 L102,105Z"/>
+    <path android:pathData="M102,82 L122,82 L122,105 L102,105Z" android:strokeWidth="2" android:strokeColor="#4346DE"/>
+    <path android:pathData="M112,82 L112,105" android:strokeWidth="1.5" android:strokeColor="#4346DE"/>
+    <path android:pathData="M102,93 L122,93" android:strokeWidth="1.5" android:strokeColor="#4346DE"/>
+    <!-- Key -->
+    <path android:fillColor="#D84D35" android:pathData="M115,45 A8,8,0,1,1,115,45.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M115,45 A4,4,0,1,1,115,45.01Z"/>
+    <path android:fillColor="#D84D35" android:pathData="M123,43 L140,43 L140,47 L135,47 L135,50 L132,50 L132,47 L123,47Z"/>
+    <!-- Ground -->
+    <path android:pathData="M5,135 L145,135" android:strokeWidth="2" android:strokeColor="#F0CDC6"/>
+</vector>

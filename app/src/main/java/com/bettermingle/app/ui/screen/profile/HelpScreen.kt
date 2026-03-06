@@ -40,37 +40,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
 
-private data class FaqItem(val question: String, val answer: String)
+private data class FaqItem(val questionResId: Int, val answerResId: Int)
 
 private val faqItems = listOf(
-    FaqItem(
-        "Jak vytvořit novou akci?",
-        "Klikni na tlačítko + na spodní liště a vyplň název, datum a popis akce. Po vytvoření můžeš přidávat moduly jako hlasování, výdaje nebo spolujízdu."
-    ),
-    FaqItem(
-        "Jak pozvat přátele?",
-        "V nastavení akce najdeš odkaz pro sdílení. Můžeš ho zkopírovat nebo rovnou sdílet přes libovolnou aplikaci. Pozvaní se připojí jedním kliknutím."
-    ),
-    FaqItem(
-        "Jak fungují výdaje?",
-        "V modulu Výdaje přidáš výdaj a zadáš částku. Můžeš vybrat, kdo platil a mezi koho se výdaj rozdělí. Aplikace automaticky vypočítá vyrovnání."
-    ),
-    FaqItem(
-        "Jak funguje hlasování?",
-        "V modulu Hlasování vytvoříš anketu s možnostmi a ostatní účastníci mohou hlasovat. Výsledky se zobrazují v reálném čase."
-    ),
-    FaqItem(
-        "Jak změnit nastavení akce?",
-        "Na dashboardu akce klikni na Nastavení. Zde můžeš upravit název, popis, zabezpečení, rozpočet a další možnosti."
-    )
+    FaqItem(R.string.help_faq1_q, R.string.help_faq1_a),
+    FaqItem(R.string.help_faq2_q, R.string.help_faq2_a),
+    FaqItem(R.string.help_faq3_q, R.string.help_faq3_a),
+    FaqItem(R.string.help_faq4_q, R.string.help_faq4_a),
+    FaqItem(R.string.help_faq5_q, R.string.help_faq5_a)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,14 +71,14 @@ fun HelpScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nápověda", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.help_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -105,7 +93,7 @@ fun HelpScreen(
             // Section: FAQ
             item {
                 Text(
-                    text = "Často kladené otázky",
+                    text = stringResource(R.string.help_section_faq),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
@@ -121,14 +109,14 @@ fun HelpScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = faq.question,
+                                text = stringResource(faq.questionResId),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(
                                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (expanded) "Sbalit" else "Rozbalit",
+                                contentDescription = if (expanded) stringResource(R.string.help_faq_collapse) else stringResource(R.string.help_faq_expand),
                                 tint = TextSecondary
                             )
                         }
@@ -140,7 +128,7 @@ fun HelpScreen(
                             Column {
                                 Spacer(modifier = Modifier.height(Spacing.sm))
                                 Text(
-                                    text = faq.answer,
+                                    text = stringResource(faq.answerResId),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )
@@ -154,7 +142,7 @@ fun HelpScreen(
             item {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "Kontakt",
+                    text = stringResource(R.string.help_section_contact),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
@@ -181,12 +169,12 @@ fun HelpScreen(
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Napsat e-mail",
+                                text = stringResource(R.string.help_contact_send_email),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "hello@codewhiskers.app",
+                                text = stringResource(R.string.help_contact_email),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )

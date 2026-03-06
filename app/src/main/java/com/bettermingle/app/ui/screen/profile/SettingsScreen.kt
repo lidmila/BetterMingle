@@ -42,15 +42,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bettermingle.app.R
+import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
+import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Language
 import com.bettermingle.app.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
@@ -76,12 +83,12 @@ fun SettingsScreen(
         var newName by remember { mutableStateOf(profileState.userName) }
         AlertDialog(
             onDismissRequest = { showEditNameDialog = false },
-            title = { Text("Upravit jméno") },
+            title = { Text(stringResource(R.string.settings_edit_name)) },
             text = {
                 BetterMingleTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = "Jméno"
+                    label = stringResource(R.string.settings_edit_name_label)
                 )
             },
             confirmButton = {
@@ -109,18 +116,18 @@ fun SettingsScreen(
                                         .update("displayName", newName).await()
                                 }
 
-                                Toast.makeText(context, "Jméno aktualizováno", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.settings_name_updated), Toast.LENGTH_SHORT).show()
                                 showEditNameDialog = false
                             } catch (_: Exception) {
-                                Toast.makeText(context, "Chyba při aktualizaci jména", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.settings_name_update_error), Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
                     enabled = newName.isNotBlank()
-                ) { Text("Uložit") }
+                ) { Text(stringResource(R.string.common_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showEditNameDialog = false }) { Text("Zrušit") }
+                TextButton(onClick = { showEditNameDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -128,9 +135,9 @@ fun SettingsScreen(
     if (showDeleteAccountDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAccountDialog = false },
-            title = { Text("Smazat účet") },
+            title = { Text(stringResource(R.string.settings_delete_account)) },
             text = {
-                Text("Opravdu chceš trvale smazat svůj účet a všechna data? Tuto akci nelze vrátit zpět.")
+                Text(stringResource(R.string.settings_delete_account_confirm))
             },
             confirmButton = {
                 TextButton(
@@ -153,16 +160,16 @@ fun SettingsScreen(
 
                                 onAccountDeleted()
                             } catch (_: Exception) {
-                                Toast.makeText(context, "Chyba při mazání účtu. Zkus se znovu přihlásit a opakovat.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.settings_delete_account_error), Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 ) {
-                    Text("Smazat", color = AccentOrange)
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteAccountDialog = false }) { Text("Zrušit") }
+                TextButton(onClick = { showDeleteAccountDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -170,14 +177,14 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nastavení", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -192,7 +199,7 @@ fun SettingsScreen(
             // Section: Profil
             item {
                 Text(
-                    text = "Profil",
+                    text = stringResource(R.string.settings_section_profile),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
@@ -215,12 +222,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Upravit jméno",
+                                text = stringResource(R.string.settings_edit_name),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = profileState.userName.ifBlank { "Nenastaveno" },
+                                text = profileState.userName.ifBlank { stringResource(R.string.settings_name_not_set) },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -245,12 +252,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "E-mail",
+                                text = stringResource(R.string.settings_email),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = profileState.userEmail.ifBlank { "Nenalezen" },
+                                text = profileState.userEmail.ifBlank { stringResource(R.string.settings_email_not_found) },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -266,10 +273,10 @@ fun SettingsScreen(
                     if (email.isNotBlank()) {
                         FirebaseAuth.getInstance().sendPasswordResetEmail(email)
                             .addOnSuccessListener {
-                                Toast.makeText(context, "Odkaz pro změnu hesla odeslán na tvůj e-mail", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.settings_password_reset_sent), Toast.LENGTH_LONG).show()
                             }
                             .addOnFailureListener {
-                                Toast.makeText(context, "Chyba při odesílání odkazu", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.settings_password_reset_error), Toast.LENGTH_SHORT).show()
                             }
                     }
                 }) {
@@ -285,7 +292,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Text(
-                            text = "Změnit heslo",
+                            text = stringResource(R.string.settings_change_password),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
@@ -297,7 +304,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "Notifikace",
+                    text = stringResource(R.string.settings_section_notifications),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
@@ -323,7 +330,7 @@ fun SettingsScreen(
                             )
                             Spacer(modifier = Modifier.width(Spacing.md))
                             Text(
-                                text = "Povolit notifikace",
+                                text = stringResource(R.string.settings_notifications_enable),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -342,11 +349,135 @@ fun SettingsScreen(
                 }
             }
 
+            // Section: Vzhled
+            item {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = stringResource(R.string.settings_section_appearance),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryBlue
+                )
+            }
+
+            item {
+                BetterMingleCard {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DarkMode,
+                                contentDescription = null,
+                                tint = PrimaryBlue,
+                                modifier = Modifier.size(Spacing.iconMD)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.md))
+                            Text(
+                                text = stringResource(R.string.settings_theme),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            val currentTheme = profileState.settings.themeMode
+                            listOf(
+                                "system" to R.string.settings_theme_system,
+                                "light" to R.string.settings_theme_light,
+                                "dark" to R.string.settings_theme_dark
+                            ).forEach { (mode, labelRes) ->
+                                val label = stringResource(labelRes)
+                                androidx.compose.material3.FilterChip(
+                                    selected = currentTheme == mode,
+                                    onClick = {
+                                        scope.launch {
+                                            val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
+                                            settingsManager.setThemeMode(mode)
+                                        }
+                                    },
+                                    label = { Text(label) },
+                                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryBlue.copy(alpha = 0.15f),
+                                        selectedLabelColor = PrimaryBlue
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Section: Language
+            item {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = stringResource(R.string.settings_section_language),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryBlue
+                )
+            }
+
+            item {
+                BetterMingleCard {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = null,
+                                tint = PrimaryBlue,
+                                modifier = Modifier.size(Spacing.iconMD)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.md))
+                            Text(
+                                text = stringResource(R.string.settings_language),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            val currentLanguage = profileState.settings.appLanguage
+                            val systemLabel = stringResource(R.string.settings_language_system)
+                            listOf(
+                                "system" to systemLabel,
+                                "cs" to "Čeština",
+                                "en" to "English"
+                            ).forEach { (langCode, label) ->
+                                androidx.compose.material3.FilterChip(
+                                    selected = currentLanguage == langCode,
+                                    onClick = {
+                                        scope.launch {
+                                            val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
+                                            settingsManager.setAppLanguage(langCode)
+                                        }
+                                    },
+                                    label = { Text(label) },
+                                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryBlue.copy(alpha = 0.15f),
+                                        selectedLabelColor = PrimaryBlue
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Section: O aplikaci
             item {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "O aplikaci",
+                    text = stringResource(R.string.settings_section_about),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
@@ -357,15 +488,77 @@ fun SettingsScreen(
                 BetterMingleCard {
                     Column {
                         Text(
-                            text = "Verze: 1.0.0",
+                            text = stringResource(R.string.settings_version, com.bettermingle.app.BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
-                            text = "Better Mingle © 2026",
+                            text = stringResource(R.string.settings_copyright),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
+                    }
+                }
+            }
+
+            // Section: Debug (only in debug builds)
+            if (com.bettermingle.app.BuildConfig.DEBUG) {
+                item {
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    Text(
+                        text = "Debug",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AccentGold
+                    )
+                }
+
+                item {
+                    BetterMingleCard {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_debug_tier_switch),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            Text(
+                                text = stringResource(R.string.settings_debug_tier_current, profileState.settings.premiumTier.name),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                            ) {
+                                PremiumTier.entries.forEach { tier ->
+                                    val isSelected = profileState.settings.premiumTier == tier
+                                    androidx.compose.material3.FilterChip(
+                                        selected = isSelected,
+                                        onClick = {
+                                            scope.launch {
+                                                val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
+                                                settingsManager.setDebugTier(tier)
+                                            }
+                                        },
+                                        label = { Text(tier.name) },
+                                        colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = when (tier) {
+                                                PremiumTier.FREE -> TextSecondary.copy(alpha = 0.15f)
+                                                PremiumTier.PRO -> PrimaryBlue.copy(alpha = 0.15f)
+                                                PremiumTier.BUSINESS -> AccentGold.copy(alpha = 0.15f)
+                                            },
+                                            selectedLabelColor = when (tier) {
+                                                PremiumTier.FREE -> TextSecondary
+                                                PremiumTier.PRO -> PrimaryBlue
+                                                PremiumTier.BUSINESS -> AccentGold
+                                            }
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -374,7 +567,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "Nebezpečná zóna",
+                    text = stringResource(R.string.settings_section_danger),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AccentOrange
@@ -396,13 +589,13 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Smazat účet",
+                                text = stringResource(R.string.settings_delete_account),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                                 color = AccentOrange
                             )
                             Text(
-                                text = "Trvale smazat účet a všechna data",
+                                text = stringResource(R.string.settings_delete_account_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )

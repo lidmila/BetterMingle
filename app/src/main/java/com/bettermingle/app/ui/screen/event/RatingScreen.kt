@@ -1,6 +1,13 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,8 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
@@ -20,6 +28,7 @@ import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,16 +45,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bettermingle.app.data.model.EventRating
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
+import com.bettermingle.app.ui.theme.BackgroundPrimary
+import com.bettermingle.app.ui.theme.PastelGold
+import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
+import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextSecondary
+import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -57,11 +76,15 @@ fun RatingScreen(
     eventId: String,
     onNavigateBack: () -> Unit
 ) {
-    val ratings = remember { mutableStateListOf<EventRating>() }
-    val userNames = remember { mutableMapOf<String, String>() }
-    var userRating by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+    val otherRatings = remember { mutableStateListOf<EventRating>() }
+    var overallRating by remember { mutableIntStateOf(0) }
+    var organizationRating by remember { mutableIntStateOf(0) }
+    var atmosphereRating by remember { mutableIntStateOf(0) }
+    var venueRating by remember { mutableIntStateOf(0) }
     var userComment by remember { mutableStateOf("") }
     var hasSubmitted by remember { mutableStateOf(false) }
+    var isEditing by remember { mutableStateOf(false) }
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     val scope = rememberCoroutineScope()
 
@@ -78,45 +101,40 @@ fun RatingScreen(
                     eventId = eventId,
                     userId = data["userId"] as? String ?: "",
                     overallRating = (data["overallRating"] as? Number)?.toInt() ?: 0,
+                    organizationRating = (data["organizationRating"] as? Number)?.toInt() ?: 0,
+                    atmosphereRating = (data["atmosphereRating"] as? Number)?.toInt() ?: 0,
+                    venueRating = (data["venueRating"] as? Number)?.toInt() ?: 0,
                     comment = data["comment"] as? String ?: "",
                     createdAt = (data["createdAt"] as? Number)?.toLong() ?: 0
                 )
             }
 
-            // Load user names
-            val allUserIds = loaded.map { it.userId }.distinct()
-            for (uid in allUserIds) {
-                try {
-                    val userDoc = firestore.collection("users").document(uid).get().await()
-                    userNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
-                } catch (_: Exception) { userNames[uid] = uid.take(8) }
-            }
-
-            // Check if current user already rated
             val existingRating = loaded.find { it.userId == currentUserId }
             if (existingRating != null) {
-                userRating = existingRating.overallRating
+                overallRating = existingRating.overallRating
+                organizationRating = existingRating.organizationRating
+                atmosphereRating = existingRating.atmosphereRating
+                venueRating = existingRating.venueRating
                 userComment = existingRating.comment
                 hasSubmitted = true
             }
 
-            // Show other people's ratings (not current user's)
-            ratings.clear()
-            ratings.addAll(loaded.filter { it.userId != currentUserId })
+            otherRatings.clear()
+            otherRatings.addAll(loaded.filter { it.userId != currentUserId })
         } catch (_: Exception) { }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Hodnocení", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.rating_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -128,31 +146,85 @@ fun RatingScreen(
             contentPadding = PaddingValues(Spacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            // User rating card
+            // User rating form
             item {
                 BetterMingleCard {
                     Column {
                         Text(
-                            text = if (hasSubmitted) "Tvoje hodnocení" else "Ohodnoť akci",
+                            text = if (hasSubmitted && !isEditing) stringResource(R.string.rating_your_rating) else stringResource(R.string.rating_rate_event),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
 
+                        // Average score display when submitted
+                        if (hasSubmitted && !isEditing) {
+                            val avg = listOf(overallRating, organizationRating, atmosphereRating, venueRating)
+                                .filter { it > 0 }
+                                .let { if (it.isEmpty()) 0f else it.average().toFloat() }
+
+                            Spacer(modifier = Modifier.height(Spacing.md))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "%.1f".format(avg),
+                                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 40.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (avg >= 4f) Success else if (avg >= 3f) AccentGold else PrimaryBlue
+                                )
+                                Spacer(modifier = Modifier.width(Spacing.sm))
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = AccentGold,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(Spacing.md))
 
-                        RatingStars(
-                            rating = userRating,
-                            onRatingChange = { if (!hasSubmitted) userRating = it },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        val canEdit = !hasSubmitted || isEditing
+
+                        RatingCategory(
+                            label = stringResource(R.string.rating_overall),
+                            rating = overallRating,
+                            onRatingChange = { if (canEdit) overallRating = it }
                         )
 
-                        if (!hasSubmitted) {
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        RatingCategory(
+                            label = stringResource(R.string.rating_organization),
+                            rating = organizationRating,
+                            onRatingChange = { if (canEdit) organizationRating = it }
+                        )
+
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        RatingCategory(
+                            label = stringResource(R.string.rating_atmosphere),
+                            rating = atmosphereRating,
+                            onRatingChange = { if (canEdit) atmosphereRating = it }
+                        )
+
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        RatingCategory(
+                            label = stringResource(R.string.rating_venue),
+                            rating = venueRating,
+                            onRatingChange = { if (canEdit) venueRating = it }
+                        )
+
+                        if (canEdit) {
                             Spacer(modifier = Modifier.height(Spacing.md))
 
                             BetterMingleTextField(
                                 value = userComment,
                                 onValueChange = { userComment = it },
-                                label = "Komentář (volitelné)",
+                                label = stringResource(R.string.rating_comment_label),
                                 singleLine = false,
                                 maxLines = 4
                             )
@@ -160,15 +232,21 @@ fun RatingScreen(
                             Spacer(modifier = Modifier.height(Spacing.md))
 
                             BetterMingleButton(
-                                text = "Odeslat hodnocení",
+                                text = if (isEditing) stringResource(R.string.rating_save_changes) else stringResource(R.string.rating_submit),
                                 onClick = {
-                                    if (userRating > 0) {
+                                    val hasAnyRating = overallRating > 0 || organizationRating > 0 ||
+                                            atmosphereRating > 0 || venueRating > 0
+                                    if (hasAnyRating) {
                                         hasSubmitted = true
+                                        isEditing = false
                                         scope.launch {
                                             try {
                                                 val ratingData = mapOf(
                                                     "userId" to currentUserId,
-                                                    "overallRating" to userRating,
+                                                    "overallRating" to overallRating,
+                                                    "organizationRating" to organizationRating,
+                                                    "atmosphereRating" to atmosphereRating,
+                                                    "venueRating" to venueRating,
                                                     "comment" to userComment,
                                                     "createdAt" to System.currentTimeMillis()
                                                 )
@@ -176,44 +254,50 @@ fun RatingScreen(
                                                     .collection("events").document(eventId)
                                                     .collection("ratings").document(currentUserId)
                                                     .set(ratingData).await()
+                                                ActivityLogger.log(eventId, "rating", context.getString(R.string.activity_rated_event, overallRating.toString()))
                                             } catch (_: Exception) { }
                                         }
                                     }
                                 },
-                                enabled = userRating > 0,
+                                enabled = overallRating > 0 || organizationRating > 0 ||
+                                        atmosphereRating > 0 || venueRating > 0,
                                 isCta = true
                             )
-                        } else if (userComment.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(Spacing.sm))
-                            Text(
-                                text = userComment,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary
+                        } else {
+                            // Submitted view — show comment and edit button
+                            if (userComment.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                Text(
+                                    text = userComment,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(Spacing.md))
+
+                            BetterMingleButton(
+                                text = stringResource(R.string.rating_edit),
+                                onClick = { isEditing = true },
+                                isCta = false
                             )
                         }
                     }
                 }
             }
 
-            // Other ratings
-            if (ratings.isNotEmpty()) {
+            // Other ratings summary
+            if (otherRatings.isNotEmpty()) {
                 item {
-                    Text(
-                        text = "Hodnocení ostatních",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                items(ratings, key = { it.id }) { rating ->
-                    RatingItem(rating = rating, userName = userNames[rating.userId] ?: rating.userId.take(8))
+                    RatingSummary(ratings = otherRatings)
                 }
             } else if (hasSubmitted) {
                 item {
                     EmptyState(
                         icon = Icons.Default.StarRate,
-                        title = "Zatím jen ty",
-                        description = "Počkej na hodnocení ostatních účastníků."
+                        illustration = R.drawable.il_empty_rating,
+                        title = stringResource(R.string.rating_empty_title),
+                        description = stringResource(R.string.rating_empty_description)
                     )
                 }
             }
@@ -222,66 +306,150 @@ fun RatingScreen(
 }
 
 @Composable
-fun RatingStars(
+private fun RatingCategory(
+    label: String,
     rating: Int,
-    onRatingChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    onRatingChange: (Int) -> Unit
 ) {
     Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        for (i in 1..5) {
-            IconButton(
-                onClick = { onRatingChange(i) },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = if (i <= rating) Icons.Default.Star else Icons.Default.StarBorder,
-                    contentDescription = "Hvězda $i",
-                    tint = AccentGold,
-                    modifier = Modifier.size(36.dp)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            for (i in 1..5) {
+                val isSelected = i <= rating
+                val animatedScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1f else 0.85f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "starScale"
                 )
+
+                IconButton(
+                    onClick = { onRatingChange(i) },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
+                        contentDescription = stringResource(R.string.rating_star_description, label, i),
+                        tint = AccentGold,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .scale(animatedScale)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun RatingItem(rating: EventRating, userName: String) {
+private fun RatingSummary(ratings: List<EventRating>) {
+    val avgOverall = ratings.map { it.overallRating }.filter { it > 0 }.let {
+        if (it.isEmpty()) 0f else it.average().toFloat()
+    }
+    val avgOrganization = ratings.map { it.organizationRating }.filter { it > 0 }.let {
+        if (it.isEmpty()) 0f else it.average().toFloat()
+    }
+    val avgAtmosphere = ratings.map { it.atmosphereRating }.filter { it > 0 }.let {
+        if (it.isEmpty()) 0f else it.average().toFloat()
+    }
+    val avgVenue = ratings.map { it.venueRating }.filter { it > 0 }.let {
+        if (it.isEmpty()) 0f else it.average().toFloat()
+    }
+
+    val allAvgs = listOf(avgOverall, avgOrganization, avgAtmosphere, avgVenue).filter { it > 0 }
+    val totalAvg = if (allAvgs.isEmpty()) 0f else allAvgs.average().toFloat()
+
     BetterMingleCard {
         Column {
+            Text(
+                text = stringResource(R.string.rating_others_title, ratings.size),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // Big average score
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = userName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    text = "%.1f".format(totalAvg),
+                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = if (totalAvg >= 4f) Success else if (totalAvg >= 3f) AccentGold else PrimaryBlue
                 )
-
-                Row {
-                    for (i in 1..5) {
-                        Icon(
-                            imageVector = if (i <= rating.overallRating) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = null,
-                            tint = AccentGold,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-
-            if (rating.comment.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Spacing.xs))
-                Text(
-                    text = rating.comment,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                Spacer(modifier = Modifier.width(Spacing.xs))
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = AccentGold,
+                    modifier = Modifier.size(28.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // Category progress bars
+            CategoryProgressBar(stringResource(R.string.rating_overall), avgOverall)
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            CategoryProgressBar(stringResource(R.string.rating_organization), avgOrganization)
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            CategoryProgressBar(stringResource(R.string.rating_atmosphere), avgAtmosphere)
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            CategoryProgressBar(stringResource(R.string.rating_venue), avgVenue)
         }
+    }
+}
+
+@Composable
+private fun CategoryProgressBar(label: String, average: Float) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = (average / 5f).coerceIn(0f, 1f),
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "progressAnim"
+    )
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+            Text(
+                text = "%.1f".format(average),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        LinearProgressIndicator(
+            progress = { animatedProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = AccentGold,
+            trackColor = PastelGold,
+            strokeCap = StrokeCap.Round
+        )
     }
 }

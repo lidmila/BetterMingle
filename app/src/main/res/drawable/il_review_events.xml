@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Calendar body -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.25"
+        android:pathData="M30,40 L120,40 Q125,40,125,45 L125,115 Q125,120,120,120 L30,120 Q25,120,25,115 L25,45 Q25,40,30,40 Z"/>
+    <!-- Calendar header -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.35"
+        android:pathData="M30,40 L120,40 Q125,40,125,45 L125,60 L25,60 L25,45 Q25,40,30,40 Z"/>
+    <!-- Calendar rings -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M50,32 L50,48" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.3"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M100,32 L100,48" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.3"/>
+    <!-- Grid lines -->
+    <path android:pathData="M25,75 L125,75" android:strokeWidth="1" android:strokeColor="#FFFFFF" android:strokeAlpha="0.1"/>
+    <path android:pathData="M25,95 L125,95" android:strokeWidth="1" android:strokeColor="#FFFFFF" android:strokeAlpha="0.1"/>
+    <path android:pathData="M58,60 L58,120" android:strokeWidth="1" android:strokeColor="#FFFFFF" android:strokeAlpha="0.1"/>
+    <path android:pathData="M91,60 L91,120" android:strokeWidth="1" android:strokeColor="#FFFFFF" android:strokeAlpha="0.1"/>
+    <!-- Stars on calendar -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M42,68 L43,65 L44,68 L47,69 L44,70 L43,73 L42,70 L39,69 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.25"
+        android:pathData="M75,82 L76,79 L77,82 L80,83 L77,84 L76,87 L75,84 L72,83 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M108,100 L109,97 L110,100 L113,101 L110,102 L109,105 L108,102 L105,101 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M42,102 L43,100 L44,102 L46,103 L44,104 L43,106 L42,104 L40,103 Z"/>
+</vector>

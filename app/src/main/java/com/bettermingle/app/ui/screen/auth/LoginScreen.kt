@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -42,8 +45,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -52,12 +60,11 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
 import com.bettermingle.app.ui.component.BetterMingleTextButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
-import androidx.compose.ui.graphics.Brush
-import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
@@ -122,21 +129,20 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(PrimaryBlue, AccentPink)
-                    )
-                )
+                .background(PrimaryBlue)
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xxl, bottom = Spacing.xl),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Better Mingle",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = TextOnColor,
-                    modifier = Modifier.scale(logoScale.value)
+                Image(
+                    painter = painterResource(id = R.drawable.bettermingle_logo),
+                    contentDescription = stringResource(R.string.login_logo_description),
+                    modifier = Modifier
+                        .size(120.dp)
+                        .scale(logoScale.value)
+                        .clip(RoundedCornerShape(20.dp)),
+                    contentScale = ContentScale.Fit
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.sm))
@@ -147,7 +153,7 @@ fun LoginScreen(
                             slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 100)) { it / 3 }
                 ) {
                     Text(
-                        text = "Organizuj akce snadno a na jednom místě",
+                        text = stringResource(R.string.login_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextOnColor.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
@@ -170,7 +176,7 @@ fun LoginScreen(
                 BetterMingleTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = "E-mail",
+                    label = stringResource(R.string.login_email),
                     enabled = !uiState.isLoading,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     leadingIcon = {
@@ -183,7 +189,7 @@ fun LoginScreen(
                 BetterMingleTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = "Heslo",
+                    label = stringResource(R.string.login_password),
                     enabled = !uiState.isLoading,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -194,7 +200,7 @@ fun LoginScreen(
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Skrýt heslo" else "Zobrazit heslo"
+                                contentDescription = if (passwordVisible) stringResource(R.string.login_password_hide) else stringResource(R.string.login_password_show)
                             )
                         }
                     }
@@ -203,7 +209,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 BetterMingleTextButton(
-                    text = "Zapomenuté heslo?",
+                    text = stringResource(R.string.login_forgot_password),
                     onClick = onNavigateToForgotPassword,
                     modifier = Modifier.align(Alignment.End)
                 )
@@ -225,7 +231,7 @@ fun LoginScreen(
                     CircularProgressIndicator(color = PrimaryBlue)
                 } else {
                     BetterMingleButton(
-                        text = "Přihlásit se",
+                        text = stringResource(R.string.login_button),
                         onClick = { authViewModel.login(email, password) },
                         isCta = true
                     )
@@ -234,13 +240,13 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(Spacing.md))
 
                 BetterMingleOutlinedButton(
-                    text = "Přihlásit přes Google",
+                    text = stringResource(R.string.login_google),
                     onClick = {
                         coroutineScope.launch {
                             try {
                                 val googleIdOption = GetGoogleIdOption.Builder()
                                     .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId("116136511693-0b7dumps5q1lb6gjffs3rdns05n2h0kh.apps.googleusercontent.com")
+                                    .setServerClientId(com.bettermingle.app.BuildConfig.GOOGLE_CLIENT_ID)
                                     .build()
 
                                 val request = GetCredentialRequest.Builder()
@@ -254,7 +260,7 @@ fun LoginScreen(
                                 // User cancelled
                             } catch (e: Exception) {
                                 Log.e("LoginScreen", "Google Sign-In failed", e)
-                                snackbarHostState.showSnackbar("Přihlášení přes Google se nezdařilo")
+                                snackbarHostState.showSnackbar(context.getString(R.string.login_google_failed))
                             }
                         }
                     },
@@ -264,7 +270,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(Spacing.lg))
 
                 BetterMingleTextButton(
-                    text = "Nemáš účet? Zaregistruj se",
+                    text = stringResource(R.string.login_no_account),
                     onClick = onNavigateToRegister
                 )
             }

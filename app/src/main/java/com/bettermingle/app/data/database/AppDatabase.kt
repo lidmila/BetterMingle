@@ -26,7 +26,7 @@ import com.bettermingle.app.data.dao.PollDao
         Expense::class,
         Message::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

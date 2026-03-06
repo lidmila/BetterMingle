@@ -34,10 +34,13 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
+        androidResources.localeFilters += listOf("en", "cs")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"$phApiKey\"")
         buildConfigField("String", "POSTHOG_HOST", "\"$phHost\"")
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"116136511693-0b7dumps5q1lb6gjffs3rdns05n2h0kh.apps.googleusercontent.com\"")
         manifestPlaceholders["GEO_API_KEY"] = geoApiKey
     }
 
@@ -158,6 +161,12 @@ dependencies {
 
     // Lottie for Compose animations
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // QR Code generation
+    implementation("com.google.zxing:core:3.5.3")
+
+    // Jetpack Glance (Widget)
+    implementation("androidx.glance:glance-appwidget:1.1.1")
 
     // PostHog Analytics
     implementation("com.posthog:posthog-android:3.7.4")

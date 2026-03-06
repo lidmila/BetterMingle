@@ -1,5 +1,8 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.utils.ActivityLogger
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -61,12 +64,15 @@ import com.bettermingle.app.data.repository.ChatRepository
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.SurfacePeach
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
+import androidx.compose.ui.platform.LocalView
 import com.bettermingle.app.utils.DateFormatUtils
+import com.bettermingle.app.utils.performHapticClick
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -86,18 +92,19 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var showEmojiPickerForMessageId by remember { mutableStateOf<String?>(null) }
+    val hapticView = LocalView.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.dashboard_chat), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
@@ -112,7 +119,7 @@ fun ChatScreen(
                 BetterMingleTextField(
                     value = messageText,
                     onValueChange = { messageText = it },
-                    label = "Zpráva...",
+                    label = stringResource(R.string.chat_input_placeholder),
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -126,13 +133,15 @@ fun ChatScreen(
                             messageText = ""
                             scope.launch {
                                 chatRepository.sendMessage(eventId, text)
+                                val preview = if (text.length > 40) text.take(40) + "…" else text
+                                ActivityLogger.log(eventId, "chat", context.getString(R.string.activity_sent_message, preview))
                             }
                         }
                     }
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Odeslat",
+                        contentDescription = stringResource(R.string.chat_send),
                         tint = if (messageText.isNotBlank()) PrimaryBlue else TextSecondary
                     )
                 }
@@ -142,8 +151,9 @@ fun ChatScreen(
         if (messages.isEmpty()) {
             EmptyState(
                 icon = Icons.AutoMirrored.Filled.Chat,
-                title = "Zatím žádné zprávy",
-                description = "Napiš první zprávu a zahaj konverzaci.",
+                illustration = R.drawable.il_empty_chat,
+                title = stringResource(R.string.chat_empty_title),
+                description = stringResource(R.string.chat_empty_description),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -169,11 +179,13 @@ fun ChatScreen(
                         },
                         onEmojiSelected = { emoji ->
                             showEmojiPickerForMessageId = null
+                            hapticView.performHapticClick()
                             scope.launch {
                                 chatRepository.toggleReaction(eventId, chatMessage.message.id, emoji)
                             }
                         },
                         onReactionTap = { emoji ->
+                            hapticView.performHapticClick()
                             scope.launch {
                                 chatRepository.toggleReaction(eventId, chatMessage.message.id, emoji)
                             }

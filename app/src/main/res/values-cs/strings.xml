@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Better Mingle</string>
+
+    <!-- Navigation -->
+    <string name="nav_events">Akce</string>
+    <string name="nav_create">Vytvořit</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_notifications">Upozornění</string>
+
+    <!-- Common / Shared -->
+    <string name="common_back">Zpět</string>
+    <string name="common_save">Uložit</string>
+    <string name="common_cancel">Zrušit</string>
+    <string name="common_delete">Smazat</string>
+    <string name="common_edit">Upravit</string>
+    <string name="common_share">Sdílet</string>
+    <string name="common_loading">Načítání…</string>
+    <string name="common_retry">Zkus to znovu</string>
+    <string name="common_create">Vytvořit</string>
+    <string name="common_search">Hledat</string>
+    <string name="common_add">Přidat</string>
+    <string name="common_remove">Odebrat</string>
+    <string name="common_confirm">Potvrdit</string>
+    <string name="common_close">Zavřít</string>
+    <string name="common_continue">Pokračovat</string>
+    <string name="common_skip">Přeskočit</string>
+    <string name="common_days">dní</string>
+    <string name="common_hours">hodin</string>
+    <string name="common_minutes">minut</string>
+    <string name="common_seconds">sekund</string>
+    <string name="common_email_label">E-mail</string>
+    <string name="common_password_label">Heslo</string>
+    <string name="common_name_label">Jméno</string>
+    <string name="common_date_today">dnes</string>
+    <string name="common_date_yesterday">včera</string>
+    <string name="common_error_generic">Něco se pokazilo. Zkus to znovu.</string>
+
+    <!-- Auth - Login -->
+    <string name="login_title">Přihlásit se</string>
+    <string name="login_subtitle">Organizuj akce snadno a na jednom místě</string>
+    <string name="login_email">E-mail</string>
+    <string name="login_password">Heslo</string>
+    <string name="login_password_hide">Skrýt heslo</string>
+    <string name="login_password_show">Zobrazit heslo</string>
+    <string name="login_button">Přihlásit se</string>
+    <string name="login_google">Přihlásit přes Google</string>
+    <string name="login_google_failed">Přihlášení přes Google se nezdařilo</string>
+    <string name="login_no_account">Nemáš účet? Zaregistruj se</string>
+    <string name="login_forgot_password">Zapomenuté heslo?</string>
+    <string name="login_logo_description">BetterMingle</string>
+
+    <!-- Auth - Register -->
+    <string name="register_title">Registrace</string>
+    <string name="register_subtitle">Vytvoř si účet a začni organizovat akce</string>
+    <string name="register_name">Jméno</string>
+    <string name="register_email">E-mail</string>
+    <string name="register_password">Heslo</string>
+    <string name="register_confirm_password">Potvrdit heslo</string>
+    <string name="register_button">Vytvořit účet</string>
+    <string name="register_has_account">Už máš účet? Přihlas se</string>
+    <string name="register_logo_description">BetterMingle</string>
+
+    <!-- Auth - Forgot Password -->
+    <string name="forgot_password_title">Obnovení hesla</string>
+    <string name="forgot_password_description">Zadej svůj e-mail a pošleme ti odkaz na obnovení hesla.</string>
+    <string name="forgot_password_success">Odkaz na obnovení hesla byl odeslán na tvůj e-mail.</string>
+    <string name="forgot_password_button">Odeslat odkaz</string>
+    <string name="forgot_password_back">Zpět na přihlášení</string>
+    <string name="forgot_password_email">E-mail</string>
+
+    <!-- Auth - Onboarding -->
+    <string name="onboarding_page1_title">Koordinuj akce snadno</string>
+    <string name="onboarding_page1_description">Hlasování, program, chat a úkoly — vše na jednom místě pro tvou akci.</string>
+    <string name="onboarding_page2_title">Rozděl výdaje spravedlivě</string>
+    <string name="onboarding_page2_description">Přehledné sdílení nákladů. Každý ví, kolik platí a kdo komu dluží.</string>
+    <string name="onboarding_page3_title">Hlasuj a rozhoduj společně</string>
+    <string name="onboarding_page3_description">Ankety pro datum, místo i aktivity. Demokracie ve skupině snadno.</string>
+    <string name="onboarding_page4_title">Začni zdarma</string>
+    <string name="onboarding_page4_description">Vytvoř svou první akci a pozvi kamarády. Je to na pár klepnutí.</string>
+    <string name="onboarding_skip">Přeskočit</string>
+    <string name="onboarding_start">Začít</string>
+    <string name="onboarding_continue">Pokračovat</string>
+
+    <!-- Events List -->
+    <string name="events_title">Tvoje akce</string>
+    <string name="events_empty_title">Zatím žádné akce</string>
+    <string name="events_empty_description">Vytvoř svou první akci a pozvi kamarády!</string>
+    <string name="events_create">Nová akce</string>
+    <string name="events_search_label">Hledat akce…</string>
+    <string name="events_search_icon">Hledat</string>
+    <string name="events_count">%d akcí celkem</string>
+    <string name="events_section_ongoing">Probíhá</string>
+    <string name="events_section_upcoming">Nadcházející</string>
+    <string name="events_section_completed">Dokončené</string>
+    <string name="events_section_cancelled">Zrušené</string>
+    <string name="events_banner_close">Zavřít</string>
+    <string name="events_year_review_title">Rok v akcích</string>
+    <string name="events_year_review_description">Podívej se na své statistiky za rok!</string>
+
+    <!-- Event Status -->
+    <string name="event_status_planning">Plánování</string>
+    <string name="event_status_confirmed">Potvrzeno</string>
+    <string name="event_status_ongoing">Probíhá</string>
+    <string name="event_status_completed">Dokončeno</string>
+    <string name="event_status_cancelled">Zrušeno</string>
+
+    <!-- Event Dashboard -->
+    <string name="dashboard_countdown">Odpočet</string>
+    <string name="dashboard_voting">Hlasování</string>
+    <string name="dashboard_participants">Účastníci</string>
+    <string name="dashboard_expenses">Výdaje</string>
+    <string name="dashboard_carpool">Spolujízda</string>
+    <string name="dashboard_rooms">Ubytování</string>
+    <string name="dashboard_schedule">Program</string>
+    <string name="dashboard_packing">Balicí seznam</string>
+    <string name="dashboard_chat">Chat</string>
+    <string name="dashboard_gallery">Galerie</string>
+    <string name="dashboard_rating">Hodnocení</string>
+    <string name="dashboard_settings">Nastavení</string>
+    <string name="dashboard_tasks">Úkoly</string>
+    <string name="dashboard_activity">Aktivita</string>
+    <string name="dashboard_summary">Shrnutí</string>
+    <string name="dashboard_modules">Moduly</string>
+    <string name="dashboard_loading">Načítám…</string>
+    <string name="dashboard_cover_description">Titulní fotka</string>
+    <string name="dashboard_add_to_calendar">Přidat do kalendáře</string>
+    <string name="dashboard_share_invite">Sdílet pozvánku</string>
+    <string name="dashboard_share_title">Sdílej pozvánku</string>
+    <string name="dashboard_share_text">Ahoj! Pojď se připojit k akci \"%1$s\" na BetterMingle: %2$s</string>
+    <string name="dashboard_share_code">Kód: %1$s</string>
+    <string name="dashboard_share_copy_link">Kopírovat odkaz</string>
+    <string name="dashboard_share_link_copied">Odkaz zkopírován</string>
+    <string name="dashboard_share_chooser">Sdílet pozvánku</string>
+    <string name="dashboard_currency_czk">Kč</string>
+    <string name="dashboard_active_count">aktivní</string>
+    <string name="dashboard_people_count">lidí</string>
+    <string name="dashboard_rides_count">jízd</string>
+    <string name="dashboard_rooms_count">pokojů</string>
+    <string name="dashboard_items_count">bodů</string>
+    <string name="dashboard_messages_count">zpráv</string>
+    <string name="dashboard_tasks_count">úkolů</string>
+    <string name="dashboard_things_count">věcí</string>
+
+    <!-- Create Event -->
+    <string name="create_event_step_basics">Nová akce</string>
+    <string name="create_event_step_invite">Pozvat účastníky</string>
+    <string name="create_event_step_modules">Vybrat moduly</string>
+    <string name="create_event_limit_title">Limit akcí</string>
+    <string name="create_event_limit_free">Dosáhl/a jsi limitu %d akcí ve Free verzi. Přejdi na Pro nebo Business pro více akcí.</string>
+    <string name="create_event_limit_free_button">Přejít na Premium</string>
+    <string name="create_event_limit_pro">Dosáhl/a jsi limitu %d akcí v Pro verzi. Přejdi na Business pro neomezené akce.</string>
+    <string name="create_event_limit_pro_button">Přejít na Business</string>
+    <string name="create_event_basics_title">Základní informace</string>
+    <string name="create_event_cover_description">Titulní fotka</string>
+    <string name="create_event_cover_remove">Odebrat</string>
+    <string name="create_event_cover_add">Přidat titulní fotku</string>
+    <string name="create_event_name_label">Název akce</string>
+    <string name="create_event_description_label">Popis</string>
+    <string name="create_event_formatting_hint">Formátování: **tučně**, *kurzíva*</string>
+    <string name="create_event_intro_label">Úvodní text (nepovinné)</string>
+    <string name="create_event_intro_hint">Zobrazí se na dashboardu akce. Můžeš použít **tučné**, *kurzívu* nebo - seznamy.</string>
+    <string name="create_event_location_label">Místo</string>
+    <string name="create_event_theme_label">Téma akce (nepovinné)</string>
+    <string name="create_event_section_datetime">Datum a čas</string>
+    <string name="create_event_start_label">Začátek</string>
+    <string name="create_event_end_label">Konec</string>
+    <string name="create_event_date_clear">Smazat</string>
+    <string name="create_event_datepicker_continue">Pokračovat</string>
+    <string name="create_event_datepicker_cancel">Zrušit</string>
+    <string name="create_event_timepicker_title">Vyberte čas</string>
+    <string name="create_event_timepicker_cancel">Zrušit</string>
+    <string name="create_event_timepicker_confirm">Potvrdit</string>
+    <string name="create_event_invite_title">Pozvi účastníky</string>
+    <string name="create_event_invite_subtitle">Pozvánky můžeš poslat i později.</string>
+    <string name="create_event_invite_email">E-mail účastníka</string>
+    <string name="create_event_invite_add">Přidat</string>
+    <string name="create_event_invite_remove">Odebrat</string>
+    <string name="create_event_invite_continue">Pokračovat</string>
+    <string name="create_event_invite_skip">Přeskočit</string>
+    <string name="create_event_modules_title">Vyber moduly</string>
+    <string name="create_event_modules_subtitle">Vyber, co tvoje akce potřebuje. Můžeš změnit kdykoliv.</string>
+    <string name="create_event_module_voting">Hlasování</string>
+    <string name="create_event_module_expenses">Výdaje</string>
+    <string name="create_event_module_carpool">Spolujízda</string>
+    <string name="create_event_module_rooms">Ubytování</string>
+    <string name="create_event_module_chat">Chat</string>
+    <string name="create_event_module_schedule">Program</string>
+    <string name="create_event_module_tasks">Úkoly</string>
+    <string name="create_event_create_button">Vytvořit akci</string>
+    <string name="create_event_security_title">Zvýšená ochrana</string>
+    <string name="create_event_security_subtitle">Pro firemní a citlivé akce</string>
+    <string name="create_event_security_pin_label">PIN pro vstup (4–6 číslic)</string>
+    <string name="create_event_security_pin_hide">Skrýt</string>
+    <string name="create_event_security_pin_show">Zobrazit</string>
+    <string name="create_event_security_hide_financials">Skrýt finance</string>
+    <string name="create_event_security_hide_financials_desc">Finanční detaily vidí jen organizátor</string>
+    <string name="create_event_security_screenshot">Ochrana obrazovky</string>
+    <string name="create_event_security_screenshot_desc">Blokovat snímky obrazovky</string>
+    <string name="create_event_security_approval">Schvalování účastníků</string>
+    <string name="create_event_security_approval_desc">Noví účastníci musí být schváleni</string>
+    <string name="create_event_security_auto_delete">Automatické smazání dat</string>
+    <string name="create_event_security_auto_delete_off">Vypnuto</string>
+    <string name="create_event_security_auto_delete_days">%d dní po konci akce</string>
+    <string name="create_event_security_auto_delete_never">Nikdy</string>
+    <string name="create_event_security_auto_delete_7">7 dní</string>
+    <string name="create_event_security_auto_delete_30">30 dní</string>
+    <string name="create_event_security_auto_delete_90">90 dní</string>
+    <string name="create_event_template_picker_title">Vyber šablonu</string>
+    <string name="create_event_template_picker_desc">Rychlý start s předem připravenými moduly a nastavením.</string>
+    <string name="create_event_template_custom">Vlastní akce</string>
+    <string name="create_event_template_premium_badge">Premium</string>
+    <string name="create_event_template_wedding">Svatba</string>
+    <string name="create_event_template_wedding_desc">Náš velký den!</string>
+    <string name="create_event_template_birthday">Narozeniny</string>
+    <string name="create_event_template_birthday_desc">Oslava narozenin</string>
+    <string name="create_event_template_teambuilding">Teambuilding</string>
+    <string name="create_event_template_teambuilding_desc">Firemní teambuilding</string>
+    <string name="create_event_template_trip">Výlet</string>
+    <string name="create_event_template_trip_desc">Společný výlet</string>
+    <string name="create_event_template_festival">Festival</string>
+    <string name="create_event_template_festival_desc">Hudební festival</string>
+    <string name="create_event_template_corporate">Firemní akce</string>
+    <string name="create_event_template_corporate_desc">Firemní událost</string>
+    <string name="create_event_template_party">Oslava</string>
+    <string name="create_event_template_party_desc">Párty s přáteli</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Úkoly</string>
+    <string name="tasks_empty_title">Zatím žádné úkoly</string>
+    <string name="tasks_empty_description">Přidej úkoly a přiřaď je účastníkům.</string>
+    <string name="tasks_empty_icon">Ikona úkolů</string>
+    <string name="tasks_new">Nový úkol</string>
+    <string name="tasks_created">Úkol vytvořen</string>
+    <string name="tasks_deleted">Úkol smazán</string>
+    <string name="tasks_delete_title">Smazat úkol</string>
+    <string name="tasks_delete_confirm">Opravdu chceš smazat tento úkol?</string>
+    <string name="tasks_name_label">Název úkolu</string>
+    <string name="tasks_color">Barva</string>
+    <string name="tasks_assign">Přiřadit</string>
+    <string name="tasks_deadline">Termín: %1$s</string>
+    <string name="tasks_deadline_optional">Termín (nepovinné)</string>
+    <string name="tasks_color_blue">Modrá</string>
+    <string name="tasks_color_pink">Růžová</string>
+    <string name="tasks_color_orange">Oranžová</string>
+    <string name="tasks_color_gold">Zlatá</string>
+    <string name="tasks_color_green">Zelená</string>
+
+    <!-- Expenses -->
+    <string name="expenses_title">Výdaje</string>
+    <string name="expenses_empty_title">Zatím žádné výdaje</string>
+    <string name="expenses_empty_description">Přidej výdaj a rozděl ho mezi účastníky.</string>
+    <string name="expenses_empty_icon">Žádné výdaje</string>
+    <string name="expenses_new">Nový výdaj</string>
+    <string name="expenses_added">Výdaj přidán</string>
+    <string name="expenses_deleted">Výdaj smazán</string>
+    <string name="expenses_delete_title">Smazat výdaj</string>
+    <string name="expenses_delete_confirm">Opravdu chceš smazat tento výdaj?</string>
+    <string name="expenses_description_label">Popis výdaje</string>
+    <string name="expenses_amount_label">Částka (Kč)</string>
+    <string name="expenses_category_label">Kategorie</string>
+    <string name="expenses_paid_by">Zaplatil/a: %1$s</string>
+    <string name="expenses_budget">Rozpočet</string>
+    <string name="expenses_over_budget">Překročeno o %1$s</string>
+    <string name="expenses_tab_expenses">Výdaje</string>
+    <string name="expenses_tab_settlement">Vyrovnání</string>
+    <string name="expenses_settled_title">Vše vyrovnáno!</string>
+    <string name="expenses_settled_description">Momentálně nejsou žádné dluhy k vyrovnání.</string>
+    <string name="expenses_settle">Vyrovnat</string>
+    <string name="expenses_add">Přidat</string>
+    <string name="expenses_payer">Platil/a</string>
+    <string name="expenses_payer_label">Plátce</string>
+    <string name="expenses_payer_me">Já</string>
+    <string name="expenses_item_default">Výdaj</string>
+    <string name="expenses_my_balance">Můj stav:</string>
+    <string name="expenses_to_receive">dostaneš zpět</string>
+    <string name="expenses_i_owe">dlužím</string>
+    <string name="expenses_settled">Vyrovnáno</string>
+    <string name="expenses_debt_owes"> dluží </string>
+    <string name="expenses_count_one">výdaj</string>
+    <string name="expenses_count_few">výdaje</string>
+    <string name="expenses_count_many">výdajů</string>
+    <string name="expenses_category_food">Jídlo</string>
+    <string name="expenses_category_transport">Doprava</string>
+    <string name="expenses_category_accommodation">Ubytování</string>
+    <string name="expenses_category_drinks">Nápoje</string>
+    <string name="expenses_category_other">Ostatní</string>
+
+    <!-- Voting -->
+    <string name="voting_title">Hlasování</string>
+    <string name="voting_empty_title">Zatím žádné ankety</string>
+    <string name="voting_empty_description">Vytvoř anketu a nech ostatní hlasovat.</string>
+    <string name="voting_empty_icon">Žádné ankety</string>
+    <string name="voting_new">Nová anketa</string>
+    <string name="voting_created">Anketa vytvořena</string>
+    <string name="voting_updated">Anketa aktualizována</string>
+    <string name="voting_poll_closed">Anketa uzavřena</string>
+    <string name="voting_active">Aktivní</string>
+    <string name="voting_votes">%1$d hlasů</string>
+    <string name="voting_poll_name_label">Název ankety</string>
+    <string name="voting_poll_type">Typ ankety</string>
+    <string name="voting_multiple_answers">Více odpovědí</string>
+    <string name="voting_single_answer">Jedna odpověď</string>
+    <string name="voting_multiple_hint">Lze vybrat více možností</string>
+    <string name="voting_single_hint">Pouze jedna volba</string>
+    <string name="voting_anonymous">Anonymní</string>
+    <string name="voting_options">Možnosti</string>
+    <string name="voting_option_label">Možnost %1$d</string>
+    <string name="voting_add_option">Přidat možnost</string>
+    <string name="voting_remove_option">Odebrat</string>
+    <string name="voting_close_description">Uzavřít hlasování</string>
+    <string name="voting_edit_description">Upravit</string>
+    <string name="voting_edit_title">Upravit anketu</string>
+    <string name="voting_existing_options">Stávající možnosti</string>
+    <string name="voting_new_options">Nové možnosti</string>
+    <string name="voting_new_option_label">Nová možnost %1$d</string>
+    <string name="voting_type_date">Datum</string>
+    <string name="voting_type_location">Místo</string>
+    <string name="voting_type_activity">Aktivita</string>
+    <string name="voting_type_price">Cena</string>
+    <string name="voting_type_custom">Vlastní</string>
+    <string name="voting_limit_title">Limit anket</string>
+    <string name="voting_limit_message">Dosáhl/a jsi limitu anket ve Free verzi. Přejdi na Pro pro neomezené ankety.</string>
+    <string name="voting_limit_upgrade">Přejít na Pro</string>
+    <string name="voting_votes_count">hlasů</string>
+
+    <!-- Chat -->
+    <string name="chat_input_placeholder">Zpráva…</string>
+    <string name="chat_send">Odeslat</string>
+    <string name="chat_empty_title">Zatím žádné zprávy</string>
+    <string name="chat_empty_description">Napiš první zprávu a zahaj konverzaci.</string>
+
+    <!-- Carpool -->
+    <string name="carpool_title">Spolujízda</string>
+    <string name="carpool_tab_offers">Nabídky</string>
+    <string name="carpool_tab_requests">Poptávky</string>
+    <string name="carpool_offer_ride">Nabídnout jízdu</string>
+    <string name="carpool_request_ride">Poptat jízdu</string>
+    <string name="carpool_empty_offers_title">Zatím žádné nabídky</string>
+    <string name="carpool_empty_offers_desc">Nabídni spolujízdu ostatním účastníkům.</string>
+    <string name="carpool_empty_requests_title">Zatím žádné poptávky</string>
+    <string name="carpool_empty_requests_desc">Poptej jízdu od ostatních účastníků.</string>
+    <string name="carpool_delete_title">Smazat jízdu</string>
+    <string name="carpool_delete_confirm">Opravdu chceš smazat tuto jízdu?</string>
+    <string name="carpool_driver">Řidič</string>
+    <string name="carpool_requester">Žadatel</string>
+    <string name="carpool_closed">Uzavřeno</string>
+    <string name="carpool_seats_count">míst</string>
+    <string name="carpool_passengers">Spolujezdci</string>
+    <string name="carpool_approved">Schváleno</string>
+    <string name="carpool_rejected">Zamítnuto</string>
+    <string name="carpool_pending">Čeká</string>
+    <string name="carpool_approve">Schválit</string>
+    <string name="carpool_reject">Zamítnout</string>
+    <string name="carpool_close_button">Uzavřít</string>
+    <string name="carpool_request_button">Požádat o spolujízdu</string>
+    <string name="carpool_select_time">Vyberte čas</string>
+    <string name="carpool_dialog_offer_title">Nabídnout jízdu</string>
+    <string name="carpool_dialog_request_title">Poptat jízdu</string>
+    <string name="carpool_departure_location">Místo odjezdu</string>
+    <string name="carpool_departure_time">Čas odjezdu</string>
+    <string name="carpool_available_seats">Počet volných míst</string>
+    <string name="carpool_notes">Poznámky</string>
+
+    <!-- Rooms -->
+    <string name="rooms_title">Ubytování</string>
+    <string name="rooms_empty_title">Zatím žádné pokoje</string>
+    <string name="rooms_empty_description">Přidej pokoje a přiřaď účastníky.</string>
+    <string name="rooms_add">Přidat pokoj</string>
+    <string name="rooms_delete_title">Smazat pokoj</string>
+    <string name="rooms_delete_confirm">Opravdu chceš smazat pokoj \"%1$s\"?</string>
+    <string name="rooms_name_label">Název pokoje</string>
+    <string name="rooms_capacity_label">Kapacita</string>
+    <string name="rooms_notes_label">Poznámky (volitelné)</string>
+    <string name="rooms_assign_title">Přiřadit do: %1$s</string>
+    <string name="rooms_assign_occupancy">%1$d/%2$d obsazeno</string>
+    <string name="rooms_assign_in_other_room"> (v jiném pokoji)</string>
+
+    <!-- Schedule -->
+    <string name="schedule_title">Program</string>
+    <string name="schedule_empty_title">Zatím žádný program</string>
+    <string name="schedule_empty_description">Přidej body programu a vytvoř program akce.</string>
+    <string name="schedule_add">Přidat bod programu</string>
+    <string name="schedule_delete_title">Smazat bod programu</string>
+    <string name="schedule_delete_confirm">Opravdu chceš smazat \"%1$s\"?</string>
+    <string name="schedule_name_label">Název</string>
+    <string name="schedule_description_label">Popis (volitelné)</string>
+    <string name="schedule_start_label">Začátek</string>
+    <string name="schedule_end_label">Konec</string>
+    <string name="schedule_location_label">Místo (volitelné)</string>
+    <string name="schedule_add_to_calendar">Přidat do kalendáře</string>
+    <string name="schedule_select_time">Vyberte čas</string>
+
+    <!-- Packing List -->
+    <string name="packing_title">Balicí seznam</string>
+    <string name="packing_empty_title">Prázdný seznam</string>
+    <string name="packing_empty_description">Přidej věci, které je potřeba zabalit.</string>
+    <string name="packing_add">Přidat věc</string>
+    <string name="packing_name_label">Název věci</string>
+    <string name="packing_personal">Osobní</string>
+    <string name="packing_shared">Sdílené</string>
+
+    <!-- Participants -->
+    <string name="participants_title">Účastníci</string>
+    <string name="participants_empty_title">Zatím žádní účastníci</string>
+    <string name="participants_empty_description">Pozvi kamarády sdílením odkazu na akci.</string>
+    <string name="participants_add">Přidat účastníka</string>
+    <string name="participants_share_text">Ahoj! Pojď se připojit k akci \"%1$s\" na BetterMingle: %2$s</string>
+    <string name="participants_share_title">Sdílet pozvánku</string>
+    <string name="participants_invite_title">Pozvat účastníka</string>
+    <string name="participants_role_organizer">Organizátor</string>
+    <string name="participants_role_co_organizer">Spoluorganizátor</string>
+    <string name="participants_role_participant">Účastník</string>
+    <string name="participants_email_label">Email</string>
+    <string name="participants_contact_email_label">Kontaktní email</string>
+    <string name="participants_phone_label">Telefon</string>
+    <string name="participants_department_label">Oddělení</string>
+    <string name="participants_rsvp_accepted">Přijato</string>
+    <string name="participants_rsvp_declined">Odmítnuto</string>
+    <string name="participants_rsvp_maybe">Možná</string>
+    <string name="participants_rsvp_pending">Čeká</string>
+
+    <!-- Rating -->
+    <string name="rating_title">Hodnocení</string>
+    <string name="rating_your_rating">Tvoje hodnocení</string>
+    <string name="rating_rate_event">Ohodnoť akci</string>
+    <string name="rating_overall">Celkový dojem</string>
+    <string name="rating_organization">Organizace</string>
+    <string name="rating_atmosphere">Atmosféra</string>
+    <string name="rating_venue">Místo konání</string>
+    <string name="rating_comment_label">Komentář (volitelné)</string>
+    <string name="rating_save_changes">Uložit změny</string>
+    <string name="rating_submit">Odeslat hodnocení</string>
+    <string name="rating_edit">Upravit hodnocení</string>
+    <string name="rating_empty_title">Zatím jen ty</string>
+    <string name="rating_empty_description">Počkej na hodnocení ostatních účastníků.</string>
+    <string name="rating_star_description">%1$s hvězda %2$d</string>
+    <string name="rating_others_title">Hodnocení ostatních (%1$d)</string>
+
+    <!-- Join Event -->
+    <string name="join_title">Pozvánka</string>
+    <string name="join_error_not_found">Pozvánka nebyla nalezena nebo je neplatná.</string>
+    <string name="join_error_load_failed">Nepodařilo se načíst pozvánku.</string>
+    <string name="join_error_title">Chyba</string>
+    <string name="join_joining">Připojuji se…</string>
+    <string name="join_button">Připojit se</string>
+    <string name="join_participant_limit">Akce má maximum %1$d účastníků (%2$s verze).</string>
+    <string name="join_error_failed">Nepodařilo se připojit k akci.</string>
+    <string name="join_tier_free">Zdarma</string>
+    <string name="join_tier_pro">Pro</string>
+    <string name="join_tier_business">Business</string>
+
+    <!-- Event Settings -->
+    <string name="event_settings_title">Nastavení akce</string>
+    <string name="event_settings_invite_section">Pozvánka</string>
+    <string name="event_settings_copy_link">Kopírovat odkaz</string>
+    <string name="event_settings_link_copied">Odkaz zkopírován</string>
+    <string name="event_settings_share">Sdílet</string>
+    <string name="event_settings_share_chooser">Sdílet pozvánku</string>
+    <string name="event_settings_share_text">Ahoj! Pojď se připojit k akci \"%1$s\" na BetterMingle: %2$s</string>
+    <string name="event_settings_notifications">Upozornění</string>
+    <string name="event_settings_notifications_desc">Upozornění na novinky v akci</string>
+    <string name="event_settings_status">Stav akce</string>
+    <string name="event_settings_status_error">Chyba při změně stavu</string>
+    <string name="event_settings_security">Zvýšená ochrana</string>
+    <string name="event_settings_security_active">Aktivní</string>
+    <string name="event_settings_security_disabled">Vypnuto</string>
+    <string name="event_settings_hide_financials">Skrýt finance</string>
+    <string name="event_settings_hide_financials_desc">Finanční detaily vidí jen organizátor</string>
+    <string name="event_settings_screenshot">Ochrana obrazovky</string>
+    <string name="event_settings_screenshot_desc">Blokovat snímky obrazovky</string>
+    <string name="event_settings_approval">Schvalování účastníků</string>
+    <string name="event_settings_approval_desc">Noví účastníci musí být schváleni</string>
+    <string name="event_settings_change_pin">Změnit PIN</string>
+    <string name="event_settings_pin_dialog_title">Změnit PIN</string>
+    <string name="event_settings_pin_dialog_desc">Zadej nový 4místný PIN pro akci</string>
+    <string name="event_settings_pin_label">Nový PIN</string>
+    <string name="event_settings_pin_changed">PIN změněn</string>
+    <string name="event_settings_pin_error">Chyba při změně PINu</string>
+    <string name="event_settings_edit_title">Upravit akci</string>
+    <string name="event_settings_edit_name">Název akce</string>
+    <string name="event_settings_edit_description">Popis</string>
+    <string name="event_settings_edit_formatting">Formátování: **tučně**, *kurzíva*</string>
+    <string name="event_settings_edit_theme">Téma akce (nepovinné)</string>
+    <string name="event_settings_edit_success">Akce upravena</string>
+    <string name="event_settings_edit_error">Chyba při úpravě</string>
+    <string name="event_settings_edit_action">Upravit akci</string>
+    <string name="event_settings_edit_action_desc">Změnit název, datum a popis</string>
+    <string name="event_settings_repeat">Opakovat akci</string>
+    <string name="event_settings_repeat_desc">Vytvořit kopii se stejnými moduly</string>
+    <string name="event_settings_delete_title">Smazat akci</string>
+    <string name="event_settings_delete_confirm">Opravdu chceš trvale smazat akci \"%1$s\" a všechna její data? Tento krok nelze vrátit zpět.</string>
+    <string name="event_settings_delete_action">Smazat akci</string>
+    <string name="event_settings_delete_action_desc">Trvale smazat akci a všechna data</string>
+    <string name="event_settings_danger_zone">Nebezpečná zóna</string>
+
+    <!-- Activity Feed -->
+    <string name="activity_title">Aktivita</string>
+    <string name="activity_empty_title">Zatím žádná aktivita</string>
+    <string name="activity_empty_description">Aktivity se budou zobrazovat, jakmile se v akci něco stane.</string>
+
+    <!-- Event Summary -->
+    <string name="summary_title">Shrnutí akce</string>
+    <string name="summary_subtitle">Přehled tvé akce</string>
+    <string name="summary_participants">Účastníků</string>
+    <string name="summary_total_expenses">Výdaje celkem</string>
+    <string name="summary_messages">Zpráv</string>
+    <string name="summary_polls">Hlasování</string>
+    <string name="summary_rides">Spolujízd</string>
+    <string name="summary_most_active">Nejaktivnější</string>
+    <string name="summary_top_payer">Největší štědrák</string>
+    <string name="summary_share_button">Sdílet shrnutí</string>
+    <string name="summary_share_chooser">Sdílet shrnutí</string>
+    <string name="summary_share_header">Shrnutí akce: %1$s</string>
+    <string name="summary_share_participants">%1$d účastníků</string>
+    <string name="summary_share_expenses">%1$s Kč výdajů</string>
+    <string name="summary_share_messages">%1$d zpráv</string>
+    <string name="summary_share_polls">%1$d hlasování</string>
+    <string name="summary_share_footer">Vytvořeno v BetterMingle</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profil</string>
+    <string name="profile_default_user">Uživatel</string>
+    <string name="profile_edit">Upravit profil</string>
+    <string name="profile_contact_email">Kontaktní email</string>
+    <string name="profile_phone">Telefon</string>
+    <string name="profile_department">Oddělení</string>
+    <string name="profile_settings">Nastavení</string>
+    <string name="profile_notifications">Upozornění</string>
+    <string name="profile_premium">Mingle Pro</string>
+    <string name="profile_premium_description">Odemkni neomezené akce a funkce</string>
+    <string name="profile_help">Nápověda</string>
+    <string name="profile_logout">Odhlásit se</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Nastavení</string>
+    <string name="settings_section_profile">Profil</string>
+    <string name="settings_edit_name">Upravit jméno</string>
+    <string name="settings_edit_name_label">Jméno</string>
+    <string name="settings_name_not_set">Nenastaveno</string>
+    <string name="settings_name_updated">Jméno aktualizováno</string>
+    <string name="settings_name_update_error">Chyba při aktualizaci jména</string>
+    <string name="settings_email">E-mail</string>
+    <string name="settings_email_not_found">Nenalezen</string>
+    <string name="settings_change_password">Změnit heslo</string>
+    <string name="settings_password_reset_sent">Odkaz pro změnu hesla odeslán na tvůj e-mail</string>
+    <string name="settings_password_reset_error">Chyba při odesílání odkazu</string>
+    <string name="settings_section_notifications">Upozornění</string>
+    <string name="settings_notifications_enable">Povolit upozornění</string>
+    <string name="settings_section_appearance">Vzhled</string>
+    <string name="settings_theme">Motiv aplikace</string>
+    <string name="settings_theme_system">Systém</string>
+    <string name="settings_theme_light">Světlý</string>
+    <string name="settings_theme_dark">Tmavý</string>
+    <string name="settings_section_about">O aplikaci</string>
+    <string name="settings_version">Verze: %1$s</string>
+    <string name="settings_copyright">Better Mingle © 2026</string>
+    <string name="settings_debug_tier_switch">Přepínání verze</string>
+    <string name="settings_debug_tier_current">Aktuální: %1$s</string>
+    <string name="settings_section_danger">Nebezpečná zóna</string>
+    <string name="settings_delete_account">Smazat účet</string>
+    <string name="settings_delete_account_desc">Trvale smazat účet a všechna data</string>
+    <string name="settings_delete_account_confirm">Opravdu chceš trvale smazat svůj účet a všechna data? Tento krok nelze vrátit zpět.</string>
+    <string name="settings_delete_account_error">Chyba při mazání účtu. Zkus se znovu přihlásit a opakovat.</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Upravit profil</string>
+    <string name="edit_profile_change_avatar">Změnit avatara</string>
+    <string name="edit_profile_change_avatar_hint">Klepni pro změnu avatara</string>
+    <string name="edit_profile_name">Jméno</string>
+    <string name="edit_profile_contact_email">Kontaktní email</string>
+    <string name="edit_profile_phone">Telefon</string>
+    <string name="edit_profile_department">Oddělení</string>
+    <string name="edit_profile_bio">Bio</string>
+    <string name="edit_profile_save">Uložit</string>
+    <string name="edit_profile_avatar_picker_title">Vyber avatara</string>
+    <string name="edit_profile_avatar_description">Avatar %1$d</string>
+    <string name="edit_profile_avatar_premium">Premium</string>
+    <string name="edit_profile_upload_photo">Nahrát vlastní fotku</string>
+    <string name="edit_profile_avatar_picker_close">Zavřít</string>
+
+    <!-- Upgrade -->
+    <string name="upgrade_title">Premium</string>
+    <string name="upgrade_headline">Odemkni plný potenciál</string>
+    <string name="upgrade_subheadline">Vyber si plán, který ti sedne</string>
+    <string name="upgrade_plan_pro">Pro</string>
+    <string name="upgrade_plan_business">Business</string>
+    <string name="upgrade_billing_monthly">Měsíčně</string>
+    <string name="upgrade_billing_yearly">Ročně (ušetři)</string>
+    <string name="upgrade_price_pro_monthly">79 Kč</string>
+    <string name="upgrade_price_pro_yearly">799 Kč</string>
+    <string name="upgrade_price_business_monthly">119 Kč</string>
+    <string name="upgrade_price_business_yearly">1 190 Kč</string>
+    <string name="upgrade_period_monthly">/ měsíc</string>
+    <string name="upgrade_period_yearly">/ rok</string>
+    <string name="upgrade_card_title_pro">Mingle Pro</string>
+    <string name="upgrade_card_title_business">Mingle Business</string>
+    <string name="upgrade_feature_pro_events">Až 5 akcí (Free: max 2)</string>
+    <string name="upgrade_feature_pro_participants">Až 100 účastníků (Free: max 8)</string>
+    <string name="upgrade_feature_pro_polls">Neomezené ankety (Free: max 1)</string>
+    <string name="upgrade_feature_export_csv">Export výdajů (CSV)</string>
+    <string name="upgrade_feature_multi_organizers">Více organizátorů</string>
+    <string name="upgrade_feature_no_ads">Bez reklam</string>
+    <string name="upgrade_feature_business_events">Neomezené akce</string>
+    <string name="upgrade_feature_business_participants">Neomezený počet účastníků</string>
+    <string name="upgrade_feature_business_polls">Neomezené ankety</string>
+    <string name="upgrade_button_pro">Získat Mingle Pro</string>
+    <string name="upgrade_button_business">Získat Mingle Business</string>
+    <string name="upgrade_lifetime_title">Lifetime</string>
+    <string name="upgrade_lifetime_price">2 999 Kč</string>
+    <string name="upgrade_lifetime_desc">jednorázově · funkce Business navždy</string>
+    <string name="upgrade_lifetime_button">Koupit Lifetime</string>
+    <string name="upgrade_disclaimer">Předplatné se automaticky obnovuje. Zrušit můžeš kdykoli v Google Play.</string>
+
+    <!-- Help -->
+    <string name="help_title">Nápověda</string>
+    <string name="help_section_faq">Často kladené otázky</string>
+    <string name="help_faq_collapse">Sbalit</string>
+    <string name="help_faq_expand">Rozbalit</string>
+    <string name="help_section_contact">Kontakt</string>
+    <string name="help_contact_send_email">Napsat e-mail</string>
+    <string name="help_contact_email">hello@codewhiskers.app</string>
+    <string name="help_faq1_q">Jak vytvořit novou akci?</string>
+    <string name="help_faq1_a">Klepni na tlačítko + na spodní liště a vyplň název, datum a popis akce. Po vytvoření můžeš přidávat moduly jako hlasování, výdaje nebo spolujízdu.</string>
+    <string name="help_faq2_q">Jak pozvat přátele?</string>
+    <string name="help_faq2_a">V nastavení akce najdeš odkaz pro sdílení. Můžeš ho zkopírovat nebo rovnou sdílet přes libovolnou aplikaci. Pozvaní se připojí jedním klepnutím.</string>
+    <string name="help_faq3_q">Jak fungují výdaje?</string>
+    <string name="help_faq3_a">V modulu Výdaje přidáš výdaj a zadáš částku. Můžeš vybrat, kdo platil a mezi koho se výdaj rozdělí. Aplikace automaticky vypočítá vyrovnání.</string>
+    <string name="help_faq4_q">Jak funguje hlasování?</string>
+    <string name="help_faq4_a">V modulu Hlasování vytvoříš anketu s možnostmi a ostatní účastníci mohou hlasovat. Výsledky se zobrazují v reálném čase.</string>
+    <string name="help_faq5_q">Jak změnit nastavení akce?</string>
+    <string name="help_faq5_a">Na dashboardu akce klepni na Nastavení. Zde můžeš upravit název, popis, zabezpečení, rozpočet a další možnosti.</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">Upozornění</string>
+    <string name="notifications_empty_title">Žádná upozornění</string>
+    <string name="notifications_empty_description">Až se něco stane v tvých akcích, uvidíš to tady.</string>
+    <string name="notifications_time_just_now">právě teď</string>
+    <string name="notifications_time_minutes_ago">před %d min</string>
+    <string name="notifications_time_hours_ago">před %d hod</string>
+
+    <!-- Year in Review -->
+    <string name="year_review_intro_label">Tvůj rok v akcích</string>
+    <string name="year_review_intro_desc">Pojďme se ohlédnout za tím, co jsi letos společně zažil/a!</string>
+    <string name="year_review_events_label">akcí</string>
+    <string name="year_review_events_desc">Každá akce je příběh. A ty jsi jich letos napsal/a hned %1$d!</string>
+    <string name="year_review_people_label">lidí</string>
+    <string name="year_review_people_desc">Tolik úžasných lidí jsi potkal/a. Každý z nich přidal kousek do skládačky tvých zážitků.</string>
+    <string name="year_review_days_label">dnů</string>
+    <string name="year_review_days_desc">Celých %1$d dnů strávených společně. To je víc než jen číslo — to jsou vzpomínky na celý život.</string>
+    <string name="year_review_longest_label">dnů</string>
+    <string name="year_review_longest_desc">Tvoje nejdelší akce \u201E%1$s\u201C trvala celých %2$d dnů!</string>
+    <string name="year_review_longest_subtitle">Nejdelší akce</string>
+    <string name="year_review_location_desc">Tvoje oblíbené místo. Tam, kde se děly ty nejlepší věci!</string>
+    <string name="year_review_location_subtitle">Nejnavštěvovanější místo</string>
+    <string name="year_review_month_desc">Tvůj nejaktivnější měsíc. Tehdy to žilo nejvíc!</string>
+    <string name="year_review_month_subtitle">Nejaktivnější měsíc</string>
+    <string name="year_review_avg_label">lidí na akci</string>
+    <string name="year_review_avg_desc">Průměrně se na každé akci sešlo %1$d lidí. Parta jako hrom!</string>
+    <string name="year_review_avg_subtitle">Průměr na akci</string>
+    <string name="year_review_outro_label">Skvělý rok!</string>
+    <string name="year_review_outro_desc">Děkujeme, že plánuješ s BetterMingle. Ať je příští rok ještě lepší!</string>
+    <string name="year_review_share">Sdílet</string>
+    <string name="year_review_share_chooser">Sdílet rok v akcích</string>
+    <string name="year_review_tagline">Události, na kterých záleží, plánujeme s BetterMingle</string>
+
+    <!-- Activity Logger strings -->
+    <string name="activity_sent_message">poslal/a zprávu: \u201E%1$s\u201C</string>
+    <string name="activity_deleted_expense">smazal/a výdaj: %1$s (%2$s Kč)</string>
+    <string name="activity_settled_debt">vyrovnal/a dluh vůči %1$s</string>
+    <string name="activity_added_expense">přidal/a výdaj: %1$s (%2$s Kč)</string>
+    <string name="activity_voted_for">hlasoval/a pro \u201E%1$s\u201C v anketě %2$s</string>
+    <string name="activity_created_poll">vytvořil/a anketu: %1$s</string>
+    <string name="activity_deleted_ride">smazal/a spolujízdu z %1$s</string>
+    <string name="activity_requested_ride">požádal/a o místo ve spolujízdě z %1$s</string>
+    <string name="activity_offered_ride">nabídl/a spolujízdu</string>
+    <string name="activity_looking_for_ride">hledá spolujízdu</string>
+    <string name="activity_deleted_room">smazal/a pokoj: %1$s</string>
+    <string name="activity_created_room">vytvořil/a pokoj %1$s (kapacita %2$s)</string>
+    <string name="activity_joined_room">přidal/a se do pokoje: %1$s</string>
+    <string name="activity_removed_from_schedule">odebral/a z programu: %1$s</string>
+    <string name="activity_added_to_schedule">přidal/a do programu: %1$s</string>
+    <string name="activity_deleted_task">smazal/a úkol: %1$s</string>
+    <string name="activity_completed_task">dokončil/a úkol: %1$s</string>
+    <string name="activity_created_task">vytvořil/a úkol: %1$s</string>
+    <string name="activity_removed_from_packing">odebral/a z balicího seznamu: %1$s</string>
+    <string name="activity_added_to_packing">přidal/a do balicího seznamu: %1$s</string>
+    <string name="activity_rated_event">ohodnotil/a akci (%1$s/5 \u2B50)</string>
+    <string name="activity_edited_event">upravil/a %1$s akce</string>
+    <string name="activity_deleted_event">smazal/a akci: %1$s</string>
+    <string name="activity_changed_status">změnil/a stav akce na %1$s</string>
+    <string name="activity_joined_event">se připojil/a k akci</string>
+    <string name="activity_change_name">název</string>
+    <string name="activity_change_description">popis</string>
+    <string name="activity_change_theme">téma</string>
+
+    <!-- PIN Verification -->
+    <string name="pin_dialog_title">Chráněná akce</string>
+    <string name="pin_dialog_description">Tato akce vyžaduje PIN pro přístup.</string>
+    <string name="pin_dialog_input_label">Zadej PIN</string>
+    <string name="pin_dialog_error">Nesprávný PIN</string>
+
+    <!-- QR Code -->
+    <string name="qr_code_description">QR kód</string>
+
+    <!-- User Avatar -->
+    <string name="user_avatar_description">Avatar</string>
+
+    <!-- Error State -->
+    <string name="error_title">Něco se pokazilo</string>
+    <string name="error_description">Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="error_icon_description">Chyba</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_no_events">Žádné akce</string>
+    <string name="a11y_no_tasks">Ikona úkolů</string>
+    <string name="a11y_no_expenses">Žádné výdaje</string>
+    <string name="a11y_no_polls">Žádné ankety</string>
+    <string name="a11y_search">Hledat</string>
+    <string name="a11y_assigned">Přiřazeno</string>
+    <string name="a11y_delete_task">Smazat úkol</string>
+    <string name="a11y_delete_expense">Smazat výdaj</string>
+    <string name="a11y_error">Chyba</string>
+    <string name="a11y_add_to_calendar">Přidat do kalendáře</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Odpočet do nejbližší akce</string>
+
+    <!-- Language Settings -->
+    <string name="settings_section_language">Jazyk</string>
+    <string name="settings_language">Jazyk aplikace</string>
+    <string name="settings_language_system">Systém</string>
+</resources>

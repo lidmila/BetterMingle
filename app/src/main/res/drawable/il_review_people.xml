@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Person 1 (left) -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M40,50 A8,8,0,1,1,40,50.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M30,68 Q30,58,40,58 Q50,58,50,68 L50,95 Q50,100,45,100 L35,100 Q30,100,30,95Z"/>
+    <!-- Person 2 (center, larger) -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M75,42 A10,10,0,1,1,75,42.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M62,62 Q62,52,75,52 Q88,52,88,62 L88,98 Q88,103,83,103 L67,103 Q62,103,62,98Z"/>
+    <!-- Person 3 (right) -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M110,50 A8,8,0,1,1,110,50.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M100,68 Q100,58,110,58 Q120,58,120,68 L120,95 Q120,100,115,100 L105,100 Q100,100,100,95Z"/>
+    <!-- Raised arms -->
+    <path android:pathData="M30,68 L22,48" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <path android:pathData="M50,68 L58,48" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.2"/>
+    <path android:pathData="M62,62 L52,40" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.3"/>
+    <path android:pathData="M88,62 L98,40" android:strokeWidth="3" android:strokeColor="#FFFFFF" android:strokeAlpha="0.3"/>
+    <!-- Hearts above -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M55,28 Q55,24,58,24 Q61,24,61,28 Q61,32,58,35 Q55,32,55,28 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M88,25 Q88,21,91,21 Q94,21,94,25 Q94,29,91,32 Q88,29,88,25 Z"/>
+    <!-- Ground -->
+    <path android:pathData="M15,110 L135,110" android:strokeWidth="2" android:strokeColor="#FFFFFF" android:strokeAlpha="0.15"/>
+</vector>

@@ -7,6 +7,8 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,22 +19,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ScreenshotMonitor
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,31 +54,43 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
+import com.bettermingle.app.data.model.EventStatus
+import com.bettermingle.app.data.model.PREDEFINED_THEMES
+import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.BackgroundPrimary
+import com.bettermingle.app.ui.theme.PastelBlue
+import com.bettermingle.app.ui.theme.PastelGold
+import com.bettermingle.app.ui.theme.PastelGray
+import com.bettermingle.app.ui.theme.PastelGreen
+import com.bettermingle.app.ui.theme.PastelOrange
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextSecondary
+import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EventSettingsScreen(
     eventId: String,
     onNavigateBack: () -> Unit,
-    onEventDeleted: () -> Unit = onNavigateBack
+    onEventDeleted: () -> Unit = onNavigateBack,
+    onRepeatEvent: ((String, String, String, String, List<String>) -> Unit)? = null
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
     var inviteCode by remember { mutableStateOf("") }
@@ -88,13 +102,17 @@ fun EventSettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var budgetLimitText by remember { mutableStateOf("") }
-
     // Security state (would be loaded from event data)
+    val currentUserId = remember { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "" }
+    var isOrganizer by remember { mutableStateOf(false) }
     var securityEnabled by remember { mutableStateOf(false) }
     var hideFinancials by remember { mutableStateOf(false) }
     var screenshotProtection by remember { mutableStateOf(false) }
     var requireApproval by remember { mutableStateOf(false) }
+    var eventStatus by remember { mutableStateOf(EventStatus.PLANNING) }
+    var eventTheme by remember { mutableStateOf("") }
+    var eventLocationName by remember { mutableStateOf("") }
+    var enabledModuleNames by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(eventId) {
         try {
@@ -107,23 +125,40 @@ fun EventSettingsScreen(
             hideFinancials = doc.getBoolean("hideFinancials") ?: false
             screenshotProtection = doc.getBoolean("screenshotProtection") ?: false
             requireApproval = doc.getBoolean("requireApproval") ?: false
-            val budget = (doc.get("budgetLimit") as? Number)?.toDouble() ?: 0.0
-            budgetLimitText = if (budget > 0) budget.toLong().toString() else ""
+            eventTheme = doc.getString("theme") ?: ""
+            eventLocationName = doc.getString("locationName") ?: ""
+            @Suppress("UNCHECKED_CAST")
+            enabledModuleNames = (doc.get("enabledModules") as? List<String>) ?: emptyList()
+            val statusStr = doc.getString("status") ?: "PLANNING"
+            eventStatus = try { EventStatus.valueOf(statusStr) } catch (_: Exception) { EventStatus.PLANNING }
+            val createdBy = doc.getString("createdBy") ?: ""
+            isOrganizer = createdBy == currentUserId
+        } catch (_: Exception) { }
+
+        // Load notification preference
+        try {
+            val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            if (uid != null) {
+                val lastSeenDoc = FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("lastSeen").document(uid).get().await()
+                notificationsEnabled = lastSeenDoc.getBoolean("notificationsEnabled") ?: true
+            }
         } catch (_: Exception) { }
     }
 
     val inviteLink = "https://bettermingle.app/invite/$inviteCode"
-    val shareText = "Ahoj! Pojď se připojit k akci \"$eventName\" na BetterMingle: $inviteLink"
+    val shareText = stringResource(R.string.event_settings_share_text, eventName, inviteLink)
 
     if (showPinDialog) {
         var newPin by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showPinDialog = false },
-            title = { Text("Změnit PIN") },
+            title = { Text(stringResource(R.string.event_settings_pin_dialog_title)) },
             text = {
                 Column {
                     Text(
-                        text = "Zadej nový 4místný PIN pro akci",
+                        text = stringResource(R.string.event_settings_pin_dialog_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
@@ -131,7 +166,7 @@ fun EventSettingsScreen(
                     BetterMingleTextField(
                         value = newPin,
                         onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) newPin = it },
-                        label = "Nový PIN"
+                        label = stringResource(R.string.event_settings_pin_label)
                     )
                 }
             },
@@ -142,19 +177,19 @@ fun EventSettingsScreen(
                             try {
                                 FirebaseFirestore.getInstance()
                                     .collection("events").document(eventId)
-                                    .update("pin", newPin).await()
-                                Toast.makeText(context, "PIN změněn", Toast.LENGTH_SHORT).show()
+                                    .update("eventPin", newPin).await()
+                                Toast.makeText(context, context.getString(R.string.event_settings_pin_changed), Toast.LENGTH_SHORT).show()
                                 showPinDialog = false
                             } catch (_: Exception) {
-                                Toast.makeText(context, "Chyba při změně PINu", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.event_settings_pin_error), Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
                     enabled = newPin.length == 4
-                ) { Text("Uložit") }
+                ) { Text(stringResource(R.string.common_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPinDialog = false }) { Text("Zrušit") }
+                TextButton(onClick = { showPinDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -162,24 +197,55 @@ fun EventSettingsScreen(
     if (showEditDialog) {
         var editName by remember { mutableStateOf(eventName) }
         var editDescription by remember { mutableStateOf(eventDescription) }
+        var editTheme by remember { mutableStateOf(eventTheme) }
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Upravit akci") },
+            title = { Text(stringResource(R.string.event_settings_edit_title)) },
             text = {
                 Column {
                     BetterMingleTextField(
                         value = editName,
                         onValueChange = { editName = it },
-                        label = "Název akce"
+                        label = stringResource(R.string.event_settings_edit_name)
                     )
                     Spacer(modifier = Modifier.height(Spacing.sm))
                     BetterMingleTextField(
                         value = editDescription,
                         onValueChange = { editDescription = it },
-                        label = "Popis",
+                        label = stringResource(R.string.event_settings_edit_description),
                         singleLine = false,
-                        maxLines = 3
+                        maxLines = 5
                     )
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                    Text(
+                        text = stringResource(R.string.event_settings_edit_formatting),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    BetterMingleTextField(
+                        value = editTheme,
+                        onValueChange = { editTheme = it },
+                        label = stringResource(R.string.event_settings_edit_theme)
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        PREDEFINED_THEMES.forEach { t ->
+                            FilterChip(
+                                selected = editTheme == t,
+                                onClick = { editTheme = if (editTheme == t) "" else t },
+                                label = { Text(t, style = MaterialTheme.typography.labelSmall) },
+                                shape = RoundedCornerShape(100.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AccentPink.copy(alpha = 0.12f),
+                                    selectedLabelColor = AccentPink
+                                )
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -192,23 +258,32 @@ fun EventSettingsScreen(
                                     .update(
                                         mapOf(
                                             "name" to editName,
-                                            "description" to editDescription
+                                            "description" to editDescription,
+                                            "theme" to editTheme
                                         )
                                     ).await()
+                                val changes = mutableListOf<String>()
+                                if (editName != eventName) changes.add(context.getString(R.string.activity_change_name))
+                                if (editDescription != eventDescription) changes.add(context.getString(R.string.activity_change_description))
+                                if (editTheme != eventTheme) changes.add(context.getString(R.string.activity_change_theme))
                                 eventName = editName
                                 eventDescription = editDescription
-                                Toast.makeText(context, "Akce upravena", Toast.LENGTH_SHORT).show()
+                                eventTheme = editTheme
+                                if (changes.isNotEmpty()) {
+                                    ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_edited_event, changes.joinToString(", ")), eventName = editName)
+                                }
+                                Toast.makeText(context, context.getString(R.string.event_settings_edit_success), Toast.LENGTH_SHORT).show()
                                 showEditDialog = false
                             } catch (_: Exception) {
-                                Toast.makeText(context, "Chyba při úpravě", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.event_settings_edit_error), Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
                     enabled = editName.isNotBlank()
-                ) { Text("Uložit") }
+                ) { Text(stringResource(R.string.common_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) { Text("Zrušit") }
+                TextButton(onClick = { showEditDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -216,8 +291,8 @@ fun EventSettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Smazat akci") },
-            text = { Text("Opravdu chceš trvale smazat akci \"$eventName\" a všechna její data? Tuto akci nelze vrátit zpět.") },
+            title = { Text(stringResource(R.string.event_settings_delete_title)) },
+            text = { Text(stringResource(R.string.event_settings_delete_confirm, eventName)) },
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
@@ -233,15 +308,16 @@ fun EventSettingsScreen(
                                 }
                             }
                             eventRef.delete().await()
+                            ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_deleted_event, eventName), eventName = eventName)
                             onEventDeleted()
                         } catch (_: Exception) { }
                     }
                 }) {
-                    Text("Smazat", color = AccentOrange)
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Zrušit") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -249,14 +325,14 @@ fun EventSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nastavení akce", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.event_settings_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -273,7 +349,7 @@ fun EventSettingsScreen(
                 BetterMingleCard {
                     Column {
                         Text(
-                            text = "Pozvánka",
+                            text = stringResource(R.string.event_settings_invite_section),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -285,23 +361,23 @@ fun EventSettingsScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
                             BetterMingleOutlinedButton(
-                                text = "Kopírovat odkaz",
+                                text = stringResource(R.string.event_settings_copy_link),
                                 onClick = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboard.setPrimaryClip(ClipData.newPlainText("invite_link", inviteLink))
-                                    Toast.makeText(context, "Odkaz zkopírován", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.event_settings_link_copied), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
 
                             BetterMingleButton(
-                                text = "Sdílet",
+                                text = stringResource(R.string.event_settings_share),
                                 onClick = {
                                     val intent = Intent(Intent.ACTION_SEND).apply {
                                         type = "text/plain"
                                         putExtra(Intent.EXTRA_TEXT, shareText)
                                     }
-                                    context.startActivity(Intent.createChooser(intent, "Sdílet pozvánku"))
+                                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.event_settings_share_chooser)))
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -320,12 +396,12 @@ fun EventSettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Notifikace",
+                                text = stringResource(R.string.event_settings_notifications),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "Upozornění na novinky v akci",
+                                text = stringResource(R.string.event_settings_notifications_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -333,7 +409,16 @@ fun EventSettingsScreen(
 
                         Switch(
                             checked = notificationsEnabled,
-                            onCheckedChange = { notificationsEnabled = it },
+                            onCheckedChange = { enabled ->
+                                notificationsEnabled = enabled
+                                val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                                if (uid != null) {
+                                    FirebaseFirestore.getInstance()
+                                        .collection("events").document(eventId)
+                                        .collection("lastSeen").document(uid)
+                                        .set(mapOf("notificationsEnabled" to enabled), com.google.firebase.firestore.SetOptions.merge())
+                                }
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = PrimaryBlue
                             )
@@ -342,8 +427,68 @@ fun EventSettingsScreen(
                 }
             }
 
-            // Security section
-            item {
+            // Event status (only for organizer)
+            if (isOrganizer) { item {
+                BetterMingleCard {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.event_settings_status),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            data class StatusOption(val status: EventStatus, val label: String, val bgColor: androidx.compose.ui.graphics.Color, val textColor: androidx.compose.ui.graphics.Color)
+                            val statusPlanning = stringResource(R.string.event_status_planning)
+                            val statusConfirmed = stringResource(R.string.event_status_confirmed)
+                            val statusOngoing = stringResource(R.string.event_status_ongoing)
+                            val statusCompleted = stringResource(R.string.event_status_completed)
+                            val statusCancelled = stringResource(R.string.event_status_cancelled)
+                            val options = listOf(
+                                StatusOption(EventStatus.PLANNING, statusPlanning, PastelGold, AccentGold),
+                                StatusOption(EventStatus.CONFIRMED, statusConfirmed, PastelBlue, PrimaryBlue),
+                                StatusOption(EventStatus.ONGOING, statusOngoing, PastelGreen, Success),
+                                StatusOption(EventStatus.COMPLETED, statusCompleted, PastelGray, TextSecondary),
+                                StatusOption(EventStatus.CANCELLED, statusCancelled, PastelOrange, AccentOrange)
+                            )
+                            options.forEach { opt ->
+                                FilterChip(
+                                    selected = eventStatus == opt.status,
+                                    onClick = {
+                                        if (eventStatus != opt.status) {
+                                            val oldStatus = eventStatus
+                                            eventStatus = opt.status
+                                            scope.launch {
+                                                try {
+                                                    FirebaseFirestore.getInstance()
+                                                        .collection("events").document(eventId)
+                                                        .update("status", opt.status.name).await()
+                                                    ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_changed_status, opt.label), eventName = eventName)
+                                                } catch (_: Exception) {
+                                                    eventStatus = oldStatus
+                                                    Toast.makeText(context, context.getString(R.string.event_settings_status_error), Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
+                                    },
+                                    label = { Text(opt.label) },
+                                    shape = RoundedCornerShape(100.dp),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = opt.bgColor,
+                                        selectedLabelColor = opt.textColor
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            } }
+
+            // Security section (only for organizer)
+            if (isOrganizer) { item {
                 BetterMingleCard {
                     Column {
                         Row(
@@ -361,12 +506,12 @@ fun EventSettingsScreen(
                                 Spacer(modifier = Modifier.width(Spacing.sm))
                                 Column {
                                     Text(
-                                        text = "Zvýšená ochrana",
+                                        text = stringResource(R.string.event_settings_security),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = if (securityEnabled) "Aktivní" else "Vypnuto",
+                                        text = if (securityEnabled) stringResource(R.string.event_settings_security_active) else stringResource(R.string.event_settings_security_disabled),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (securityEnabled) Success else TextSecondary
                                     )
@@ -394,8 +539,8 @@ fun EventSettingsScreen(
 
                             SecuritySettingRow(
                                 icon = Icons.Default.VisibilityOff,
-                                title = "Skrýt finance",
-                                description = "Finanční detaily vidí jen organizátor",
+                                title = stringResource(R.string.event_settings_hide_financials),
+                                description = stringResource(R.string.event_settings_hide_financials_desc),
                                 checked = hideFinancials,
                                 onCheckedChange = {
                                     hideFinancials = it
@@ -407,8 +552,8 @@ fun EventSettingsScreen(
 
                             SecuritySettingRow(
                                 icon = Icons.Default.ScreenshotMonitor,
-                                title = "Ochrana obrazovky",
-                                description = "Blokovat snímky obrazovky",
+                                title = stringResource(R.string.event_settings_screenshot),
+                                description = stringResource(R.string.event_settings_screenshot_desc),
                                 checked = screenshotProtection,
                                 onCheckedChange = {
                                     screenshotProtection = it
@@ -420,8 +565,8 @@ fun EventSettingsScreen(
 
                             SecuritySettingRow(
                                 icon = Icons.Default.VerifiedUser,
-                                title = "Schvalování účastníků",
-                                description = "Noví účastníci musí být schváleni",
+                                title = stringResource(R.string.event_settings_approval),
+                                description = stringResource(R.string.event_settings_approval_desc),
                                 checked = requireApproval,
                                 onCheckedChange = {
                                     requireApproval = it
@@ -443,7 +588,7 @@ fun EventSettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.width(Spacing.sm))
                                 BetterMingleOutlinedButton(
-                                    text = "Změnit PIN",
+                                    text = stringResource(R.string.event_settings_change_pin),
                                     onClick = { showPinDialog = true },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -451,100 +596,57 @@ fun EventSettingsScreen(
                         }
                     }
                 }
-            }
+            } }
 
-            // Budget
-            item {
-                BetterMingleCard {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Savings,
-                                contentDescription = null,
-                                tint = PrimaryBlue,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(Spacing.sm))
-                            Text(
-                                text = "Rozpočet",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-
-                        Text(
-                            text = "Nastav limit rozpočtu pro akci",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
-
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                        ) {
-                            BetterMingleTextField(
-                                value = budgetLimitText,
-                                onValueChange = { budgetLimitText = it.filter { c -> c.isDigit() || c == '.' } },
-                                label = "Limit (Kč)",
-                                modifier = Modifier.weight(1f),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                            )
-
-                            BetterMingleButton(
-                                text = "Uložit",
-                                onClick = {
-                                    scope.launch {
-                                        try {
-                                            val amount = budgetLimitText.replace(",", ".").toDoubleOrNull() ?: 0.0
-                                            FirebaseFirestore.getInstance()
-                                                .collection("events").document(eventId)
-                                                .update("budgetLimit", amount).await()
-                                            Toast.makeText(context, "Rozpočet uložen", Toast.LENGTH_SHORT).show()
-                                        } catch (_: Exception) {
-                                            Toast.makeText(context, "Chyba při ukládání", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
+            // Edit event (only for organizer)
+            if (isOrganizer) {
+                item {
+                    SettingsActionItem(
+                        icon = Icons.Default.Edit,
+                        title = stringResource(R.string.event_settings_edit_action),
+                        description = stringResource(R.string.event_settings_edit_action_desc),
+                        onClick = { showEditDialog = true }
+                    )
                 }
-            }
 
-            // Edit event
-            item {
-                SettingsActionItem(
-                    icon = Icons.Default.Edit,
-                    title = "Upravit akci",
-                    description = "Změnit název, datum a popis",
-                    onClick = { showEditDialog = true }
-                )
-            }
+                // Repeat event
+                item {
+                    SettingsActionItem(
+                        icon = Icons.Default.ContentCopy,
+                        title = stringResource(R.string.event_settings_repeat),
+                        description = stringResource(R.string.event_settings_repeat_desc),
+                        onClick = {
+                            onRepeatEvent?.invoke(
+                                eventName,
+                                eventDescription,
+                                eventTheme,
+                                eventLocationName,
+                                enabledModuleNames
+                            )
+                        }
+                    )
+                }
 
-            // Danger zone
-            item {
-                Spacer(modifier = Modifier.height(Spacing.md))
-                Text(
-                    text = "Nebezpečná zóna",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = AccentOrange,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                // Danger zone
+                item {
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    Text(
+                        text = stringResource(R.string.event_settings_danger_zone),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = AccentOrange,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
 
-            item {
-                SettingsActionItem(
-                    icon = Icons.Default.Delete,
-                    title = "Smazat akci",
-                    description = "Trvale smazat akci a všechna data",
-                    onClick = { showDeleteDialog = true },
-                    isDangerous = true
-                )
+                item {
+                    SettingsActionItem(
+                        icon = Icons.Default.Delete,
+                        title = stringResource(R.string.event_settings_delete_action),
+                        description = stringResource(R.string.event_settings_delete_action_desc),
+                        onClick = { showDeleteDialog = true },
+                        isDangerous = true
+                    )
+                }
             }
         }
     }
@@ -616,7 +718,7 @@ private fun SettingsActionItem(
                 modifier = Modifier.size(24.dp)
             )
 
-            Spacer(modifier = Modifier.padding(Spacing.md))
+            Spacer(modifier = Modifier.width(Spacing.md))
 
             Column {
                 Text(

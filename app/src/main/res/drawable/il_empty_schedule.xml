@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Calendar body -->
+    <path android:fillColor="#FFFFFF" android:pathData="M20,35 L130,35 Q135,35,135,40 L135,130 Q135,135,130,135 L20,135 Q15,135,15,130 L15,40 Q15,35,20,35Z"/>
+    <path android:pathData="M15,35 L135,35 L135,135 L15,135Z" android:strokeWidth="2" android:strokeColor="#4346DE"/>
+    <!-- Calendar header -->
+    <path android:fillColor="#4346DE" android:pathData="M15,35 L135,35 L135,55 L15,55Z"/>
+    <!-- Calendar rings -->
+    <path android:pathData="M45,28 L45,42" android:strokeWidth="4" android:strokeColor="#3335B0" android:strokeLineCap="round"/>
+    <path android:pathData="M75,28 L75,42" android:strokeWidth="4" android:strokeColor="#3335B0" android:strokeLineCap="round"/>
+    <path android:pathData="M105,28 L105,42" android:strokeWidth="4" android:strokeColor="#3335B0" android:strokeLineCap="round"/>
+    <!-- Grid lines -->
+    <path android:pathData="M15,75 L135,75" android:strokeWidth="1" android:strokeColor="#F0CDC6"/>
+    <path android:pathData="M15,95 L135,95" android:strokeWidth="1" android:strokeColor="#F0CDC6"/>
+    <path android:pathData="M15,115 L135,115" android:strokeWidth="1" android:strokeColor="#F0CDC6"/>
+    <path android:pathData="M55,55 L55,135" android:strokeWidth="1" android:strokeColor="#F0CDC6"/>
+    <path android:pathData="M95,55 L95,135" android:strokeWidth="1" android:strokeColor="#F0CDC6"/>
+    <!-- Highlighted date -->
+    <path android:fillColor="#D84D35" android:pathData="M58,78 L92,78 L92,92 L58,92Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M71,82 L79,82 L79,88 L71,88Z"/>
+    <!-- Small clock overlay -->
+    <path android:fillColor="#F884BD" android:pathData="M118,15 A15,15,0,1,1,118,15.01Z"/>
+    <path android:pathData="M118,15 L118,8" android:strokeWidth="2" android:strokeColor="#FFFFFF"/>
+    <path android:pathData="M118,15 L124,15" android:strokeWidth="2" android:strokeColor="#FFFFFF"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M118,15 A2,2,0,1,1,118,15.01Z"/>
+</vector>

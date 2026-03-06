@@ -13,7 +13,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,12 +28,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Poll
+import androidx.compose.material.icons.filled.HowToVote
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -44,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -63,15 +63,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
@@ -85,8 +85,8 @@ fun UpgradeScreen(
     onSubscribe: (productId: String, isYearly: Boolean) -> Unit = { _, _ -> }
 ) {
     var visible by remember { mutableStateOf(false) }
-    var selectedPlan by remember { mutableIntStateOf(0) } // 0 = Pro, 1 = Business
     var isYearly by remember { mutableStateOf(true) }
+    var selectedPlan by remember { mutableIntStateOf(0) } // 0 = Pro, 1 = Business
 
     val crownScale = remember { Animatable(0f) }
     val infiniteTransition = rememberInfiniteTransition(label = "shine")
@@ -114,14 +114,14 @@ fun UpgradeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Premium", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.upgrade_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -141,11 +141,7 @@ fun UpgradeScreen(
                     .scale(crownScale.value)
                     .rotate(shimmerRotation)
                     .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(AccentGold, AccentOrange, AccentPink)
-                        )
-                    ),
+                    .background(if (selectedPlan == 0) PrimaryBlue else AccentGold),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -165,14 +161,14 @@ fun UpgradeScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Odemkni plný potenciál",
+                        text = stringResource(R.string.upgrade_headline),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(Spacing.xs))
                     Text(
-                        text = "Neomezené akce, funkce a žádné reklamy",
+                        text = stringResource(R.string.upgrade_subheadline),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary,
                         textAlign = TextAlign.Center
@@ -182,11 +178,11 @@ fun UpgradeScreen(
 
             Spacer(modifier = Modifier.height(Spacing.lg))
 
-            // Plan selector
+            // Plan selector: Pro / Business
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 250)) +
-                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 250)) { it / 3 }
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 200)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 200)) { it / 3 }
             ) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
@@ -194,14 +190,14 @@ fun UpgradeScreen(
                         onClick = { selectedPlan = 0 },
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                     ) {
-                        Text("Mingle Pro")
+                        Text(stringResource(R.string.upgrade_plan_pro))
                     }
                     SegmentedButton(
                         selected = selectedPlan == 1,
                         onClick = { selectedPlan = 1 },
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                     ) {
-                        Text("Business")
+                        Text(stringResource(R.string.upgrade_plan_business))
                     }
                 }
             }
@@ -211,8 +207,8 @@ fun UpgradeScreen(
             // Billing period toggle
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 300)) +
-                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 300)) { it / 3 }
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 250)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 250)) { it / 3 }
             ) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
@@ -220,14 +216,14 @@ fun UpgradeScreen(
                         onClick = { isYearly = false },
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                     ) {
-                        Text("Měsíčně")
+                        Text(stringResource(R.string.upgrade_billing_monthly))
                     }
                     SegmentedButton(
                         selected = isYearly,
                         onClick = { isYearly = true },
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                     ) {
-                        Text("Ročně (ušetři 32 %)")
+                        Text(stringResource(R.string.upgrade_billing_yearly))
                     }
                 }
             }
@@ -237,11 +233,11 @@ fun UpgradeScreen(
             // Price card
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 350)) +
-                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 350)) { it / 3 }
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 300)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 300)) { it / 3 }
             ) {
                 val priceScale = remember { Animatable(0.8f) }
-                LaunchedEffect(selectedPlan, isYearly) {
+                LaunchedEffect(isYearly, selectedPlan) {
                     priceScale.snapTo(0.8f)
                     priceScale.animateTo(
                         1f,
@@ -254,7 +250,7 @@ fun UpgradeScreen(
                         .fillMaxWidth()
                         .scale(priceScale.value),
                     colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue
+                        containerColor = if (selectedPlan == 0) PrimaryBlue else AccentGold
                     ),
                     shape = MaterialTheme.shapes.large
                 ) {
@@ -264,12 +260,20 @@ fun UpgradeScreen(
                             .padding(Spacing.lg),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val (price, period) = when {
-                            selectedPlan == 0 && isYearly -> "649 Kč" to "/ rok"
-                            selectedPlan == 0 -> "79 Kč" to "/ měsíc"
-                            selectedPlan == 1 && isYearly -> "2 990 Kč" to "/ rok"
-                            else -> "299 Kč" to "/ měsíc"
+                        val (price, period) = if (selectedPlan == 0) {
+                            if (isYearly) stringResource(R.string.upgrade_price_pro_yearly) to stringResource(R.string.upgrade_period_yearly)
+                            else stringResource(R.string.upgrade_price_pro_monthly) to stringResource(R.string.upgrade_period_monthly)
+                        } else {
+                            if (isYearly) stringResource(R.string.upgrade_price_business_yearly) to stringResource(R.string.upgrade_period_yearly)
+                            else stringResource(R.string.upgrade_price_business_monthly) to stringResource(R.string.upgrade_period_monthly)
                         }
+                        Text(
+                            text = if (selectedPlan == 0) stringResource(R.string.upgrade_card_title_pro) else stringResource(R.string.upgrade_card_title_business),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextOnColor
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
                             text = price,
                             style = MaterialTheme.typography.displaySmall,
@@ -290,29 +294,29 @@ fun UpgradeScreen(
             // Features list
             val features = if (selectedPlan == 0) {
                 listOf(
-                    FeatureItem(Icons.Default.Star, "Neomezené akce a ankety"),
-                    FeatureItem(Icons.Default.Groups, "Až 100 účastníků"),
-                    FeatureItem(Icons.Default.PhotoLibrary, "Galerie v plném rozlišení"),
-                    FeatureItem(Icons.Default.TableChart, "Export výdajů (CSV/PDF)"),
-                    FeatureItem(Icons.Default.Palette, "Vlastní vizuál akce"),
-                    FeatureItem(Icons.Default.AutoAwesome, "Bez reklam")
+                    FeatureItem(Icons.Default.Star, stringResource(R.string.upgrade_feature_pro_events)),
+                    FeatureItem(Icons.Default.Groups, stringResource(R.string.upgrade_feature_pro_participants)),
+                    FeatureItem(Icons.Default.HowToVote, stringResource(R.string.upgrade_feature_pro_polls)),
+                    FeatureItem(Icons.Default.TableChart, stringResource(R.string.upgrade_feature_export_csv)),
+                    FeatureItem(Icons.Default.PersonAdd, stringResource(R.string.upgrade_feature_multi_organizers)),
+                    FeatureItem(Icons.Default.AutoAwesome, stringResource(R.string.upgrade_feature_no_ads))
                 )
             } else {
                 listOf(
-                    FeatureItem(Icons.Default.Star, "Vše z Pro"),
-                    FeatureItem(Icons.Default.Groups, "Až 500 účastníků"),
-                    FeatureItem(Icons.Default.Poll, "Více spoluorganizátorů"),
-                    FeatureItem(Icons.Default.Palette, "Firemní branding"),
-                    FeatureItem(Icons.Default.TableChart, "Reporty a statistiky"),
-                    FeatureItem(Icons.Default.AutoAwesome, "API přístup a SSO")
+                    FeatureItem(Icons.Default.AllInclusive, stringResource(R.string.upgrade_feature_business_events)),
+                    FeatureItem(Icons.Default.Groups, stringResource(R.string.upgrade_feature_business_participants)),
+                    FeatureItem(Icons.Default.HowToVote, stringResource(R.string.upgrade_feature_business_polls)),
+                    FeatureItem(Icons.Default.TableChart, stringResource(R.string.upgrade_feature_export_csv)),
+                    FeatureItem(Icons.Default.PersonAdd, stringResource(R.string.upgrade_feature_multi_organizers)),
+                    FeatureItem(Icons.Default.AutoAwesome, stringResource(R.string.upgrade_feature_no_ads))
                 )
             }
 
             features.forEachIndexed { index, feature ->
                 AnimatedVisibility(
                     visible = visible,
-                    enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 400 + index * 60)) +
-                            slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 400 + index * 60)) { it / 3 }
+                    enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 350 + index * 60)) +
+                            slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 350 + index * 60)) { it / 3 }
                 ) {
                     FeatureRow(feature = feature)
                 }
@@ -326,20 +330,68 @@ fun UpgradeScreen(
                 enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 700)) +
                         slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 700)) { it / 2 }
             ) {
+                val productId = if (selectedPlan == 0) "mingle_pro" else "mingle_business"
                 BetterMingleButton(
-                    text = if (selectedPlan == 0) "Získat Mingle Pro" else "Získat Business",
+                    text = if (selectedPlan == 0) stringResource(R.string.upgrade_button_pro) else stringResource(R.string.upgrade_button_business),
                     onClick = {
-                        val productId = if (selectedPlan == 0) "mingle_pro" else "mingle_business"
                         onSubscribe(productId, isYearly)
                     },
                     isCta = true
                 )
             }
 
+            Spacer(modifier = Modifier.height(Spacing.lg))
+
+            // Lifetime card
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 750)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 750)) { it / 3 }
+            ) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Spacing.lg),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.upgrade_lifetime_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = AccentGold
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = stringResource(R.string.upgrade_lifetime_price),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.upgrade_lifetime_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        BetterMingleButton(
+                            text = stringResource(R.string.upgrade_lifetime_button),
+                            onClick = {
+                                onSubscribe("mingle_lifetime", false)
+                            },
+                            isCta = false
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(Spacing.md))
 
             Text(
-                text = "Předplatné se automaticky obnovuje. Zrušit můžeš kdykoli v Google Play.",
+                text = stringResource(R.string.upgrade_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary,
                 textAlign = TextAlign.Center

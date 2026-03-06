@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Map pin body -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M75,20 A25,25,0,0,1,100,45 Q100,65,75,95 Q50,65,50,45 A25,25,0,0,1,75,20 Z"/>
+    <!-- Pin inner circle -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M75,35 A10,10,0,1,1,75,35.01Z"/>
+    <!-- Flag pole -->
+    <path android:pathData="M75,45 L75,15" android:strokeWidth="2" android:strokeColor="#FFFFFF" android:strokeAlpha="0.25"/>
+    <!-- Flag -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.25"
+        android:pathData="M75,15 L95,22 L75,29 Z"/>
+    <!-- Shadow/base -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M75,95 A15,5,0,1,1,75,95.01Z"/>
+    <!-- Decorative dots (map feel) -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M30,80 A2,2,0,1,1,30,80.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M120,70 A2,2,0,1,1,120,70.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M35,55 A2,2,0,1,1,35,55.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M115,50 A2,2,0,1,1,115,50.01Z"/>
+    <!-- Ground line -->
+    <path android:pathData="M20,110 L130,110" android:strokeWidth="2" android:strokeColor="#FFFFFF" android:strokeAlpha="0.12"/>
+</vector>

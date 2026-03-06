@@ -51,6 +51,7 @@ class BillingManager(
         private const val TAG = "BillingManager"
         const val PRODUCT_PRO = "mingle_pro"
         const val PRODUCT_BUSINESS = "mingle_business"
+        const val PRODUCT_LIFETIME = "mingle_lifetime"
         private const val BASE_PLAN_MONTHLY = "monthly"
         private const val BASE_PLAN_YEARLY = "yearly"
     }
@@ -113,19 +114,19 @@ class BillingManager(
     }
 
     private suspend fun queryProducts() {
-        val productList = listOf(PRODUCT_PRO, PRODUCT_BUSINESS).map { productId ->
+        val subProductList = listOf(PRODUCT_PRO, PRODUCT_BUSINESS).map { productId ->
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
         }
 
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
+        val subParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(subProductList)
             .build()
 
-        val result = suspendCancellableCoroutine { cont ->
-            billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        val subResult = suspendCancellableCoroutine { cont ->
+            billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsList ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     cont.resume(productDetailsList)
                 } else {
@@ -134,6 +135,31 @@ class BillingManager(
                 }
             }
         }
+
+        // Query lifetime (INAPP) product
+        val inappProductList = listOf(
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_LIFETIME)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        )
+
+        val inappParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(inappProductList)
+            .build()
+
+        val inappResult = suspendCancellableCoroutine { cont ->
+            billingClient.queryProductDetailsAsync(inappParams) { billingResult, productDetailsList ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    cont.resume(productDetailsList)
+                } else {
+                    Log.e(TAG, "Query INAPP products failed: ${billingResult.debugMessage}")
+                    cont.resume(emptyList())
+                }
+            }
+        }
+
+        val result = subResult + inappResult
 
         val products = result.map { details ->
             val monthlyOffer = details.subscriptionOfferDetails?.find { offer ->

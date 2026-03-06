@@ -1,29 +1,31 @@
 package com.bettermingle.app.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val BitterbalLightColorScheme = lightColorScheme(
     primary = PrimaryBlue,
     onPrimary = TextOnColor,
-    primaryContainer = PrimaryBlue.copy(alpha = 0.12f),
+    primaryContainer = PrimaryBlue.copy(alpha = 0.08f),
     onPrimaryContainer = PrimaryBlue,
 
     secondary = AccentPink,
     onSecondary = TextOnColor,
-    secondaryContainer = AccentPink.copy(alpha = 0.12f),
+    secondaryContainer = AccentPink.copy(alpha = 0.08f),
     onSecondaryContainer = TextPrimary,
 
     tertiary = AccentOrange,
     onTertiary = TextOnColor,
-    tertiaryContainer = AccentOrange.copy(alpha = 0.12f),
+    tertiaryContainer = AccentOrange.copy(alpha = 0.08f),
     onTertiaryContainer = TextPrimary,
 
     background = BackgroundPrimary,
     onBackground = TextPrimary,
 
-    surface = BackgroundPrimary,
+    surface = GlassWhite,
     onSurface = TextPrimary,
     surfaceVariant = BackgroundSecondary,
     onSurfaceVariant = TextSecondary,
@@ -37,12 +39,52 @@ private val BitterbalLightColorScheme = lightColorScheme(
     onErrorContainer = TextPrimary
 )
 
+private val BitterbalDarkColorScheme = darkColorScheme(
+    primary = PrimaryBlue,
+    onPrimary = TextOnColor,
+    primaryContainer = PrimaryBlue.copy(alpha = 0.15f),
+    onPrimaryContainer = PrimaryBlue,
+
+    secondary = AccentPink,
+    onSecondary = TextOnColor,
+    secondaryContainer = AccentPink.copy(alpha = 0.15f),
+    onSecondaryContainer = DarkTextPrimary,
+
+    tertiary = AccentOrange,
+    onTertiary = TextOnColor,
+    tertiaryContainer = AccentOrange.copy(alpha = 0.15f),
+    onTertiaryContainer = DarkTextPrimary,
+
+    background = DarkBackgroundPrimary,
+    onBackground = DarkTextPrimary,
+
+    surface = DarkSurfaceCard,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkBackgroundSecondary,
+    onSurfaceVariant = DarkTextSecondary,
+
+    outline = DarkBorderColor,
+    outlineVariant = DarkSurfacePeach,
+
+    error = Error,
+    onError = TextOnColor,
+    errorContainer = DarkErrorBackground,
+    onErrorContainer = DarkTextPrimary
+)
+
 @Composable
 fun BetterMingleTheme(
+    themeMode: String = "system",
     content: @Composable () -> Unit
 ) {
+    val useDark = when (themeMode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
+
     MaterialTheme(
-        colorScheme = BitterbalLightColorScheme,
+        colorScheme = if (useDark) BitterbalDarkColorScheme else BitterbalLightColorScheme,
         typography = BetterMingleTypography,
         shapes = BetterMingleShapes,
         content = content

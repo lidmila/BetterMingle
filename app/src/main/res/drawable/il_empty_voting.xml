@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Ballot box -->
+    <path android:fillColor="#4346DE" android:pathData="M35,65 L115,65 L115,130 L35,130Z"/>
+    <path android:fillColor="#3335B0" android:pathData="M35,65 L115,65 L115,75 L35,75Z"/>
+    <!-- Slot -->
+    <path android:fillColor="#FFFFFF" android:pathData="M60,67 L90,67 L90,73 L60,73Z"/>
+    <!-- Ballot paper -->
+    <path android:fillColor="#F0CDC6" android:pathData="M62,30 L88,30 L88,72 L62,72Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M67,38 L83,38 L83,40 L67,40Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M67,44 L83,44 L83,46 L67,46Z"/>
+    <!-- Checkmark on ballot -->
+    <path android:fillColor="#D84D35" android:pathData="M68,52 L73,57 L82,48" android:strokeWidth="2.5" android:strokeColor="#D84D35"/>
+    <!-- Hand -->
+    <path android:fillColor="#F884BD" android:pathData="M88,35 Q95,35,95,42 L95,55 Q95,60,88,60 L88,35Z"/>
+    <path android:fillColor="#F884BD" android:pathData="M88,42 L100,42 L100,50 L88,50Z"/>
+    <!-- Box legs -->
+    <path android:fillColor="#3335B0" android:pathData="M40,130 L40,140 L45,140 L45,130Z"/>
+    <path android:fillColor="#3335B0" android:pathData="M105,130 L105,140 L110,140 L110,130Z"/>
+</vector>

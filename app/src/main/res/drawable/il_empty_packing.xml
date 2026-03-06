@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Backpack body -->
+    <path android:fillColor="#4346DE" android:pathData="M35,50 L115,50 Q120,50,120,55 L120,130 Q120,140,110,140 L40,140 Q30,140,30,130 L30,55 Q30,50,35,50Z"/>
+    <!-- Backpack top flap -->
+    <path android:fillColor="#3335B0" android:pathData="M40,35 L110,35 Q115,35,115,40 L115,55 L35,55 L35,40 Q35,35,40,35Z"/>
+    <!-- Backpack handle -->
+    <path android:pathData="M60,30 Q60,18,75,18 Q90,18,90,30" android:strokeWidth="4" android:strokeColor="#3335B0"/>
+    <!-- Front pocket -->
+    <path android:fillColor="#F0CDC6" android:pathData="M45,80 L105,80 Q108,80,108,83 L108,120 Q108,123,105,123 L45,123 Q42,123,42,120 L42,83 Q42,80,45,80Z"/>
+    <!-- Zipper line -->
+    <path android:pathData="M45,80 L105,80" android:strokeWidth="2" android:strokeColor="#D84D35"/>
+    <!-- Pocket buckle -->
+    <path android:fillColor="#D84D35" android:pathData="M70,75 L80,75 L80,85 L70,85Z"/>
+    <!-- Items peeking out -->
+    <path android:fillColor="#F884BD" android:pathData="M50,40 L60,40 L55,50Z"/>
+    <path android:fillColor="#D84D35" android:pathData="M85,38 L95,38 Q95,50,90,50 L85,50Z"/>
+    <!-- Straps -->
+    <path android:fillColor="#3335B0" android:pathData="M35,55 L30,55 L25,140 L32,140Z"/>
+    <path android:fillColor="#3335B0" android:pathData="M115,55 L120,55 L125,140 L118,140Z"/>
+</vector>

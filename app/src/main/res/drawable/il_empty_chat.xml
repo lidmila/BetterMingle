@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Chat bubble 1 (left, bigger) -->
+    <path android:fillColor="#4346DE" android:pathData="M15,30 L95,30 Q105,30,105,40 L105,75 Q105,85,95,85 L40,85 L25,100 L25,85 L15,85 Q5,85,5,75 L5,40 Q5,30,15,30Z"/>
+    <!-- Dots in bubble 1 -->
+    <path android:fillColor="#FFFFFF" android:pathData="M35,57 A5,5,0,1,1,35,57.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M55,57 A5,5,0,1,1,55,57.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M75,57 A5,5,0,1,1,75,57.01Z"/>
+    <!-- Chat bubble 2 (right, smaller) -->
+    <path android:fillColor="#F884BD" android:pathData="M55,90 L135,90 Q145,90,145,100 L145,120 Q145,130,135,130 L120,130 L120,145 L105,130 L55,130 Q45,130,45,120 L45,100 Q45,90,55,90Z"/>
+    <!-- Dots in bubble 2 -->
+    <path android:fillColor="#FFFFFF" android:pathData="M75,110 A4,4,0,1,1,75,110.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M95,110 A4,4,0,1,1,95,110.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M115,110 A4,4,0,1,1,115,110.01Z"/>
+</vector>

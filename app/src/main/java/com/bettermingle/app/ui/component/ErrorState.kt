@@ -30,17 +30,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextAlign
-import com.bettermingle.app.ui.theme.AccentOrange
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.R
+import com.bettermingle.app.ui.theme.Error
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
 
 @Composable
 fun ErrorState(
-    title: String = "Něco se pokazilo",
-    description: String = "Zkontroluj připojení k internetu a zkus to znovu.",
+    title: String? = null,
+    description: String? = null,
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null
 ) {
+    val resolvedTitle = title ?: stringResource(R.string.error_title)
+    val resolvedDescription = description ?: stringResource(R.string.error_description)
     var visible by remember { mutableStateOf(false) }
     val iconScale = remember { Animatable(0.3f) }
 
@@ -64,11 +68,11 @@ fun ErrorState(
     ) {
         Icon(
             imageVector = Icons.Default.ErrorOutline,
-            contentDescription = "Chyba",
+            contentDescription = stringResource(R.string.error_icon_description),
             modifier = Modifier
                 .size(Spacing.iconXXL)
                 .scale(iconScale.value),
-            tint = AccentOrange.copy(alpha = 0.7f)
+            tint = Error.copy(alpha = 0.7f)
         )
 
         Spacer(modifier = Modifier.height(Spacing.md))
@@ -80,7 +84,7 @@ fun ErrorState(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = title,
+                    text = resolvedTitle,
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center
                 )
@@ -88,7 +92,7 @@ fun ErrorState(
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Text(
-                    text = description,
+                    text = resolvedDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                     textAlign = TextAlign.Center
@@ -105,7 +109,7 @@ fun ErrorState(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(Spacing.lg))
                     BetterMingleButton(
-                        text = "Zkus to znovu",
+                        text = stringResource(R.string.common_retry),
                         onClick = onRetry,
                         isCta = true
                     )

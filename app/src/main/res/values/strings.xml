@@ -3,143 +3,731 @@
     <string name="app_name">Better Mingle</string>
 
     <!-- Navigation -->
-    <string name="nav_events">Akce</string>
-    <string name="nav_create">Vytvořit</string>
-    <string name="nav_profile">Profil</string>
+    <string name="nav_events">Events</string>
+    <string name="nav_create">Create</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_notifications">Notifications</string>
 
-    <!-- Auth -->
-    <string name="login_title">Přihlásit se</string>
+    <!-- Common / Shared -->
+    <string name="common_back">Back</string>
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_edit">Edit</string>
+    <string name="common_share">Share</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_retry">Try again</string>
+    <string name="common_create">Create</string>
+    <string name="common_search">Search</string>
+    <string name="common_add">Add</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_confirm">Confirm</string>
+    <string name="common_close">Close</string>
+    <string name="common_continue">Continue</string>
+    <string name="common_skip">Skip</string>
+    <string name="common_days">days</string>
+    <string name="common_hours">hours</string>
+    <string name="common_minutes">minutes</string>
+    <string name="common_seconds">seconds</string>
+    <string name="common_email_label">E-mail</string>
+    <string name="common_password_label">Password</string>
+    <string name="common_name_label">Name</string>
+    <string name="common_date_today">today</string>
+    <string name="common_date_yesterday">yesterday</string>
+    <string name="common_error_generic">Something went wrong. Please try again.</string>
+
+    <!-- Auth - Login -->
+    <string name="login_title">Log in</string>
+    <string name="login_subtitle">Organize events easily in one place</string>
     <string name="login_email">E-mail</string>
-    <string name="login_password">Heslo</string>
-    <string name="login_button">Přihlásit se</string>
-    <string name="login_google">Přihlásit přes Google</string>
-    <string name="login_no_account">Nemáš účet? Zaregistruj se</string>
-    <string name="login_forgot_password">Zapomenuté heslo?</string>
+    <string name="login_password">Password</string>
+    <string name="login_password_hide">Hide password</string>
+    <string name="login_password_show">Show password</string>
+    <string name="login_button">Log in</string>
+    <string name="login_google">Sign in with Google</string>
+    <string name="login_google_failed">Google sign-in failed</string>
+    <string name="login_no_account">Don\'t have an account? Sign up</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_logo_description">BetterMingle</string>
 
-    <string name="register_title">Registrace</string>
-    <string name="register_name">Jméno</string>
+    <!-- Auth - Register -->
+    <string name="register_title">Sign up</string>
+    <string name="register_subtitle">Create an account and start organizing events</string>
+    <string name="register_name">Name</string>
     <string name="register_email">E-mail</string>
-    <string name="register_password">Heslo</string>
-    <string name="register_confirm_password">Potvrdit heslo</string>
-    <string name="register_button">Vytvořit účet</string>
-    <string name="register_has_account">Už máš účet? Přihlas se</string>
+    <string name="register_password">Password</string>
+    <string name="register_confirm_password">Confirm password</string>
+    <string name="register_button">Create account</string>
+    <string name="register_has_account">Already have an account? Log in</string>
+    <string name="register_logo_description">BetterMingle</string>
 
-    <string name="forgot_password_title">Obnovení hesla</string>
-    <string name="forgot_password_description">Zadej svůj e-mail a pošleme ti odkaz na obnovení hesla.</string>
-    <string name="forgot_password_button">Odeslat odkaz</string>
-    <string name="forgot_password_back">Zpět na přihlášení</string>
+    <!-- Auth - Forgot Password -->
+    <string name="forgot_password_title">Reset password</string>
+    <string name="forgot_password_description">Enter your e-mail and we\'ll send you a password reset link.</string>
+    <string name="forgot_password_success">A password reset link has been sent to your e-mail.</string>
+    <string name="forgot_password_button">Send link</string>
+    <string name="forgot_password_back">Back to login</string>
+    <string name="forgot_password_email">E-mail</string>
 
-    <!-- Events -->
-    <string name="events_title">Tvoje akce</string>
-    <string name="events_empty_title">Zatím žádné akce</string>
-    <string name="events_empty_description">Vytvoř svou první akci a pozvi kamarády!</string>
-    <string name="events_create">Nová akce</string>
+    <!-- Auth - Onboarding -->
+    <string name="onboarding_page1_title">Coordinate events easily</string>
+    <string name="onboarding_page1_description">Voting, schedule, chat, and tasks — all in one place for your event.</string>
+    <string name="onboarding_page2_title">Split expenses fairly</string>
+    <string name="onboarding_page2_description">Clear cost sharing. Everyone knows how much to pay and who owes whom.</string>
+    <string name="onboarding_page3_title">Vote and decide together</string>
+    <string name="onboarding_page3_description">Polls for dates, places, and activities. Group democracy made easy.</string>
+    <string name="onboarding_page4_title">Start for free</string>
+    <string name="onboarding_page4_description">Create your first event and invite friends. It only takes a few taps.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_start">Start</string>
+    <string name="onboarding_continue">Continue</string>
+
+    <!-- Events List -->
+    <string name="events_title">Your events</string>
+    <string name="events_empty_title">No events yet</string>
+    <string name="events_empty_description">Create your first event and invite friends!</string>
+    <string name="events_create">New event</string>
+    <string name="events_search_label">Search events…</string>
+    <string name="events_search_icon">Search</string>
+    <string name="events_count">%d events total</string>
+    <string name="events_section_ongoing">Ongoing</string>
+    <string name="events_section_upcoming">Upcoming</string>
+    <string name="events_section_completed">Completed</string>
+    <string name="events_section_cancelled">Cancelled</string>
+    <string name="events_banner_close">Close</string>
+    <string name="events_year_review_title">Year in events</string>
+    <string name="events_year_review_description">Check out your stats for the year!</string>
+
+    <!-- Event Status -->
+    <string name="event_status_planning">Planning</string>
+    <string name="event_status_confirmed">Confirmed</string>
+    <string name="event_status_ongoing">Ongoing</string>
+    <string name="event_status_completed">Completed</string>
+    <string name="event_status_cancelled">Cancelled</string>
 
     <!-- Event Dashboard -->
-    <string name="dashboard_countdown">Odpočet</string>
-    <string name="dashboard_voting">Hlasování</string>
-    <string name="dashboard_participants">Účastníci</string>
-    <string name="dashboard_expenses">Výdaje</string>
-    <string name="dashboard_carpool">Spolujízda</string>
-    <string name="dashboard_rooms">Ubytování</string>
-    <string name="dashboard_schedule">Harmonogram</string>
-    <string name="dashboard_packing">Balicí seznam</string>
+    <string name="dashboard_countdown">Countdown</string>
+    <string name="dashboard_voting">Voting</string>
+    <string name="dashboard_participants">Participants</string>
+    <string name="dashboard_expenses">Expenses</string>
+    <string name="dashboard_carpool">Carpool</string>
+    <string name="dashboard_rooms">Accommodation</string>
+    <string name="dashboard_schedule">Schedule</string>
+    <string name="dashboard_packing">Packing list</string>
     <string name="dashboard_chat">Chat</string>
-    <string name="dashboard_gallery">Galerie</string>
-    <string name="dashboard_rating">Hodnocení</string>
-    <string name="dashboard_settings">Nastavení</string>
+    <string name="dashboard_gallery">Gallery</string>
+    <string name="dashboard_rating">Rating</string>
+    <string name="dashboard_settings">Settings</string>
+    <string name="dashboard_tasks">Tasks</string>
+    <string name="dashboard_activity">Activity</string>
+    <string name="dashboard_summary">Summary</string>
+    <string name="dashboard_modules">Modules</string>
+    <string name="dashboard_loading">Loading…</string>
+    <string name="dashboard_cover_description">Cover</string>
+    <string name="dashboard_add_to_calendar">Add to calendar</string>
+    <string name="dashboard_share_invite">Share invite</string>
+    <string name="dashboard_share_title">Share invite</string>
+    <string name="dashboard_share_text">Hey! Join the event \"%1$s\" on BetterMingle: %2$s</string>
+    <string name="dashboard_share_code">Code: %1$s</string>
+    <string name="dashboard_share_copy_link">Copy link</string>
+    <string name="dashboard_share_link_copied">Link copied</string>
+    <string name="dashboard_share_chooser">Share invite</string>
+    <string name="dashboard_currency_czk">CZK</string>
+    <string name="dashboard_active_count">active</string>
+    <string name="dashboard_people_count">people</string>
+    <string name="dashboard_rides_count">rides</string>
+    <string name="dashboard_rooms_count">rooms</string>
+    <string name="dashboard_items_count">items</string>
+    <string name="dashboard_messages_count">messages</string>
+    <string name="dashboard_tasks_count">tasks</string>
+    <string name="dashboard_things_count">things</string>
 
-    <!-- Profile -->
-    <string name="profile_title">Profil</string>
-    <string name="profile_settings">Nastavení</string>
-    <string name="profile_premium">Mingle Pro</string>
-    <string name="profile_logout">Odhlásit se</string>
-
-    <!-- General -->
-    <string name="save">Uložit</string>
-    <string name="cancel">Zrušit</string>
-    <string name="delete">Smazat</string>
-    <string name="edit">Upravit</string>
-    <string name="share">Sdílet</string>
-    <string name="loading">Načítání…</string>
-    <string name="error_generic">Něco se pokazilo. Zkus to znovu.</string>
-    <string name="days">dní</string>
-    <string name="hours">hodin</string>
-    <string name="minutes">minut</string>
-    <string name="back">Zpět</string>
-    <string name="retry">Zkus to znovu</string>
-    <string name="create">Vytvořit</string>
-    <string name="search">Hledat</string>
+    <!-- Create Event -->
+    <string name="create_event_step_basics">New event</string>
+    <string name="create_event_step_invite">Invite participants</string>
+    <string name="create_event_step_modules">Choose modules</string>
+    <string name="create_event_limit_title">Event limit</string>
+    <string name="create_event_limit_free">You\'ve reached the limit of %d events in the Free version. Upgrade to Pro or Business for more events.</string>
+    <string name="create_event_limit_free_button">Go to Premium</string>
+    <string name="create_event_limit_pro">You\'ve reached the limit of %d events in the Pro version. Upgrade to Business for unlimited events.</string>
+    <string name="create_event_limit_pro_button">Go to Business</string>
+    <string name="create_event_basics_title">Basic info</string>
+    <string name="create_event_cover_description">Cover</string>
+    <string name="create_event_cover_remove">Remove</string>
+    <string name="create_event_cover_add">Add cover photo</string>
+    <string name="create_event_name_label">Event name</string>
+    <string name="create_event_description_label">Description</string>
+    <string name="create_event_formatting_hint">Formatting: **bold**, *italic*</string>
+    <string name="create_event_intro_label">Intro text (optional)</string>
+    <string name="create_event_intro_hint">Shown on event dashboard. You can use **bold**, *italic*, or - lists.</string>
+    <string name="create_event_location_label">Location</string>
+    <string name="create_event_theme_label">Event theme (optional)</string>
+    <string name="create_event_section_datetime">Date and time</string>
+    <string name="create_event_start_label">Start</string>
+    <string name="create_event_end_label">End</string>
+    <string name="create_event_date_clear">Clear</string>
+    <string name="create_event_datepicker_continue">Continue</string>
+    <string name="create_event_datepicker_cancel">Cancel</string>
+    <string name="create_event_timepicker_title">Select time</string>
+    <string name="create_event_timepicker_cancel">Cancel</string>
+    <string name="create_event_timepicker_confirm">Confirm</string>
+    <string name="create_event_invite_title">Invite participants</string>
+    <string name="create_event_invite_subtitle">You can also send invites later.</string>
+    <string name="create_event_invite_email">Participant e-mail</string>
+    <string name="create_event_invite_add">Add</string>
+    <string name="create_event_invite_remove">Remove</string>
+    <string name="create_event_invite_continue">Continue</string>
+    <string name="create_event_invite_skip">Skip</string>
+    <string name="create_event_modules_title">Choose modules</string>
+    <string name="create_event_modules_subtitle">Choose what your event needs. You can change anytime.</string>
+    <string name="create_event_module_voting">Voting</string>
+    <string name="create_event_module_expenses">Expenses</string>
+    <string name="create_event_module_carpool">Carpool</string>
+    <string name="create_event_module_rooms">Accommodation</string>
+    <string name="create_event_module_chat">Chat</string>
+    <string name="create_event_module_schedule">Schedule</string>
+    <string name="create_event_module_tasks">Tasks</string>
+    <string name="create_event_create_button">Create event</string>
+    <string name="create_event_security_title">Enhanced security</string>
+    <string name="create_event_security_subtitle">For corporate and sensitive events</string>
+    <string name="create_event_security_pin_label">Entry PIN (4–6 digits)</string>
+    <string name="create_event_security_pin_hide">Hide</string>
+    <string name="create_event_security_pin_show">Show</string>
+    <string name="create_event_security_hide_financials">Hide finances</string>
+    <string name="create_event_security_hide_financials_desc">Financial details visible only to organizer</string>
+    <string name="create_event_security_screenshot">Screenshot protection</string>
+    <string name="create_event_security_screenshot_desc">Block screenshots</string>
+    <string name="create_event_security_approval">Participant approval</string>
+    <string name="create_event_security_approval_desc">New participants must be approved</string>
+    <string name="create_event_security_auto_delete">Automatic data deletion</string>
+    <string name="create_event_security_auto_delete_off">Off</string>
+    <string name="create_event_security_auto_delete_days">%d days after event ends</string>
+    <string name="create_event_security_auto_delete_never">Never</string>
+    <string name="create_event_security_auto_delete_7">7 days</string>
+    <string name="create_event_security_auto_delete_30">30 days</string>
+    <string name="create_event_security_auto_delete_90">90 days</string>
+    <string name="create_event_template_picker_title">Choose template</string>
+    <string name="create_event_template_picker_desc">Quick start with pre-configured modules and settings.</string>
+    <string name="create_event_template_custom">Custom event</string>
+    <string name="create_event_template_premium_badge">Premium</string>
+    <string name="create_event_template_wedding">Wedding</string>
+    <string name="create_event_template_wedding_desc">Our big day!</string>
+    <string name="create_event_template_birthday">Birthday</string>
+    <string name="create_event_template_birthday_desc">Birthday party</string>
+    <string name="create_event_template_teambuilding">Teambuilding</string>
+    <string name="create_event_template_teambuilding_desc">Corporate teambuilding</string>
+    <string name="create_event_template_trip">Trip</string>
+    <string name="create_event_template_trip_desc">Group trip</string>
+    <string name="create_event_template_festival">Festival</string>
+    <string name="create_event_template_festival_desc">Music festival</string>
+    <string name="create_event_template_corporate">Corporate event</string>
+    <string name="create_event_template_corporate_desc">Corporate event</string>
+    <string name="create_event_template_party">Party</string>
+    <string name="create_event_template_party_desc">Party with friends</string>
 
     <!-- Tasks -->
-    <string name="tasks_title">Úkoly</string>
-    <string name="tasks_empty_title">Zatím žádné úkoly</string>
-    <string name="tasks_empty_description">Přidej úkoly a přiřaď je účastníkům.</string>
-    <string name="tasks_new">Nový úkol</string>
-    <string name="tasks_created">Úkol vytvořen</string>
-    <string name="tasks_deleted">Úkol smazán</string>
-    <string name="tasks_delete_title">Smazat úkol</string>
-    <string name="tasks_delete_confirm">Opravdu chceš smazat tento úkol?</string>
-    <string name="tasks_name_label">Název úkolu</string>
-    <string name="tasks_color">Barva</string>
-    <string name="tasks_assign">Přiřadit</string>
-    <string name="tasks_deadline">Termín: %1$s</string>
+    <string name="tasks_title">Tasks</string>
+    <string name="tasks_empty_title">No tasks yet</string>
+    <string name="tasks_empty_description">Add tasks and assign them to participants.</string>
+    <string name="tasks_empty_icon">Tasks icon</string>
+    <string name="tasks_new">New task</string>
+    <string name="tasks_created">Task created</string>
+    <string name="tasks_deleted">Task deleted</string>
+    <string name="tasks_delete_title">Delete task</string>
+    <string name="tasks_delete_confirm">Are you sure you want to delete this task?</string>
+    <string name="tasks_name_label">Task name</string>
+    <string name="tasks_color">Color</string>
+    <string name="tasks_assign">Assign</string>
+    <string name="tasks_deadline">Deadline: %1$s</string>
+    <string name="tasks_deadline_optional">Deadline (optional)</string>
+    <string name="tasks_color_blue">Blue</string>
+    <string name="tasks_color_pink">Pink</string>
+    <string name="tasks_color_orange">Orange</string>
+    <string name="tasks_color_gold">Gold</string>
+    <string name="tasks_color_green">Green</string>
 
     <!-- Expenses -->
-    <string name="expenses_title">Výdaje</string>
-    <string name="expenses_empty_title">Zatím žádné výdaje</string>
-    <string name="expenses_empty_description">Přidej výdaj a rozděl ho mezi účastníky.</string>
-    <string name="expenses_new">Nový výdaj</string>
-    <string name="expenses_added">Výdaj přidán</string>
-    <string name="expenses_deleted">Výdaj smazán</string>
-    <string name="expenses_delete_title">Smazat výdaj</string>
-    <string name="expenses_delete_confirm">Opravdu chceš smazat tento výdaj?</string>
-    <string name="expenses_description_label">Popis výdaje</string>
-    <string name="expenses_amount_label">Částka (CZK)</string>
-    <string name="expenses_category_label">Kategorie (volitelné)</string>
-    <string name="expenses_paid_by">Zaplatil/a: %1$s</string>
-    <string name="expenses_budget">Rozpočet</string>
-    <string name="expenses_over_budget">Překročeno o %1$s</string>
-    <string name="expenses_tab_expenses">Výdaje</string>
-    <string name="expenses_tab_settlement">Vyrovnání</string>
-    <string name="expenses_settled_title">Vše vyrovnáno</string>
-    <string name="expenses_settled_description">Momentálně nejsou žádné dluhy k vyrovnání.</string>
-    <string name="expenses_settle">Vyrovnat</string>
-    <string name="expenses_add">Přidat</string>
-    <string name="expenses_payer">Platil/a</string>
-    <string name="expenses_payer_label">Plátce</string>
+    <string name="expenses_title">Expenses</string>
+    <string name="expenses_empty_title">No expenses yet</string>
+    <string name="expenses_empty_description">Add an expense and split it among participants.</string>
+    <string name="expenses_empty_icon">No expenses</string>
+    <string name="expenses_new">New expense</string>
+    <string name="expenses_added">Expense added</string>
+    <string name="expenses_deleted">Expense deleted</string>
+    <string name="expenses_delete_title">Delete expense</string>
+    <string name="expenses_delete_confirm">Are you sure you want to delete this expense?</string>
+    <string name="expenses_description_label">Expense description</string>
+    <string name="expenses_amount_label">Amount (CZK)</string>
+    <string name="expenses_category_label">Category</string>
+    <string name="expenses_paid_by">Paid by: %1$s</string>
+    <string name="expenses_budget">Budget</string>
+    <string name="expenses_over_budget">Over budget by %1$s</string>
+    <string name="expenses_tab_expenses">Expenses</string>
+    <string name="expenses_tab_settlement">Settlement</string>
+    <string name="expenses_settled_title">All settled!</string>
+    <string name="expenses_settled_description">There are currently no debts to settle.</string>
+    <string name="expenses_settle">Settle</string>
+    <string name="expenses_add">Add</string>
+    <string name="expenses_payer">Paid by</string>
+    <string name="expenses_payer_label">Payer</string>
+    <string name="expenses_payer_me">Me</string>
+    <string name="expenses_item_default">Expense</string>
+    <string name="expenses_my_balance">My balance:</string>
+    <string name="expenses_to_receive">to receive</string>
+    <string name="expenses_i_owe">I owe</string>
+    <string name="expenses_settled">Settled</string>
+    <string name="expenses_debt_owes"> owes </string>
+    <string name="expenses_count_one">expense</string>
+    <string name="expenses_count_few">expenses</string>
+    <string name="expenses_count_many">expenses</string>
+    <string name="expenses_category_food">Food</string>
+    <string name="expenses_category_transport">Transport</string>
+    <string name="expenses_category_accommodation">Accommodation</string>
+    <string name="expenses_category_drinks">Drinks</string>
+    <string name="expenses_category_other">Other</string>
 
     <!-- Voting -->
-    <string name="voting_title">Hlasování</string>
-    <string name="voting_empty_title">Zatím žádné ankety</string>
-    <string name="voting_empty_description">Vytvoř anketu a nech ostatní hlasovat.</string>
-    <string name="voting_new">Nová anketa</string>
-    <string name="voting_created">Anketa vytvořena</string>
-    <string name="voting_poll_closed">Anketa uzavřena</string>
-    <string name="voting_active">Aktivní</string>
-    <string name="voting_votes">%1$d hlasů</string>
-    <string name="voting_poll_name_label">Název ankety</string>
-    <string name="voting_poll_type">Typ ankety</string>
-    <string name="voting_multiple_answers">Více odpovědí</string>
-    <string name="voting_anonymous">Anonymní</string>
-    <string name="voting_options">Možnosti</string>
-    <string name="voting_option_label">Možnost %1$d</string>
-    <string name="voting_add_option">Přidat možnost</string>
-    <string name="voting_remove_option">Odebrat</string>
+    <string name="voting_title">Voting</string>
+    <string name="voting_empty_title">No polls yet</string>
+    <string name="voting_empty_description">Create a poll and let others vote.</string>
+    <string name="voting_empty_icon">No polls</string>
+    <string name="voting_new">New poll</string>
+    <string name="voting_created">Poll created</string>
+    <string name="voting_updated">Poll updated</string>
+    <string name="voting_poll_closed">Poll closed</string>
+    <string name="voting_active">Active</string>
+    <string name="voting_votes">%1$d votes</string>
+    <string name="voting_poll_name_label">Poll name</string>
+    <string name="voting_poll_type">Poll type</string>
+    <string name="voting_multiple_answers">Multiple answers</string>
+    <string name="voting_single_answer">Single answer</string>
+    <string name="voting_multiple_hint">Multiple choices allowed</string>
+    <string name="voting_single_hint">Only one choice</string>
+    <string name="voting_anonymous">Anonymous</string>
+    <string name="voting_options">Options</string>
+    <string name="voting_option_label">Option %1$d</string>
+    <string name="voting_add_option">Add option</string>
+    <string name="voting_remove_option">Remove</string>
+    <string name="voting_close_description">Close voting</string>
+    <string name="voting_edit_description">Edit</string>
+    <string name="voting_edit_title">Edit poll</string>
+    <string name="voting_existing_options">Existing options</string>
+    <string name="voting_new_options">New options</string>
+    <string name="voting_new_option_label">New option %1$d</string>
+    <string name="voting_type_date">Date</string>
+    <string name="voting_type_location">Location</string>
+    <string name="voting_type_activity">Activity</string>
+    <string name="voting_type_price">Price</string>
+    <string name="voting_type_custom">Custom</string>
+    <string name="voting_limit_title">Poll limit</string>
+    <string name="voting_limit_message">You\'ve reached the poll limit in the Free version. Upgrade to Pro for unlimited polls.</string>
+    <string name="voting_limit_upgrade">Upgrade to Pro</string>
+    <string name="voting_votes_count">votes</string>
+
+    <!-- Chat -->
+    <string name="chat_input_placeholder">Message…</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_empty_title">No messages yet</string>
+    <string name="chat_empty_description">Send the first message and start the conversation.</string>
+
+    <!-- Carpool -->
+    <string name="carpool_title">Carpool</string>
+    <string name="carpool_tab_offers">Offers</string>
+    <string name="carpool_tab_requests">Requests</string>
+    <string name="carpool_offer_ride">Offer ride</string>
+    <string name="carpool_request_ride">Request ride</string>
+    <string name="carpool_empty_offers_title">No offers yet</string>
+    <string name="carpool_empty_offers_desc">Offer a ride to other participants.</string>
+    <string name="carpool_empty_requests_title">No requests yet</string>
+    <string name="carpool_empty_requests_desc">Request a ride from other participants.</string>
+    <string name="carpool_delete_title">Delete ride</string>
+    <string name="carpool_delete_confirm">Are you sure you want to delete this ride?</string>
+    <string name="carpool_driver">Driver</string>
+    <string name="carpool_requester">Requester</string>
+    <string name="carpool_closed">Closed</string>
+    <string name="carpool_seats_count">seats</string>
+    <string name="carpool_passengers">Passengers</string>
+    <string name="carpool_approved">Approved</string>
+    <string name="carpool_rejected">Rejected</string>
+    <string name="carpool_pending">Pending</string>
+    <string name="carpool_approve">Approve</string>
+    <string name="carpool_reject">Reject</string>
+    <string name="carpool_close_button">Close</string>
+    <string name="carpool_request_button">Request a ride</string>
+    <string name="carpool_select_time">Select time</string>
+    <string name="carpool_dialog_offer_title">Offer ride</string>
+    <string name="carpool_dialog_request_title">Request ride</string>
+    <string name="carpool_departure_location">Departure location</string>
+    <string name="carpool_departure_time">Departure time</string>
+    <string name="carpool_available_seats">Available seats</string>
+    <string name="carpool_notes">Notes</string>
+
+    <!-- Rooms -->
+    <string name="rooms_title">Accommodation</string>
+    <string name="rooms_empty_title">No rooms yet</string>
+    <string name="rooms_empty_description">Add rooms and assign participants.</string>
+    <string name="rooms_add">Add room</string>
+    <string name="rooms_delete_title">Delete room</string>
+    <string name="rooms_delete_confirm">Are you sure you want to delete room \"%1$s\"?</string>
+    <string name="rooms_name_label">Room name</string>
+    <string name="rooms_capacity_label">Capacity</string>
+    <string name="rooms_notes_label">Notes (optional)</string>
+    <string name="rooms_assign_title">Assign to: %1$s</string>
+    <string name="rooms_assign_occupancy">%1$d/%2$d occupied</string>
+    <string name="rooms_assign_in_other_room"> (in another room)</string>
+
+    <!-- Schedule -->
+    <string name="schedule_title">Schedule</string>
+    <string name="schedule_empty_title">No schedule yet</string>
+    <string name="schedule_empty_description">Add schedule items and create the event timeline.</string>
+    <string name="schedule_add">Add schedule item</string>
+    <string name="schedule_delete_title">Delete schedule item</string>
+    <string name="schedule_delete_confirm">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="schedule_name_label">Name</string>
+    <string name="schedule_description_label">Description (optional)</string>
+    <string name="schedule_start_label">Start</string>
+    <string name="schedule_end_label">End</string>
+    <string name="schedule_location_label">Location (optional)</string>
+    <string name="schedule_add_to_calendar">Add to calendar</string>
+    <string name="schedule_select_time">Select time</string>
+
+    <!-- Packing List -->
+    <string name="packing_title">Packing list</string>
+    <string name="packing_empty_title">Empty list</string>
+    <string name="packing_empty_description">Add things that need to be packed.</string>
+    <string name="packing_add">Add item</string>
+    <string name="packing_name_label">Item name</string>
+    <string name="packing_personal">Personal</string>
+    <string name="packing_shared">Shared</string>
+
+    <!-- Participants -->
+    <string name="participants_title">Participants</string>
+    <string name="participants_empty_title">No participants yet</string>
+    <string name="participants_empty_description">Invite friends by sharing the event link.</string>
+    <string name="participants_add">Add participant</string>
+    <string name="participants_share_text">Hey! Join the event \"%1$s\" on BetterMingle: %2$s</string>
+    <string name="participants_share_title">Share invite</string>
+    <string name="participants_invite_title">Invite participant</string>
+    <string name="participants_role_organizer">Organizer</string>
+    <string name="participants_role_co_organizer">Co-organizer</string>
+    <string name="participants_role_participant">Participant</string>
+    <string name="participants_email_label">Email</string>
+    <string name="participants_contact_email_label">Contact email</string>
+    <string name="participants_phone_label">Phone</string>
+    <string name="participants_department_label">Department</string>
+    <string name="participants_rsvp_accepted">Accepted</string>
+    <string name="participants_rsvp_declined">Declined</string>
+    <string name="participants_rsvp_maybe">Maybe</string>
+    <string name="participants_rsvp_pending">Pending</string>
+
+    <!-- Rating -->
+    <string name="rating_title">Rating</string>
+    <string name="rating_your_rating">Your rating</string>
+    <string name="rating_rate_event">Rate the event</string>
+    <string name="rating_overall">Overall impression</string>
+    <string name="rating_organization">Organization</string>
+    <string name="rating_atmosphere">Atmosphere</string>
+    <string name="rating_venue">Venue</string>
+    <string name="rating_comment_label">Comment (optional)</string>
+    <string name="rating_save_changes">Save changes</string>
+    <string name="rating_submit">Submit rating</string>
+    <string name="rating_edit">Edit rating</string>
+    <string name="rating_empty_title">Just you so far</string>
+    <string name="rating_empty_description">Wait for other participants to rate.</string>
+    <string name="rating_star_description">%1$s star %2$d</string>
+    <string name="rating_others_title">Other ratings (%1$d)</string>
+
+    <!-- Join Event -->
+    <string name="join_title">Invitation</string>
+    <string name="join_error_not_found">Invitation not found or is invalid.</string>
+    <string name="join_error_load_failed">Failed to load invitation.</string>
+    <string name="join_error_title">Error</string>
+    <string name="join_joining">Joining…</string>
+    <string name="join_button">Join</string>
+    <string name="join_participant_limit">Event has a maximum of %1$d participants (%2$s version).</string>
+    <string name="join_error_failed">Failed to join the event.</string>
+    <string name="join_tier_free">Free</string>
+    <string name="join_tier_pro">Pro</string>
+    <string name="join_tier_business">Business</string>
+
+    <!-- Event Settings -->
+    <string name="event_settings_title">Event settings</string>
+    <string name="event_settings_invite_section">Invitation</string>
+    <string name="event_settings_copy_link">Copy link</string>
+    <string name="event_settings_link_copied">Link copied</string>
+    <string name="event_settings_share">Share</string>
+    <string name="event_settings_share_chooser">Share invite</string>
+    <string name="event_settings_share_text">Hey! Join the event \"%1$s\" on BetterMingle: %2$s</string>
+    <string name="event_settings_notifications">Notifications</string>
+    <string name="event_settings_notifications_desc">Notify about event updates</string>
+    <string name="event_settings_status">Event status</string>
+    <string name="event_settings_status_error">Error changing status</string>
+    <string name="event_settings_security">Enhanced security</string>
+    <string name="event_settings_security_active">Active</string>
+    <string name="event_settings_security_disabled">Off</string>
+    <string name="event_settings_hide_financials">Hide finances</string>
+    <string name="event_settings_hide_financials_desc">Financial details visible only to organizer</string>
+    <string name="event_settings_screenshot">Screenshot protection</string>
+    <string name="event_settings_screenshot_desc">Block screenshots</string>
+    <string name="event_settings_approval">Participant approval</string>
+    <string name="event_settings_approval_desc">New participants must be approved</string>
+    <string name="event_settings_change_pin">Change PIN</string>
+    <string name="event_settings_pin_dialog_title">Change PIN</string>
+    <string name="event_settings_pin_dialog_desc">Enter a new 4-digit PIN for the event</string>
+    <string name="event_settings_pin_label">New PIN</string>
+    <string name="event_settings_pin_changed">PIN changed</string>
+    <string name="event_settings_pin_error">Error changing PIN</string>
+    <string name="event_settings_edit_title">Edit event</string>
+    <string name="event_settings_edit_name">Event name</string>
+    <string name="event_settings_edit_description">Description</string>
+    <string name="event_settings_edit_formatting">Formatting: **bold**, *italic*</string>
+    <string name="event_settings_edit_theme">Event theme (optional)</string>
+    <string name="event_settings_edit_success">Event updated</string>
+    <string name="event_settings_edit_error">Error updating event</string>
+    <string name="event_settings_edit_action">Edit event</string>
+    <string name="event_settings_edit_action_desc">Change name, date, and description</string>
+    <string name="event_settings_repeat">Repeat event</string>
+    <string name="event_settings_repeat_desc">Create a copy with the same modules</string>
+    <string name="event_settings_delete_title">Delete event</string>
+    <string name="event_settings_delete_confirm">Are you sure you want to permanently delete event \"%1$s\" and all its data? This action cannot be undone.</string>
+    <string name="event_settings_delete_action">Delete event</string>
+    <string name="event_settings_delete_action_desc">Permanently delete event and all data</string>
+    <string name="event_settings_danger_zone">Danger zone</string>
+
+    <!-- Activity Feed -->
+    <string name="activity_title">Activity</string>
+    <string name="activity_empty_title">No activity yet</string>
+    <string name="activity_empty_description">Activities will appear once something happens in the event.</string>
+
+    <!-- Event Summary -->
+    <string name="summary_title">Event summary</string>
+    <string name="summary_subtitle">Your event overview</string>
+    <string name="summary_participants">Participants</string>
+    <string name="summary_total_expenses">Total expenses</string>
+    <string name="summary_messages">Messages</string>
+    <string name="summary_polls">Polls</string>
+    <string name="summary_rides">Rides</string>
+    <string name="summary_most_active">Most active</string>
+    <string name="summary_top_payer">Biggest spender</string>
+    <string name="summary_share_button">Share summary</string>
+    <string name="summary_share_chooser">Share summary</string>
+    <string name="summary_share_header">Event summary: %1$s</string>
+    <string name="summary_share_participants">%1$d participants</string>
+    <string name="summary_share_expenses">%1$s CZK in expenses</string>
+    <string name="summary_share_messages">%1$d messages</string>
+    <string name="summary_share_polls">%1$d polls</string>
+    <string name="summary_share_footer">Created in BetterMingle</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_default_user">User</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_contact_email">Contact email</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_department">Department</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_premium">Mingle Pro</string>
+    <string name="profile_premium_description">Unlock unlimited events and features</string>
+    <string name="profile_help">Help</string>
+    <string name="profile_logout">Log out</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_profile">Profile</string>
+    <string name="settings_edit_name">Edit name</string>
+    <string name="settings_edit_name_label">Name</string>
+    <string name="settings_name_not_set">Not set</string>
+    <string name="settings_name_updated">Name updated</string>
+    <string name="settings_name_update_error">Error updating name</string>
+    <string name="settings_email">E-mail</string>
+    <string name="settings_email_not_found">Not found</string>
+    <string name="settings_change_password">Change password</string>
+    <string name="settings_password_reset_sent">Password reset link sent to your e-mail</string>
+    <string name="settings_password_reset_error">Error sending link</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notifications_enable">Enable notifications</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">App theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version: %1$s</string>
+    <string name="settings_copyright">Better Mingle © 2026</string>
+    <string name="settings_debug_tier_switch">Tier switching</string>
+    <string name="settings_debug_tier_current">Current: %1$s</string>
+    <string name="settings_section_danger">Danger zone</string>
+    <string name="settings_delete_account">Delete account</string>
+    <string name="settings_delete_account_desc">Permanently delete account and all data</string>
+    <string name="settings_delete_account_confirm">Are you sure you want to permanently delete your account and all data? This action cannot be undone.</string>
+    <string name="settings_delete_account_error">Error deleting account. Try logging in again and repeat.</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="edit_profile_change_avatar">Change avatar</string>
+    <string name="edit_profile_change_avatar_hint">Tap to change avatar</string>
+    <string name="edit_profile_name">Name</string>
+    <string name="edit_profile_contact_email">Contact email</string>
+    <string name="edit_profile_phone">Phone</string>
+    <string name="edit_profile_department">Department</string>
+    <string name="edit_profile_bio">Bio</string>
+    <string name="edit_profile_save">Save</string>
+    <string name="edit_profile_avatar_picker_title">Choose avatar</string>
+    <string name="edit_profile_avatar_description">Avatar %1$d</string>
+    <string name="edit_profile_avatar_premium">Premium</string>
+    <string name="edit_profile_upload_photo">Upload custom photo</string>
+    <string name="edit_profile_avatar_picker_close">Close</string>
+
+    <!-- Upgrade -->
+    <string name="upgrade_title">Premium</string>
+    <string name="upgrade_headline">Unlock full potential</string>
+    <string name="upgrade_subheadline">Choose a plan that fits you</string>
+    <string name="upgrade_plan_pro">Pro</string>
+    <string name="upgrade_plan_business">Business</string>
+    <string name="upgrade_billing_monthly">Monthly</string>
+    <string name="upgrade_billing_yearly">Yearly (save)</string>
+    <string name="upgrade_price_pro_monthly">79 CZK</string>
+    <string name="upgrade_price_pro_yearly">799 CZK</string>
+    <string name="upgrade_price_business_monthly">119 CZK</string>
+    <string name="upgrade_price_business_yearly">1 190 CZK</string>
+    <string name="upgrade_period_monthly">/ month</string>
+    <string name="upgrade_period_yearly">/ year</string>
+    <string name="upgrade_card_title_pro">Mingle Pro</string>
+    <string name="upgrade_card_title_business">Mingle Business</string>
+    <string name="upgrade_feature_pro_events">Up to 5 events (Free: max 2)</string>
+    <string name="upgrade_feature_pro_participants">Up to 100 participants (Free: max 8)</string>
+    <string name="upgrade_feature_pro_polls">Unlimited polls (Free: max 1)</string>
+    <string name="upgrade_feature_export_csv">Export expenses (CSV)</string>
+    <string name="upgrade_feature_multi_organizers">Multiple organizers</string>
+    <string name="upgrade_feature_no_ads">No ads</string>
+    <string name="upgrade_feature_business_events">Unlimited events</string>
+    <string name="upgrade_feature_business_participants">Unlimited participants</string>
+    <string name="upgrade_feature_business_polls">Unlimited polls</string>
+    <string name="upgrade_button_pro">Get Mingle Pro</string>
+    <string name="upgrade_button_business">Get Mingle Business</string>
+    <string name="upgrade_lifetime_title">Lifetime</string>
+    <string name="upgrade_lifetime_price">2 999 CZK</string>
+    <string name="upgrade_lifetime_desc">one-time · Business features forever</string>
+    <string name="upgrade_lifetime_button">Buy Lifetime</string>
+    <string name="upgrade_disclaimer">Subscription auto-renews. You can cancel anytime in Google Play.</string>
+
+    <!-- Help -->
+    <string name="help_title">Help</string>
+    <string name="help_section_faq">Frequently asked questions</string>
+    <string name="help_faq_collapse">Collapse</string>
+    <string name="help_faq_expand">Expand</string>
+    <string name="help_section_contact">Contact</string>
+    <string name="help_contact_send_email">Send e-mail</string>
+    <string name="help_contact_email">hello@codewhiskers.app</string>
+    <string name="help_faq1_q">How to create a new event?</string>
+    <string name="help_faq1_a">Tap the + button on the bottom bar and fill in the name, date, and description. After creating the event, you can add modules like voting, expenses, or carpool.</string>
+    <string name="help_faq2_q">How to invite friends?</string>
+    <string name="help_faq2_a">In the event settings, you\'ll find a sharing link. You can copy it or share it directly through any app. Invitees join with one tap.</string>
+    <string name="help_faq3_q">How do expenses work?</string>
+    <string name="help_faq3_a">In the Expenses module, add an expense and enter the amount. You can choose who paid and how to split it. The app automatically calculates settlements.</string>
+    <string name="help_faq4_q">How does voting work?</string>
+    <string name="help_faq4_a">In the Voting module, create a poll with options and other participants can vote. Results are shown in real time.</string>
+    <string name="help_faq5_q">How to change event settings?</string>
+    <string name="help_faq5_a">On the event dashboard, tap Settings. Here you can change the name, description, security, budget, and more.</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty_title">No notifications</string>
+    <string name="notifications_empty_description">When something happens in your events, you\'ll see it here.</string>
+    <string name="notifications_time_just_now">just now</string>
+    <string name="notifications_time_minutes_ago">%d min ago</string>
+    <string name="notifications_time_hours_ago">%d hrs ago</string>
+
+    <!-- Year in Review -->
+    <string name="year_review_intro_label">Your year in events</string>
+    <string name="year_review_intro_desc">Let\'s look back at what you experienced together this year!</string>
+    <string name="year_review_events_label">events</string>
+    <string name="year_review_events_desc">Every event is a story. And you wrote %1$d of them this year!</string>
+    <string name="year_review_people_label">people</string>
+    <string name="year_review_people_desc">That many amazing people you\'ve met. Each one added a piece to the puzzle of your experiences.</string>
+    <string name="year_review_days_label">days</string>
+    <string name="year_review_days_desc">A total of %1$d days spent together. That\'s more than just a number — these are memories for a lifetime.</string>
+    <string name="year_review_longest_label">days</string>
+    <string name="year_review_longest_desc">Your longest event \"%1$s\" lasted %2$d days!</string>
+    <string name="year_review_longest_subtitle">Longest event</string>
+    <string name="year_review_location_desc">Your favorite place. Where the best things happened!</string>
+    <string name="year_review_location_subtitle">Most visited location</string>
+    <string name="year_review_month_desc">Your most active month. That\'s when things were buzzing!</string>
+    <string name="year_review_month_subtitle">Most active month</string>
+    <string name="year_review_avg_label">people per event</string>
+    <string name="year_review_avg_desc">On average, %1$d people gathered at each event. What a crew!</string>
+    <string name="year_review_avg_subtitle">Average per event</string>
+    <string name="year_review_outro_label">Great year!</string>
+    <string name="year_review_outro_desc">Thank you for planning with BetterMingle. May next year be even better!</string>
+    <string name="year_review_share">Share</string>
+    <string name="year_review_share_chooser">Share year in events</string>
+    <string name="year_review_tagline">Events that matter, planned with BetterMingle</string>
+
+    <!-- Activity Logger strings -->
+    <string name="activity_sent_message">sent a message: \u201E%1$s\u201C</string>
+    <string name="activity_deleted_expense">deleted expense: %1$s (%2$s CZK)</string>
+    <string name="activity_settled_debt">settled debt to %1$s</string>
+    <string name="activity_added_expense">added expense: %1$s (%2$s CZK)</string>
+    <string name="activity_voted_for">voted for \u201E%1$s\u201C in poll %2$s</string>
+    <string name="activity_created_poll">created poll: %1$s</string>
+    <string name="activity_deleted_ride">deleted ride from %1$s</string>
+    <string name="activity_requested_ride">requested a seat in ride from %1$s</string>
+    <string name="activity_offered_ride">offered a ride</string>
+    <string name="activity_looking_for_ride">looking for a ride</string>
+    <string name="activity_deleted_room">deleted room: %1$s</string>
+    <string name="activity_created_room">created room %1$s (capacity %2$s)</string>
+    <string name="activity_joined_room">joined room: %1$s</string>
+    <string name="activity_removed_from_schedule">removed from schedule: %1$s</string>
+    <string name="activity_added_to_schedule">added to schedule: %1$s</string>
+    <string name="activity_deleted_task">deleted task: %1$s</string>
+    <string name="activity_completed_task">completed task: %1$s</string>
+    <string name="activity_created_task">created task: %1$s</string>
+    <string name="activity_removed_from_packing">removed from packing list: %1$s</string>
+    <string name="activity_added_to_packing">added to packing list: %1$s</string>
+    <string name="activity_rated_event">rated the event (%1$s/5 \u2B50)</string>
+    <string name="activity_edited_event">edited %1$s of event</string>
+    <string name="activity_deleted_event">deleted event: %1$s</string>
+    <string name="activity_changed_status">changed event status to %1$s</string>
+    <string name="activity_joined_event">joined the event</string>
+    <string name="activity_change_name">name</string>
+    <string name="activity_change_description">description</string>
+    <string name="activity_change_theme">theme</string>
+
+    <!-- PIN Verification -->
+    <string name="pin_dialog_title">Protected event</string>
+    <string name="pin_dialog_description">This event requires a PIN for access.</string>
+    <string name="pin_dialog_input_label">Enter PIN</string>
+    <string name="pin_dialog_error">Incorrect PIN</string>
+
+    <!-- QR Code -->
+    <string name="qr_code_description">QR code</string>
+
+    <!-- User Avatar -->
+    <string name="user_avatar_description">Avatar</string>
 
     <!-- Error State -->
-    <string name="error_title">Něco se pokazilo</string>
-    <string name="error_description">Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="error_title">Something went wrong</string>
+    <string name="error_description">Check your internet connection and try again.</string>
+    <string name="error_icon_description">Error</string>
 
     <!-- Accessibility -->
-    <string name="a11y_no_events">Žádné akce</string>
-    <string name="a11y_no_tasks">Ikona úkolů</string>
-    <string name="a11y_no_expenses">Žádné výdaje</string>
-    <string name="a11y_no_polls">Žádné ankety</string>
-    <string name="a11y_search">Hledat</string>
-    <string name="a11y_assigned">Přiřazeno</string>
-    <string name="a11y_delete_task">Smazat úkol</string>
-    <string name="a11y_delete_expense">Smazat výdaj</string>
-    <string name="a11y_error">Chyba</string>
-    <string name="a11y_add_to_calendar">Přidat do kalendáře</string>
+    <string name="a11y_no_events">No events</string>
+    <string name="a11y_no_tasks">Tasks icon</string>
+    <string name="a11y_no_expenses">No expenses</string>
+    <string name="a11y_no_polls">No polls</string>
+    <string name="a11y_search">Search</string>
+    <string name="a11y_assigned">Assigned</string>
+    <string name="a11y_delete_task">Delete task</string>
+    <string name="a11y_delete_expense">Delete expense</string>
+    <string name="a11y_error">Error</string>
+    <string name="a11y_add_to_calendar">Add to calendar</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Countdown to nearest event</string>
+
+    <!-- Language Settings -->
+    <string name="settings_section_language">Language</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_language_system">System</string>
 </resources>

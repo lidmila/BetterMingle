@@ -5,6 +5,9 @@ data class EventRating(
     val eventId: String = "",
     val userId: String = "",
     val overallRating: Int = 0, // 1-5
+    val organizationRating: Int = 0, // 1-5
+    val atmosphereRating: Int = 0, // 1-5
+    val venueRating: Int = 0, // 1-5
     val comment: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )

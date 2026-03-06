@@ -43,8 +43,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.TextOnColor
@@ -120,14 +121,13 @@ fun CountdownTimer(
     val minutes = ((remainingMillis / (1000 * 60)) % 60).coerceAtLeast(0)
     val seconds = ((remainingMillis / 1000) % 60).coerceAtLeast(0)
 
-    val gradientBrush = Brush.linearGradient(listOf(PrimaryBlue, AccentPink))
     val shimmerWhite = Color.White.copy(alpha = 0.15f)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
-            .background(gradientBrush)
+            .background(PrimaryBlue)
             .drawWithContent {
                 drawContent()
                 // Shimmer overlay
@@ -162,7 +162,7 @@ fun CountdownTimer(
             ) {
                 CountdownUnitCard(
                     value = days,
-                    label = "dní",
+                    label = stringResource(R.string.common_days),
                     scale = scales[0].value
                 )
 
@@ -170,7 +170,7 @@ fun CountdownTimer(
 
                 CountdownUnitCard(
                     value = hours,
-                    label = "hodin",
+                    label = stringResource(R.string.common_hours),
                     scale = scales[1].value
                 )
 
@@ -178,7 +178,7 @@ fun CountdownTimer(
 
                 CountdownUnitCard(
                     value = minutes,
-                    label = "minut",
+                    label = stringResource(R.string.common_minutes),
                     scale = scales[2].value
                 )
 
@@ -186,7 +186,7 @@ fun CountdownTimer(
 
                 CountdownUnitCard(
                     value = seconds,
-                    label = "sekund",
+                    label = stringResource(R.string.common_seconds),
                     scale = scales[3].value,
                     borderColor = AccentGold.copy(alpha = secondsBorderAlpha)
                 )

@@ -8,6 +8,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
 
@@ -38,6 +42,7 @@ fun EmptyState(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
+    @DrawableRes illustration: Int? = null,
     iconDescription: String? = null,
     action: @Composable (() -> Unit)? = null
 ) {
@@ -62,14 +67,24 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = iconDescription,
-            modifier = Modifier
-                .size(Spacing.iconXXL)
-                .scale(iconScale.value),
-            tint = TextSecondary.copy(alpha = 0.5f)
-        )
+        if (illustration != null) {
+            Image(
+                painter = painterResource(id = illustration),
+                contentDescription = iconDescription,
+                modifier = Modifier
+                    .size(140.dp)
+                    .scale(iconScale.value)
+            )
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = iconDescription,
+                modifier = Modifier
+                    .size(Spacing.iconXXL)
+                    .scale(iconScale.value),
+                tint = TextSecondary.copy(alpha = 0.5f)
+            )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.md))
 

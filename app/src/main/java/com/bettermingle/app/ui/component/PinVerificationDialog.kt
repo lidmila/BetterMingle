@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
@@ -47,7 +49,7 @@ fun PinVerificationDialog(
         },
         title = {
             Text(
-                text = "Chráněná akce",
+                text = stringResource(R.string.pin_dialog_title),
                 textAlign = TextAlign.Center
             )
         },
@@ -57,7 +59,7 @@ fun PinVerificationDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Tato akce vyžaduje PIN pro přístup.",
+                    text = stringResource(R.string.pin_dialog_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                     textAlign = TextAlign.Center
@@ -73,11 +75,11 @@ fun PinVerificationDialog(
                             isError = false
                         }
                     },
-                    label = "Zadej PIN",
+                    label = stringResource(R.string.pin_dialog_input_label),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     visualTransformation = PasswordVisualTransformation(),
                     isError = isError,
-                    errorMessage = if (isError) "Nesprávný PIN" else null,
+                    errorMessage = if (isError) stringResource(R.string.pin_dialog_error) else null,
                     leadingIcon = {
                         Icon(Icons.Default.Lock, contentDescription = null)
                     }
@@ -95,12 +97,12 @@ fun PinVerificationDialog(
                 },
                 enabled = pin.length >= 4
             ) {
-                Text("Potvrdit", color = PrimaryBlue)
+                Text(stringResource(R.string.common_confirm), color = PrimaryBlue)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Zrušit", color = TextSecondary)
+                Text(stringResource(R.string.common_cancel), color = TextSecondary)
             }
         }
     )

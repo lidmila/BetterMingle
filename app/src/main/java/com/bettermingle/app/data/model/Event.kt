@@ -8,8 +8,13 @@ enum class EventStatus {
 }
 
 enum class EventModule {
-    VOTING, EXPENSES, CARPOOL, ROOMS, CHAT, SCHEDULE, TASKS
+    VOTING, EXPENSES, CARPOOL, ROOMS, CHAT, SCHEDULE, TASKS, PACKING_LIST
 }
+
+val PREDEFINED_THEMES = listOf(
+    "Svatba", "Narozeniny", "Teambuilding", "Firemní akce",
+    "Výlet", "Festival", "Oslava", "Sport", "Rozlučka", "Vánoční večírek"
+)
 
 @Entity(tableName = "events")
 data class Event(
@@ -38,7 +43,7 @@ data class Event(
     val screenshotProtection: Boolean = false,
     val autoDeleteDays: Int = 0, // 0 = disabled, otherwise days after endDate
     val requireApproval: Boolean = false, // organizer must approve new participants
-    val budgetLimit: Double = 0.0,
+    val introText: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

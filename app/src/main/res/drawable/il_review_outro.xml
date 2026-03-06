@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Heart -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.3"
+        android:pathData="M75,110 Q45,85,35,70 Q25,55,35,42 Q45,28,58,38 Q65,43,70,50 L75,55 L80,50 Q85,43,92,38 Q105,28,115,42 Q125,55,115,70 Q105,85,75,110 Z"/>
+    <!-- Inner heart highlight -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M75,98 Q52,78,45,67 Q38,56,45,47 Q52,38,60,44 Q66,48,70,54 L75,60 L80,54 Q84,48,90,44 Q98,38,105,47 Q112,56,105,67 Q98,78,75,98 Z"/>
+    <!-- Sparkle top-left -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.25"
+        android:pathData="M30,35 L32,28 L34,35 L41,37 L34,39 L32,46 L30,39 L23,37 Z"/>
+    <!-- Sparkle top-right -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.2"
+        android:pathData="M118,30 L120,24 L122,30 L128,32 L122,34 L120,40 L118,34 L112,32 Z"/>
+    <!-- Sparkle left -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M20,70 L21,67 L22,70 L25,71 L22,72 L21,75 L20,72 L17,71 Z"/>
+    <!-- Sparkle right -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M128,65 L129,62 L130,65 L133,66 L130,67 L129,70 L128,67 L125,66 Z"/>
+    <!-- Small dots -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.15"
+        android:pathData="M50,22 A2,2,0,1,1,50,22.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.12"
+        android:pathData="M100,18 A2,2,0,1,1,100,18.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M135,48 A2,2,0,1,1,135,48.01Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.1"
+        android:pathData="M15,55 A2,2,0,1,1,15,55.01Z"/>
+</vector>

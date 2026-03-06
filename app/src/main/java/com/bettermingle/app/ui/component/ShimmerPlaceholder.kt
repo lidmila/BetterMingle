@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,19 +17,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.bettermingle.app.ui.theme.Spacing
+import com.bettermingle.app.ui.theme.BorderColor
+import com.bettermingle.app.ui.theme.CardShadow
+import com.bettermingle.app.ui.theme.CornerRadius
+import com.bettermingle.app.ui.theme.PastelBlue
+import com.bettermingle.app.ui.theme.PastelGold
+import com.bettermingle.app.ui.theme.PastelGreen
+import com.bettermingle.app.ui.theme.PastelOrange
+import com.bettermingle.app.ui.theme.PastelPink
 import com.bettermingle.app.ui.theme.SurfacePeach
+import com.bettermingle.app.ui.theme.Spacing
+
+private val CardShape = RoundedCornerShape(CornerRadius.card)
+
+private val shimmerPastels = listOf(PastelBlue, PastelPink, PastelOrange, PastelGreen, PastelGold)
 
 @Composable
 fun ShimmerBox(
@@ -46,9 +62,9 @@ fun ShimmerBox(
     )
 
     val shimmerColors = listOf(
-        SurfacePeach.copy(alpha = 0.3f),
-        SurfacePeach.copy(alpha = 0.6f),
-        SurfacePeach.copy(alpha = 0.3f)
+        SurfacePeach.copy(alpha = 0.2f),
+        SurfacePeach.copy(alpha = 0.4f),
+        SurfacePeach.copy(alpha = 0.2f)
     )
 
     val brush = Brush.linearGradient(
@@ -68,85 +84,212 @@ fun ShimmerBox(
 fun ShimmerEventCard(
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = MaterialTheme.shapes.medium
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = CardShape,
+                ambientColor = CardShadow,
+                spotColor = CardShadow
+            )
+            .clip(CardShape)
+            .background(Color.White)
+            .padding(Spacing.cardPadding)
     ) {
-        Column(modifier = Modifier.padding(Spacing.cardPadding)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    ShimmerBox(
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(20.dp)
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.xs))
-                    ShimmerBox(
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .height(14.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(Spacing.sm))
-                ShimmerBox(modifier = Modifier.size(8.dp))
-            }
+        // Top row: status chip + theme tag shimmer pills
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(22.dp)
+                    .clip(RoundedCornerShape(100.dp))
+            )
+            ShimmerBox(
+                modifier = Modifier
+                    .width(90.dp)
+                    .height(22.dp)
+                    .clip(RoundedCornerShape(100.dp))
+            )
+        }
 
-            Spacer(modifier = Modifier.height(Spacing.sm))
+        Spacer(modifier = Modifier.height(12.dp))
 
+        // Title shimmer
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(22.dp)
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.xs))
+
+        // Description shimmer (2 rows)
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .height(14.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(14.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Date row shimmer
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ShimmerBox(modifier = Modifier.size(Spacing.iconSM))
+            Spacer(modifier = Modifier.width(Spacing.xs))
+            ShimmerBox(
+                modifier = Modifier
+                    .width(160.dp)
+                    .height(14.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.xs))
+
+        // Location row shimmer
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ShimmerBox(modifier = Modifier.size(Spacing.iconSM))
+            Spacer(modifier = Modifier.width(Spacing.xs))
+            ShimmerBox(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(14.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Divider
+        HorizontalDivider(color = BorderColor, thickness = 1.dp)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Bottom row: participant shimmer + icon dots
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                ShimmerBox(modifier = Modifier.size(Spacing.iconXS))
+                Spacer(modifier = Modifier.width(4.dp))
                 ShimmerBox(
                     modifier = Modifier
-                        .width(100.dp)
-                        .height(14.dp)
+                        .width(30.dp)
+                        .height(12.dp)
                 )
-                Spacer(modifier = Modifier.width(Spacing.md))
+                Spacer(modifier = Modifier.width(8.dp))
                 ShimmerBox(
                     modifier = Modifier
                         .width(80.dp)
-                        .height(14.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
                 )
             }
-        }
 
-        // Status bar at bottom
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(4) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .size(Spacing.iconXS)
+                            .clip(CircleShape)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShimmerListItem(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(CardShape)
+            .background(Color.White)
+            .padding(Spacing.cardPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         ShimmerBox(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
+                .size(40.dp)
+                .clip(CircleShape)
+        )
+        Spacer(modifier = Modifier.width(Spacing.md))
+        Column(modifier = Modifier.weight(1f)) {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(16.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.4f)
+                    .height(12.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(Spacing.sm))
+        ShimmerBox(
+            modifier = Modifier
+                .width(60.dp)
+                .height(14.dp)
         )
     }
 }
 
 @Composable
-fun ShimmerModuleCard(
-    modifier: Modifier = Modifier
+fun ShimmerModuleContent(
+    modifier: Modifier = Modifier,
+    itemCount: Int = 5
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = MaterialTheme.shapes.medium
+    Column(
+        modifier = modifier.padding(Spacing.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.cardPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ShimmerBox(modifier = Modifier.size(32.dp))
-            Spacer(modifier = Modifier.height(Spacing.sm))
-            ShimmerBox(
-                modifier = Modifier
-                    .width(60.dp)
-                    .height(14.dp)
-            )
+        repeat(itemCount) {
+            ShimmerListItem()
         }
+    }
+}
+
+@Composable
+fun ShimmerModuleCard(
+    modifier: Modifier = Modifier,
+    index: Int = 0
+) {
+    val pastelBg = shimmerPastels[index % shimmerPastels.size]
+
+    Column(
+        modifier = modifier
+            .shadow(
+                elevation = 8.dp,
+                shape = CardShape,
+                ambientColor = pastelBg.copy(alpha = 0.3f),
+                spotColor = pastelBg.copy(alpha = 0.2f)
+            )
+            .clip(CardShape)
+            .background(pastelBg)
+            .padding(Spacing.cardPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ShimmerBox(modifier = Modifier.size(32.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
+        ShimmerBox(
+            modifier = Modifier
+                .width(60.dp)
+                .height(14.dp)
+        )
     }
 }

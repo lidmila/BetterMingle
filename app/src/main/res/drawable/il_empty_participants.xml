@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Person 1 (left back) -->
+    <path android:fillColor="#F0CDC6" android:pathData="M30,55 A10,10,0,1,1,30,55.01Z"/>
+    <path android:fillColor="#F0CDC6" android:pathData="M18,75 Q18,65,30,65 Q42,65,42,75 L42,110 Q42,115,37,115 L23,115 Q18,115,18,110Z"/>
+    <!-- Person 2 (center front) -->
+    <path android:fillColor="#4346DE" android:pathData="M75,45 A13,13,0,1,1,75,45.01Z"/>
+    <path android:fillColor="#4346DE" android:pathData="M58,68 Q58,58,75,58 Q92,58,92,68 L92,115 Q92,120,87,120 L63,120 Q58,120,58,115Z"/>
+    <!-- Person 3 (right back) -->
+    <path android:fillColor="#F884BD" android:pathData="M120,55 A10,10,0,1,1,120,55.01Z"/>
+    <path android:fillColor="#F884BD" android:pathData="M108,75 Q108,65,120,65 Q132,65,132,75 L132,110 Q132,115,127,115 L113,115 Q108,115,108,110Z"/>
+    <!-- Person 4 (far left, small) -->
+    <path android:fillColor="#D84D35" android:fillAlpha="0.5" android:pathData="M8,65 A7,7,0,1,1,8,65.01Z"/>
+    <path android:fillColor="#D84D35" android:fillAlpha="0.5" android:pathData="M0,80 Q0,72,8,72 Q16,72,16,80 L16,105 Q16,108,13,108 L3,108 Q0,108,0,105Z"/>
+    <!-- Person 5 (far right, small) -->
+    <path android:fillColor="#D84D35" android:fillAlpha="0.5" android:pathData="M142,65 A7,7,0,1,1,142,65.01Z"/>
+    <path android:fillColor="#D84D35" android:fillAlpha="0.5" android:pathData="M135,80 Q135,72,142,72 Q150,72,150,80 L150,105 Q150,108,147,108 L137,108 Q135,108,135,105Z"/>
+    <!-- Ground -->
+    <path android:pathData="M10,125 L140,125" android:strokeWidth="2" android:strokeColor="#F0CDC6"/>
+</vector>

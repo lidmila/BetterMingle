@@ -45,7 +45,15 @@ class EventRepository(context: Context) {
         locationAddress: String = "",
         startDate: Long? = null,
         endDate: Long? = null,
-        enabledModules: List<EventModule> = emptyList()
+        enabledModules: List<EventModule> = emptyList(),
+        introText: String = "",
+        securityEnabled: Boolean = false,
+        eventPin: String = "",
+        hideFinancials: Boolean = false,
+        screenshotProtection: Boolean = false,
+        autoDeleteDays: Int = 0,
+        requireApproval: Boolean = false,
+        invitedEmails: List<String> = emptyList()
     ): String {
         val userId = auth.currentUser?.uid ?: throw IllegalStateException("Not logged in")
         val eventId = UUID.randomUUID().toString()
@@ -66,6 +74,13 @@ class EventRepository(context: Context) {
             inviteCode = inviteCode,
             status = EventStatus.PLANNING,
             enabledModules = enabledModules,
+            introText = introText,
+            securityEnabled = securityEnabled,
+            eventPin = eventPin,
+            hideFinancials = hideFinancials,
+            screenshotProtection = screenshotProtection,
+            autoDeleteDays = autoDeleteDays,
+            requireApproval = requireApproval,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
@@ -89,6 +104,14 @@ class EventRepository(context: Context) {
         // Sync to Firestore
         syncEventToCloud(event)
         syncParticipantToCloud(eventId, participant)
+
+        // Store invited emails
+        if (invitedEmails.isNotEmpty()) {
+            try {
+                firestore.collection("events").document(eventId)
+                    .update("invitedEmails", invitedEmails)
+            } catch (_: Exception) { }
+        }
 
         return eventId
     }
@@ -132,6 +155,7 @@ class EventRepository(context: Context) {
                 "screenshotProtection" to event.screenshotProtection,
                 "autoDeleteDays" to event.autoDeleteDays,
                 "requireApproval" to event.requireApproval,
+                "introText" to event.introText,
                 "createdAt" to event.createdAt,
                 "updatedAt" to event.updatedAt
             )
@@ -286,6 +310,7 @@ class EventRepository(context: Context) {
             screenshotProtection = data["screenshotProtection"] as? Boolean ?: false,
             autoDeleteDays = (data["autoDeleteDays"] as? Number)?.toInt() ?: 0,
             requireApproval = data["requireApproval"] as? Boolean ?: false,
+            introText = data["introText"] as? String ?: "",
             createdAt = (data["createdAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
             updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
         )

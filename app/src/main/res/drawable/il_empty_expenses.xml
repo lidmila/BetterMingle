@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="150dp"
+    android:height="150dp"
+    android:viewportWidth="150"
+    android:viewportHeight="150">
+    <!-- Wallet body -->
+    <path android:fillColor="#4346DE" android:pathData="M25,45 Q25,35,35,35 L105,35 Q115,35,115,45 L115,105 Q115,115,105,115 L35,115 Q25,115,25,105Z"/>
+    <!-- Wallet flap -->
+    <path android:fillColor="#3335B0" android:pathData="M25,45 L115,45 L115,60 Q115,65,110,65 L30,65 Q25,65,25,60Z"/>
+    <!-- Wallet clasp -->
+    <path android:fillColor="#F884BD" android:pathData="M95,55 A8,8,0,1,1,95,55.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M95,55 A4,4,0,1,1,95,55.01Z"/>
+    <!-- Coins -->
+    <path android:fillColor="#D84D35" android:pathData="M50,95 A12,12,0,1,1,50,95.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M48,93 L52,93 L52,97 L48,97Z"/>
+    <path android:fillColor="#F884BD" android:pathData="M80,90 A10,10,0,1,1,80,90.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M78,88 L82,88 L82,92 L78,92Z"/>
+    <path android:fillColor="#D84D35" android:pathData="M105,85 A8,8,0,1,1,105,85.01Z"/>
+    <!-- Flying coin -->
+    <path android:fillColor="#F0CDC6" android:pathData="M120,30 A10,10,0,1,1,120,30.01Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M118,28 L122,28 L122,32 L118,32Z"/>
+    <!-- Small coin -->
+    <path android:fillColor="#F0CDC6" android:pathData="M35,25 A7,7,0,1,1,35,25.01Z"/>
+</vector>

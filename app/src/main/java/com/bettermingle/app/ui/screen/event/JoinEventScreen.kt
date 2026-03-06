@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,16 +29,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextSecondary
+import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.data.preferences.PremiumTier
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -48,6 +56,7 @@ fun JoinEventScreen(
     onNavigateBack: () -> Unit,
     onJoined: (String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var eventId by remember { mutableStateOf<String?>(null) }
     var eventName by remember { mutableStateOf("") }
     var eventDescription by remember { mutableStateOf("") }
@@ -70,10 +79,10 @@ fun JoinEventScreen(
                 eventName = doc.getString("name") ?: ""
                 eventDescription = doc.getString("description") ?: ""
             } else {
-                errorMessage = "Pozvánka nebyla nalezena nebo je neplatná."
+                errorMessage = context.getString(R.string.join_error_not_found)
             }
         } catch (_: Exception) {
-            errorMessage = "Nepodařilo se načíst pozvánku."
+            errorMessage = context.getString(R.string.join_error_load_failed)
         }
         isLoading = false
     }
@@ -81,14 +90,14 @@ fun JoinEventScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pozvánka", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.join_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         }
@@ -107,8 +116,8 @@ fun JoinEventScreen(
                 }
                 errorMessage != null -> {
                     EmptyState(
-                        icon = Icons.Default.Celebration,
-                        title = "Chyba",
+                        icon = Icons.Default.ErrorOutline,
+                        title = stringResource(R.string.join_error_title),
                         description = errorMessage ?: "",
                         modifier = Modifier.fillMaxSize()
                     )
@@ -139,12 +148,35 @@ fun JoinEventScreen(
                             Spacer(modifier = Modifier.height(Spacing.lg))
 
                             BetterMingleButton(
-                                text = if (isJoining) "Připojuji se..." else "Připojit se",
+                                text = if (isJoining) stringResource(R.string.join_joining) else stringResource(R.string.join_button),
                                 onClick = {
                                     val eid = eventId ?: return@BetterMingleButton
                                     isJoining = true
                                     scope.launch {
                                         try {
+                                            // Check participant limit
+                                            val settingsManager = SettingsManager(context)
+                                            val settings = settingsManager.settingsFlow.first()
+                                            val tier = settings.premiumTier
+                                            val maxParticipants = TierLimits.maxParticipants(tier)
+
+                                            val participantsSnapshot = FirebaseFirestore.getInstance()
+                                                .collection("events").document(eid)
+                                                .collection("participants")
+                                                .get().await()
+                                            val currentParticipantCount = participantsSnapshot.size()
+
+                                            if (currentParticipantCount >= maxParticipants) {
+                                                isJoining = false
+                                                val tierLabel = when (tier) {
+                                                    com.bettermingle.app.data.preferences.PremiumTier.FREE -> context.getString(R.string.join_tier_free)
+                                                    com.bettermingle.app.data.preferences.PremiumTier.PRO -> context.getString(R.string.join_tier_pro)
+                                                    com.bettermingle.app.data.preferences.PremiumTier.BUSINESS -> context.getString(R.string.join_tier_business)
+                                                }
+                                                errorMessage = context.getString(R.string.join_participant_limit, maxParticipants, tierLabel)
+                                                return@launch
+                                            }
+
                                             val currentUser = FirebaseAuth.getInstance().currentUser
                                                 ?: return@launch
                                             val participantData = hashMapOf(
@@ -161,10 +193,11 @@ fun JoinEventScreen(
                                                 .document(currentUser.uid)
                                                 .set(participantData)
                                                 .await()
+                                            ActivityLogger.log(eid, "participant", context.getString(R.string.activity_joined_event), eventName = eventName)
                                             onJoined(eid)
                                         } catch (_: Exception) {
                                             isJoining = false
-                                            errorMessage = "Nepodařilo se připojit k akci."
+                                            errorMessage = context.getString(R.string.join_error_failed)
                                         }
                                     }
                                 },

@@ -1,13 +1,21 @@
 package com.bettermingle.app.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -15,10 +23,15 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bettermingle.app.ui.screen.auth.ForgotPasswordScreen
 import com.bettermingle.app.ui.screen.auth.LoginScreen
+import com.bettermingle.app.ui.screen.auth.OnboardingScreen
 import com.bettermingle.app.ui.screen.auth.RegisterScreen
 import com.bettermingle.app.ui.screen.create.CreateEventScreen
 import com.bettermingle.app.ui.screen.event.CarpoolScreen
@@ -37,23 +51,37 @@ import com.bettermingle.app.ui.screen.event.ChatScreen
 import com.bettermingle.app.ui.screen.event.EventDashboardScreen
 import com.bettermingle.app.ui.screen.event.EventSettingsScreen
 import com.bettermingle.app.ui.screen.event.ExpensesScreen
+import com.bettermingle.app.ui.screen.event.ActivityFeedScreen
+import com.bettermingle.app.ui.screen.event.EventSummaryScreen
 import com.bettermingle.app.ui.screen.event.JoinEventScreen
 import com.bettermingle.app.ui.screen.event.TasksScreen
 import com.bettermingle.app.ui.screen.event.ParticipantsScreen
 import com.bettermingle.app.ui.screen.event.RatingScreen
+import com.bettermingle.app.ui.screen.event.PackingListScreen
 import com.bettermingle.app.ui.screen.event.RoomsScreen
 import com.bettermingle.app.ui.screen.event.ScheduleScreen
 import com.bettermingle.app.ui.screen.event.VotingScreen
 import com.bettermingle.app.ui.screen.home.EventListScreen
+import com.bettermingle.app.ui.screen.home.NotificationsScreen
+import com.bettermingle.app.ui.screen.home.YearInReviewScreen
+import com.bettermingle.app.ui.screen.profile.EditProfileScreen
 import com.bettermingle.app.ui.screen.profile.HelpScreen
 import com.bettermingle.app.ui.screen.profile.ProfileScreen
 import com.bettermingle.app.ui.screen.profile.SettingsScreen
 import com.bettermingle.app.ui.screen.profile.UpgradeScreen
+import com.bettermingle.app.data.preferences.SettingsManager
+import androidx.compose.ui.res.stringResource
+import com.bettermingle.app.R
+import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.TextSecondary
 import com.bettermingle.app.viewmodel.AuthViewModel
+import com.bettermingle.app.viewmodel.NotificationsViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 object Routes {
     const val LOGIN = "login"
@@ -73,9 +101,16 @@ object Routes {
     const val RATING = "rating/{eventId}"
     const val EVENT_SETTINGS = "event_settings/{eventId}"
     const val TASKS = "tasks/{eventId}"
+    const val PACKING_LIST = "packing_list/{eventId}"
     const val SETTINGS = "settings"
     const val HELP = "help"
     const val UPGRADE = "upgrade"
+    const val EDIT_PROFILE = "edit_profile"
+    const val NOTIFICATIONS = "notifications"
+    const val YEAR_IN_REVIEW = "year_in_review"
+    const val ONBOARDING = "onboarding"
+    const val ACTIVITY_FEED = "activity_feed/{eventId}"
+    const val EVENT_SUMMARY = "event_summary/{eventId}"
     const val INVITATION = "invitation/{inviteCode}"
 
     fun eventDashboard(eventId: String) = "event_dashboard/$eventId"
@@ -88,21 +123,25 @@ object Routes {
     fun chat(eventId: String) = "chat/$eventId"
     fun rating(eventId: String) = "rating/$eventId"
     fun tasks(eventId: String) = "tasks/$eventId"
+    fun packingList(eventId: String) = "packing_list/$eventId"
     fun eventSettings(eventId: String) = "event_settings/$eventId"
+    fun activityFeed(eventId: String) = "activity_feed/$eventId"
+    fun eventSummary(eventId: String) = "event_summary/$eventId"
     fun invitation(inviteCode: String) = "invitation/$inviteCode"
 }
 
 data class BottomNavItem(
     val route: String,
-    val label: String,
+    val labelResId: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Routes.EVENT_LIST, "Akce", Icons.Filled.Event, Icons.Outlined.Event),
-    BottomNavItem(Routes.CREATE_EVENT, "Vytvořit", Icons.Filled.Add, Icons.Outlined.Add),
-    BottomNavItem(Routes.PROFILE, "Profil", Icons.Filled.Person, Icons.Outlined.Person)
+    BottomNavItem(Routes.EVENT_LIST, R.string.nav_events, Icons.Filled.Event, Icons.Outlined.Event),
+    BottomNavItem(Routes.CREATE_EVENT, R.string.nav_create, Icons.Filled.Add, Icons.Outlined.Add),
+    BottomNavItem(Routes.NOTIFICATIONS, R.string.nav_notifications, Icons.Filled.Notifications, Icons.Outlined.Notifications),
+    BottomNavItem(Routes.PROFILE, R.string.nav_profile, Icons.Filled.Person, Icons.Outlined.Person)
 )
 
 @Composable
@@ -113,14 +152,36 @@ fun BetterMingleNavigation() {
 
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(
+        initial = com.bettermingle.app.data.preferences.AppSettings()
+    )
 
-    val startDestination = if (authState.isLoggedIn) Routes.EVENT_LIST else Routes.LOGIN
+    val startDestination = when {
+        !authState.isLoggedIn && !settings.onboardingCompleted -> Routes.ONBOARDING
+        !authState.isLoggedIn -> Routes.LOGIN
+        else -> Routes.EVENT_LIST
+    }
 
     val showBottomBar = currentDestination?.route in listOf(
         Routes.EVENT_LIST,
         Routes.CREATE_EVENT,
+        Routes.NOTIFICATIONS,
         Routes.PROFILE
     )
+
+    // Unread notifications count from local DataStore (reactive, instant)
+    val notificationsViewModel: NotificationsViewModel = viewModel()
+    val unreadCount by notificationsViewModel.unreadCount.collectAsState()
+
+    // Clear unread count when navigating to notifications
+    LaunchedEffect(currentDestination?.route) {
+        if (currentDestination?.route == Routes.NOTIFICATIONS) {
+            notificationsViewModel.markAllRead()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -130,12 +191,35 @@ fun BetterMingleNavigation() {
                         val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
                         NavigationBarItem(
                             icon = {
-                                Icon(
-                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.label
-                                )
+                                if (item.route == Routes.NOTIFICATIONS && unreadCount > 0) {
+                                    Box {
+                                        Icon(
+                                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                            contentDescription = stringResource(item.labelResId)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .offset(x = 4.dp, y = (-2).dp)
+                                                .size(16.dp)
+                                                .background(AccentOrange, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = if (unreadCount > 99) "99" else "$unreadCount",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                                color = com.bettermingle.app.ui.theme.TextOnColor
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Icon(
+                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = stringResource(item.labelResId)
+                                    )
+                                }
                             },
-                            label = { Text(item.label) },
+                            label = { Text(stringResource(item.labelResId)) },
                             selected = selected,
                             onClick = {
                                 navController.navigate(item.route) {
@@ -168,6 +252,18 @@ fun BetterMingleNavigation() {
             popEnterTransition = { BetterMingleMotion.screenPopEnter },
             popExitTransition = { BetterMingleMotion.screenPopExit }
         ) {
+            // Onboarding
+            composable(Routes.ONBOARDING) {
+                OnboardingScreen(
+                    onComplete = {
+                        scope.launch { settingsManager.setOnboardingCompleted() }
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // Auth
             composable(Routes.LOGIN) {
                 LoginScreen(
@@ -207,6 +303,9 @@ fun BetterMingleNavigation() {
                     },
                     onCreateEvent = {
                         navController.navigate(Routes.CREATE_EVENT)
+                    },
+                    onYearInReview = {
+                        navController.navigate(Routes.YEAR_IN_REVIEW)
                     }
                 )
             }
@@ -217,7 +316,16 @@ fun BetterMingleNavigation() {
                             popUpTo(Routes.EVENT_LIST) { inclusive = false }
                         }
                     },
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                )
+            }
+            composable(Routes.NOTIFICATIONS) {
+                NotificationsScreen(
+                    onEventClick = { eventId ->
+                        navController.navigate(Routes.eventDashboard(eventId))
+                    },
+                    viewModel = notificationsViewModel
                 )
             }
             composable(Routes.PROFILE) {
@@ -236,6 +344,9 @@ fun BetterMingleNavigation() {
                     },
                     onHelp = {
                         navController.navigate(Routes.HELP)
+                    },
+                    onEditProfile = {
+                        navController.navigate(Routes.EDIT_PROFILE)
                     }
                 )
             }
@@ -259,6 +370,16 @@ fun BetterMingleNavigation() {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+            composable(Routes.EDIT_PROFILE) {
+                EditProfileScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.YEAR_IN_REVIEW) {
+                YearInReviewScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
 
             // Event detail
             composable(
@@ -279,8 +400,11 @@ fun BetterMingleNavigation() {
                             "schedule" -> Routes.schedule(eventId)
                             "chat" -> Routes.chat(eventId)
                             "tasks" -> Routes.tasks(eventId)
+                            "packing" -> Routes.packingList(eventId)
                             "rating" -> Routes.rating(eventId)
                             "settings" -> Routes.eventSettings(eventId)
+                            "activity" -> Routes.activityFeed(eventId)
+                            "summary" -> Routes.eventSummary(eventId)
                             else -> return@EventDashboardScreen
                         }
                         navController.navigate(route)
@@ -294,7 +418,11 @@ fun BetterMingleNavigation() {
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) {
                 val eventId = it.arguments?.getString("eventId") ?: ""
-                VotingScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+                VotingScreen(
+                    eventId = eventId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                )
             }
             composable(
                 route = Routes.PARTICIPANTS,
@@ -339,6 +467,13 @@ fun BetterMingleNavigation() {
                 TasksScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
             }
             composable(
+                route = Routes.PACKING_LIST,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                PackingListScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+            }
+            composable(
                 route = Routes.CHAT,
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) {
@@ -364,8 +499,32 @@ fun BetterMingleNavigation() {
                         navController.navigate(Routes.EVENT_LIST) {
                             popUpTo(Routes.EVENT_LIST) { inclusive = true }
                         }
+                    },
+                    onRepeatEvent = { name, desc, theme, location, modules ->
+                        // Navigate to create event (user creates fresh copy)
+                        navController.navigate(Routes.CREATE_EVENT) {
+                            popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                        }
                     }
                 )
+            }
+
+            // Activity Feed
+            composable(
+                route = Routes.ACTIVITY_FEED,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                ActivityFeedScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+            }
+
+            // Event Summary
+            composable(
+                route = Routes.EVENT_SUMMARY,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                EventSummaryScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
             }
 
             // Invitation

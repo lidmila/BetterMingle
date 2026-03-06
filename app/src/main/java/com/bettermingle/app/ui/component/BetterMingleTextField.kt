@@ -9,8 +9,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.VisualTransformation
-import com.bettermingle.app.ui.theme.SurfacePeach
+import com.bettermingle.app.ui.theme.PrimaryBlue
 
 @Composable
 fun BetterMingleTextField(
@@ -50,8 +51,9 @@ fun BetterMingleTextField(
         } else null,
         shape = MaterialTheme.shapes.small,
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = SurfacePeach.copy(alpha = 0.3f),
-            focusedContainerColor = SurfacePeach.copy(alpha = 0.15f)
+            unfocusedContainerColor = Color.White.copy(alpha = 0.60f),
+            focusedContainerColor = Color.White.copy(alpha = 0.80f),
+            focusedBorderColor = PrimaryBlue.copy(alpha = 0.6f)
         )
     )
 }

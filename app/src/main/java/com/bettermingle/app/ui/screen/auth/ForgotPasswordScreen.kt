@@ -25,9 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleTextButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
@@ -62,7 +64,7 @@ fun ForgotPasswordScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Obnovení hesla",
+            text = stringResource(R.string.forgot_password_title),
             style = MaterialTheme.typography.headlineLarge,
             color = PrimaryBlue
         )
@@ -77,19 +79,19 @@ fun ForgotPasswordScreen(
                 modifier = Modifier.padding(Spacing.md)
             )
             Text(
-                text = "Odkaz na obnovení hesla byl odeslán na tvůj e-mail.",
+                text = stringResource(R.string.forgot_password_success),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(Spacing.lg))
             BetterMingleTextButton(
-                text = "Zpět na přihlášení",
+                text = stringResource(R.string.forgot_password_back),
                 onClick = onNavigateBack
             )
         } else {
             Text(
-                text = "Zadej svůj e-mail a pošleme ti odkaz na obnovení hesla.",
+                text = stringResource(R.string.forgot_password_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
                 textAlign = TextAlign.Center
@@ -100,7 +102,7 @@ fun ForgotPasswordScreen(
             BetterMingleTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = "E-mail",
+                label = stringResource(R.string.forgot_password_email),
                 enabled = !uiState.isLoading,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }
@@ -112,7 +114,7 @@ fun ForgotPasswordScreen(
                 CircularProgressIndicator(color = PrimaryBlue)
             } else {
                 BetterMingleButton(
-                    text = "Odeslat odkaz",
+                    text = stringResource(R.string.forgot_password_button),
                     onClick = { authViewModel.sendPasswordReset(email) },
                     isCta = true
                 )
@@ -121,7 +123,7 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(Spacing.lg))
 
             BetterMingleTextButton(
-                text = "Zpět na přihlášení",
+                text = stringResource(R.string.forgot_password_back),
                 onClick = onNavigateBack
             )
         }

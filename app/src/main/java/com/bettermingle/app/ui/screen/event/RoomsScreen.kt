@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,10 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,17 +49,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import com.bettermingle.app.data.model.EventRoom
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
+import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -67,9 +80,14 @@ fun RoomsScreen(
     eventId: String,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val rooms = remember { mutableStateListOf<EventRoom>() }
     val userNames = remember { mutableMapOf<String, String>() }
+    val allParticipants = remember { mutableStateListOf<Pair<String, String>>() } // uid to displayName
     var showCreateDialog by remember { mutableStateOf(false) }
+    var assignRoom by remember { mutableStateOf<EventRoom?>(null) }
+    var roomToDelete by remember { mutableStateOf<EventRoom?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun loadRooms() {
@@ -104,6 +122,18 @@ fun RoomsScreen(
 
             rooms.clear()
             rooms.addAll(loaded)
+
+            // Load all event participants for assignment
+            try {
+                val partsSnapshot = firestore.collection("events").document(eventId)
+                    .collection("participants").get().await()
+                allParticipants.clear()
+                partsSnapshot.documents.forEach { doc ->
+                    val name = doc.getString("displayName") ?: doc.id.take(8)
+                    allParticipants.add(doc.id to name)
+                    userNames[doc.id] = name
+                }
+            } catch (_: Exception) { }
         } catch (_: Exception) { }
         }
     }
@@ -121,49 +151,113 @@ fun RoomsScreen(
         )
     }
 
+    assignRoom?.let { room ->
+        AssignParticipantDialog(
+            eventId = eventId,
+            room = room,
+            allParticipants = allParticipants,
+            assignedRooms = rooms,
+            onDismiss = { assignRoom = null },
+            onUpdated = {
+                assignRoom = null
+                loadRooms()
+            }
+        )
+    }
+
+    if (roomToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { roomToDelete = null },
+            title = { Text(stringResource(R.string.rooms_delete_title)) },
+            text = { Text(stringResource(R.string.rooms_delete_confirm, roomToDelete!!.name)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val room = roomToDelete!!
+                    roomToDelete = null
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("rooms").document(room.id)
+                                .delete().await()
+                            rooms.removeAll { it.id == room.id }
+                            ActivityLogger.log(eventId, "room", context.getString(R.string.activity_deleted_room, room.name))
+                        } catch (_: Exception) { }
+                    }
+                }) {
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { roomToDelete = null }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ubytování", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.rooms_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = AccentOrange,
-                contentColor = TextOnColor
+                containerColor = Color.Transparent,
+                contentColor = TextOnColor,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .shadow(8.dp, CircleShape, ambientColor = AccentOrange.copy(alpha = 0.3f), spotColor = AccentOrange.copy(alpha = 0.3f))
+                    .background(AccentOrange, CircleShape)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Přidat pokoj")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.rooms_add))
             }
         }
     ) { innerPadding ->
-        if (rooms.isEmpty()) {
-            EmptyState(
-                icon = Icons.Default.Hotel,
-                title = "Zatím žádné pokoje",
-                description = "Přidej pokoje a přiřaď účastníky.",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(Spacing.screenPadding),
-                verticalArrangement = Arrangement.spacedBy(Spacing.md)
-            ) {
-                items(rooms, key = { it.id }) { room ->
-                    RoomCard(room = room, userNames = userNames)
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                loadRooms()
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            if (rooms.isEmpty() && !isRefreshing) {
+                EmptyState(
+                    icon = Icons.Default.Hotel,
+                    illustration = R.drawable.il_empty_rooms,
+                    title = stringResource(R.string.rooms_empty_title),
+                    description = stringResource(R.string.rooms_empty_description),
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(Spacing.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                ) {
+                    items(rooms, key = { it.id }) { room ->
+                        RoomCard(
+                            room = room,
+                            userNames = userNames,
+                            onClick = { assignRoom = room },
+                            onDelete = { roomToDelete = room }
+                        )
+                    }
                 }
             }
         }
@@ -172,8 +266,8 @@ fun RoomsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoomCard(room: EventRoom, userNames: Map<String, String>) {
-    BetterMingleCard {
+private fun RoomCard(room: EventRoom, userNames: Map<String, String>, onClick: () -> Unit, onDelete: () -> Unit) {
+    BetterMingleCard(onClick = onClick) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,7 +277,8 @@ private fun RoomCard(room: EventRoom, userNames: Map<String, String>) {
                 Text(
                     text = room.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
                 )
 
                 Text(
@@ -191,6 +286,10 @@ private fun RoomCard(room: EventRoom, userNames: Map<String, String>) {
                     style = MaterialTheme.typography.bodySmall,
                     color = if (room.assignments.size >= room.capacity) AccentOrange else TextSecondary
                 )
+
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete), tint = AccentOrange, modifier = Modifier.size(20.dp))
+                }
             }
 
             if (room.notes.isNotEmpty()) {
@@ -243,6 +342,7 @@ private fun AddRoomDialog(
     onDismiss: () -> Unit,
     onCreated: () -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var capacity by remember { mutableStateOf("2") }
     var notes by remember { mutableStateOf("") }
@@ -250,13 +350,13 @@ private fun AddRoomDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Přidat pokoj") },
+        title = { Text(stringResource(R.string.rooms_add)) },
         text = {
             Column {
                 BetterMingleTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = "Název pokoje"
+                    label = stringResource(R.string.rooms_name_label)
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -264,7 +364,7 @@ private fun AddRoomDialog(
                 BetterMingleTextField(
                     value = capacity,
                     onValueChange = { capacity = it },
-                    label = "Kapacita",
+                    label = stringResource(R.string.rooms_capacity_label),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
@@ -273,7 +373,7 @@ private fun AddRoomDialog(
                 BetterMingleTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = "Poznámky (volitelné)",
+                    label = stringResource(R.string.rooms_notes_label),
                     singleLine = false,
                     maxLines = 3
                 )
@@ -294,17 +394,114 @@ private fun AddRoomDialog(
                                 .collection("events").document(eventId)
                                 .collection("rooms")
                                 .add(roomData).await()
+                            val cap = capacity.toIntOrNull() ?: 2
+                            ActivityLogger.log(eventId, "room", context.getString(R.string.activity_created_room, name, cap))
                             onCreated()
                         } catch (_: Exception) { }
                     }
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Přidat")
+                Text(stringResource(R.string.common_add))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Zrušit") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AssignParticipantDialog(
+    eventId: String,
+    room: EventRoom,
+    allParticipants: List<Pair<String, String>>,
+    assignedRooms: List<EventRoom>,
+    onDismiss: () -> Unit,
+    onUpdated: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val currentAssignments = remember { mutableStateListOf(*room.assignments.toTypedArray()) }
+
+    // Participants already assigned to other rooms
+    val assignedElsewhere = remember(assignedRooms) {
+        assignedRooms.filter { it.id != room.id }.flatMap { it.assignments }.toSet()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.rooms_assign_title, room.name)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.rooms_assign_occupancy, currentAssignments.size, room.capacity),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (currentAssignments.size >= room.capacity) AccentOrange else TextSecondary
+                )
+                Spacer(modifier = Modifier.height(Spacing.sm))
+
+                allParticipants.forEach { (uid, name) ->
+                    val isAssigned = uid in currentAssignments
+                    val isInOtherRoom = uid in assignedElsewhere
+                    val isFull = currentAssignments.size >= room.capacity && !isAssigned
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable(enabled = !isInOtherRoom && !isFull) {
+                                if (isAssigned) {
+                                    currentAssignments.remove(uid)
+                                } else {
+                                    currentAssignments.add(uid)
+                                }
+                            }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            if (isAssigned) Icons.Default.Person else Icons.Default.Add,
+                            contentDescription = null,
+                            tint = when {
+                                isAssigned -> PrimaryBlue
+                                isInOtherRoom -> TextSecondary.copy(alpha = 0.4f)
+                                else -> TextSecondary
+                            },
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Text(
+                            text = name + if (isInOtherRoom) stringResource(R.string.rooms_assign_in_other_room) else "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isInOtherRoom) TextSecondary.copy(alpha = 0.5f) else Color.Unspecified
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("rooms").document(room.id)
+                                .update("assignments", currentAssignments.toList())
+                                .await()
+                            ActivityLogger.log(eventId, "room", context.getString(R.string.activity_joined_room, room.name))
+                            onUpdated()
+                        } catch (_: Exception) { }
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.common_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

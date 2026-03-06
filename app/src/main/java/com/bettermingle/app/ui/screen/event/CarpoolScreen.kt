@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.event
 
+import com.bettermingle.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,18 +18,30 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.EventSeat
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +65,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -63,7 +80,9 @@ import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.component.PlacesAutocompleteField
 import com.bettermingle.app.ui.theme.AccentOrange
+import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.Error
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -72,6 +91,7 @@ import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.theme.TextSecondary
 import com.bettermingle.app.utils.DateFormatUtils
+import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -85,9 +105,15 @@ fun CarpoolScreen(
 ) {
     val rides = remember { mutableStateListOf<CarpoolRide>() }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Nabídky", "Poptávky")
+    val tabs = listOf(
+        stringResource(R.string.carpool_tab_offers),
+        stringResource(R.string.carpool_tab_requests)
+    )
     var showCreateDialog by remember { mutableStateOf(false) }
+    var rideToDelete by remember { mutableStateOf<CarpoolRide?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     fun loadRides() {
@@ -152,27 +178,60 @@ fun CarpoolScreen(
         )
     }
 
+    if (rideToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { rideToDelete = null },
+            title = { Text(stringResource(R.string.carpool_delete_title)) },
+            text = { Text(stringResource(R.string.carpool_delete_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val ride = rideToDelete!!
+                    rideToDelete = null
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("carpoolRides").document(ride.id)
+                                .delete().await()
+                            rides.removeAll { it.id == ride.id }
+                            ActivityLogger.log(eventId, "carpool", context.getString(R.string.activity_deleted_ride, ride.departureLocation))
+                        } catch (_: Exception) { }
+                    }
+                }) {
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { rideToDelete = null }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Spolujízda", style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.carpool_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = BackgroundPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = AccentOrange,
-                contentColor = TextOnColor
+                containerColor = Color.Transparent,
+                contentColor = TextOnColor,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .shadow(8.dp, CircleShape, ambientColor = AccentOrange.copy(alpha = 0.3f), spotColor = AccentOrange.copy(alpha = 0.3f))
+                    .background(AccentOrange, CircleShape)
             ) {
-                Icon(Icons.Default.Add, contentDescription = if (selectedTab == 0) "Nabídnout jízdu" else "Poptat jízdu")
+                Icon(Icons.Default.Add, contentDescription = if (selectedTab == 0) stringResource(R.string.carpool_offer_ride) else stringResource(R.string.carpool_request_ride))
             }
         }
     ) { innerPadding ->
@@ -208,60 +267,76 @@ fun CarpoolScreen(
                 }
             }
 
-            if (filteredRides.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Default.DirectionsCar,
-                    title = if (selectedTab == 0) "Zatím žádné nabídky" else "Zatím žádné poptávky",
-                    description = if (selectedTab == 0)
-                        "Nabídni spolujízdu ostatním účastníkům."
-                    else
-                        "Poptej jízdu od ostatních účastníků.",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(Spacing.screenPadding),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    items(filteredRides, key = { it.id }) { ride ->
-                        CarpoolRideCard(
-                            ride = ride,
-                            eventId = eventId,
-                            currentUserId = currentUserId,
-                            onClose = {
-                                scope.launch {
-                                    try {
-                                        FirebaseFirestore.getInstance()
-                                            .collection("events").document(eventId)
-                                            .collection("carpoolRides").document(ride.id)
-                                            .update("isClosed", true).await()
-                                        loadRides()
-                                    } catch (_: Exception) { }
-                                }
-                            },
-                            onRequestRide = {
-                                scope.launch {
-                                    try {
-                                        val currentUser = FirebaseAuth.getInstance().currentUser
-                                        val passengerData = hashMapOf(
-                                            "userId" to (currentUser?.uid ?: ""),
-                                            "displayName" to (currentUser?.displayName ?: ""),
-                                            "status" to "PENDING",
-                                            "pickupLocation" to "",
-                                            "createdAt" to System.currentTimeMillis()
-                                        )
-                                        FirebaseFirestore.getInstance()
-                                            .collection("events").document(eventId)
-                                            .collection("carpoolRides").document(ride.id)
-                                            .collection("passengers")
-                                            .add(passengerData).await()
-                                        loadRides()
-                                    } catch (_: Exception) { }
-                                }
-                            },
-                            onPassengerUpdated = { loadRides() }
-                        )
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    loadRides()
+                    scope.launch {
+                        kotlinx.coroutines.delay(500)
+                        isRefreshing = false
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (filteredRides.isEmpty() && !isRefreshing) {
+                    EmptyState(
+                        icon = Icons.Default.DirectionsCar,
+                        illustration = R.drawable.il_empty_carpool,
+                        title = if (selectedTab == 0) stringResource(R.string.carpool_empty_offers_title) else stringResource(R.string.carpool_empty_requests_title),
+                        description = if (selectedTab == 0)
+                            stringResource(R.string.carpool_empty_offers_desc)
+                        else
+                            stringResource(R.string.carpool_empty_requests_desc),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(Spacing.screenPadding),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        items(filteredRides, key = { it.id }) { ride ->
+                            CarpoolRideCard(
+                                ride = ride,
+                                eventId = eventId,
+                                currentUserId = currentUserId,
+                                onClose = {
+                                    scope.launch {
+                                        try {
+                                            FirebaseFirestore.getInstance()
+                                                .collection("events").document(eventId)
+                                                .collection("carpoolRides").document(ride.id)
+                                                .update("isClosed", true).await()
+                                            loadRides()
+                                        } catch (_: Exception) { }
+                                    }
+                                },
+                                onDelete = { rideToDelete = ride },
+                                onRequestRide = {
+                                    scope.launch {
+                                        try {
+                                            val currentUser = FirebaseAuth.getInstance().currentUser
+                                            val passengerData = hashMapOf(
+                                                "userId" to (currentUser?.uid ?: ""),
+                                                "displayName" to (currentUser?.displayName ?: ""),
+                                                "status" to "PENDING",
+                                                "pickupLocation" to "",
+                                                "createdAt" to System.currentTimeMillis()
+                                            )
+                                            FirebaseFirestore.getInstance()
+                                                .collection("events").document(eventId)
+                                                .collection("carpoolRides").document(ride.id)
+                                                .collection("passengers")
+                                                .add(passengerData).await()
+                                            ActivityLogger.log(eventId, "carpool", context.getString(R.string.activity_requested_ride, ride.departureLocation))
+                                            loadRides()
+                                        } catch (_: Exception) { }
+                                    }
+                                },
+                                onPassengerUpdated = { loadRides() }
+                            )
+                        }
                     }
                 }
             }
@@ -275,6 +350,7 @@ private fun CarpoolRideCard(
     eventId: String,
     currentUserId: String,
     onClose: () -> Unit,
+    onDelete: () -> Unit,
     onRequestRide: () -> Unit,
     onPassengerUpdated: () -> Unit
 ) {
@@ -311,7 +387,7 @@ private fun CarpoolRideCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = ride.driverName.ifEmpty { if (ride.type == CarpoolType.OFFER) "Řidič" else "Žadatel" },
+                    text = ride.driverName.ifEmpty { if (ride.type == CarpoolType.OFFER) stringResource(R.string.carpool_driver) else stringResource(R.string.carpool_requester) },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -326,7 +402,7 @@ private fun CarpoolRideCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Uzavřeno",
+                            text = stringResource(R.string.carpool_closed),
                             style = MaterialTheme.typography.bodySmall,
                             color = Error,
                             fontWeight = FontWeight.SemiBold
@@ -342,7 +418,7 @@ private fun CarpoolRideCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${ride.availableSeats} míst",
+                            text = "${ride.availableSeats} ${stringResource(R.string.carpool_seats_count)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Success
                         )
@@ -400,7 +476,7 @@ private fun CarpoolRideCard(
             if (passengers.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "Spolujezdci",
+                    text = stringResource(R.string.carpool_passengers),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextSecondary
                 )
@@ -424,9 +500,9 @@ private fun CarpoolRideCard(
                             PassengerStatus.PENDING -> AccentPink
                         }
                         val statusText = when (passenger.status) {
-                            PassengerStatus.APPROVED -> "Schváleno"
-                            PassengerStatus.REJECTED -> "Zamítnuto"
-                            PassengerStatus.PENDING -> "Čeká"
+                            PassengerStatus.APPROVED -> stringResource(R.string.carpool_approved)
+                            PassengerStatus.REJECTED -> stringResource(R.string.carpool_rejected)
+                            PassengerStatus.PENDING -> stringResource(R.string.carpool_pending)
                         }
                         if (isOwner && passenger.status == PassengerStatus.PENDING) {
                             IconButton(onClick = {
@@ -443,7 +519,7 @@ private fun CarpoolRideCard(
                                     } catch (_: Exception) { }
                                 }
                             }) {
-                                Icon(Icons.Default.Check, contentDescription = "Schválit", tint = Success, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Check, contentDescription = stringResource(R.string.carpool_approve), tint = Success, modifier = Modifier.size(20.dp))
                             }
                             IconButton(onClick = {
                                 scope.launch {
@@ -459,7 +535,7 @@ private fun CarpoolRideCard(
                                     } catch (_: Exception) { }
                                 }
                             }) {
-                                Icon(Icons.Default.Close, contentDescription = "Zamítnout", tint = Error, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.carpool_reject), tint = Error, modifier = Modifier.size(20.dp))
                             }
                         } else {
                             Text(
@@ -481,13 +557,16 @@ private fun CarpoolRideCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isOwner) {
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete), tint = AccentOrange)
+                        }
                         BetterMingleButton(
-                            text = "Uzavřít",
+                            text = stringResource(R.string.carpool_close_button),
                             onClick = onClose
                         )
                     } else if (ride.type == CarpoolType.OFFER) {
                         BetterMingleButton(
-                            text = "Požádat o spolujízdu",
+                            text = stringResource(R.string.carpool_request_button),
                             onClick = onRequestRide,
                             isCta = true
                         )
@@ -498,6 +577,7 @@ private fun CarpoolRideCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateRideDialog(
     eventId: String,
@@ -506,33 +586,99 @@ private fun CreateRideDialog(
     onCreated: () -> Unit
 ) {
     var departureLocation by remember { mutableStateOf("") }
-    var departureTime by remember { mutableStateOf("") }
+    var departureTimeMillis by remember { mutableStateOf<Long?>(null) }
     var availableSeats by remember { mutableStateOf("4") }
     var notes by remember { mutableStateOf("") }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    AlertDialog(
+    // TimePicker dialog
+    if (showTimePicker) {
+        val cal = java.util.Calendar.getInstance().apply {
+            if (departureTimeMillis != null) timeInMillis = departureTimeMillis!!
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = cal.get(java.util.Calendar.HOUR_OF_DAY),
+            initialMinute = cal.get(java.util.Calendar.MINUTE),
+            is24Hour = true
+        )
+        Dialog(
+            onDismissRequest = { showTimePicker = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier = Modifier.padding(horizontal = Spacing.lg)
+            ) {
+                Column(
+                    modifier = Modifier.padding(Spacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.carpool_select_time),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = Spacing.lg)
+                    )
+                    TimePicker(state = timePickerState)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.common_cancel)) }
+                        TextButton(onClick = {
+                            val calendar = java.util.Calendar.getInstance().apply {
+                                set(java.util.Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(java.util.Calendar.MINUTE, timePickerState.minute)
+                                set(java.util.Calendar.SECOND, 0)
+                                set(java.util.Calendar.MILLISECOND, 0)
+                            }
+                            departureTimeMillis = calendar.timeInMillis
+                            showTimePicker = false
+                        }) { Text(stringResource(R.string.common_confirm)) }
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (type == CarpoolType.OFFER) "Nabídnout jízdu" else "Poptat jízdu"
-            )
-        },
-        text = {
-            Column {
-                BetterMingleTextField(
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier.padding(horizontal = Spacing.lg)
+        ) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text(
+                    if (type == CarpoolType.OFFER) stringResource(R.string.carpool_dialog_offer_title) else stringResource(R.string.carpool_dialog_request_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                PlacesAutocompleteField(
                     value = departureLocation,
                     onValueChange = { departureLocation = it },
-                    label = "Místo odjezdu"
+                    onPlaceSelected = { place -> departureLocation = place.name },
+                    label = stringResource(R.string.carpool_departure_location)
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
 
-                BetterMingleTextField(
-                    value = departureTime,
-                    onValueChange = { departureTime = it },
-                    label = "Čas odjezdu (např. 15:00)"
-                )
+                Box(modifier = Modifier.clickable { showTimePicker = true }) {
+                    BetterMingleTextField(
+                        value = departureTimeMillis?.let { DateFormatUtils.formatTime(it) } ?: "",
+                        onValueChange = {},
+                        label = stringResource(R.string.carpool_departure_time),
+                        enabled = false,
+                        leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) }
+                    )
+                }
 
                 if (type == CarpoolType.OFFER) {
                     Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
@@ -540,7 +686,7 @@ private fun CreateRideDialog(
                     BetterMingleTextField(
                         value = availableSeats,
                         onValueChange = { availableSeats = it },
-                        label = "Počet volných míst",
+                        label = stringResource(R.string.carpool_available_seats),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
@@ -550,58 +696,50 @@ private fun CreateRideDialog(
                 BetterMingleTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = "Poznámky",
+                    label = stringResource(R.string.carpool_notes),
                     singleLine = false,
                     maxLines = 3
                 )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        try {
-                            val currentUser = FirebaseAuth.getInstance().currentUser
-                            // Parse departure time "HH:mm" to epoch
-                            val parsedTime = departureTime.trim().split(":").let { parts ->
-                                if (parts.size == 2) {
-                                    val h = parts[0].toIntOrNull()
-                                    val m = parts[1].toIntOrNull()
-                                    if (h != null && m != null && h in 0..23 && m in 0..59) {
-                                        java.util.Calendar.getInstance().apply {
-                                            set(java.util.Calendar.HOUR_OF_DAY, h)
-                                            set(java.util.Calendar.MINUTE, m)
-                                            set(java.util.Calendar.SECOND, 0)
-                                            set(java.util.Calendar.MILLISECOND, 0)
-                                        }.timeInMillis
-                                    } else null
-                                } else null
+
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val currentUser = FirebaseAuth.getInstance().currentUser
+                                    val rideData = hashMapOf<String, Any?>(
+                                        "driverId" to (currentUser?.uid ?: ""),
+                                        "departureLocation" to departureLocation,
+                                        "departureTime" to departureTimeMillis,
+                                        "availableSeats" to (availableSeats.toIntOrNull() ?: 4),
+                                        "notes" to notes,
+                                        "type" to type.name,
+                                        "isClosed" to false,
+                                        "createdAt" to System.currentTimeMillis()
+                                    )
+                                    FirebaseFirestore.getInstance()
+                                        .collection("events").document(eventId)
+                                        .collection("carpoolRides")
+                                        .add(rideData).await()
+                                    val typeLabel = if (type.name == "OFFER") context.getString(R.string.activity_offered_ride) else context.getString(R.string.activity_looking_for_ride)
+                                    val seatsInfo = availableSeats.toIntOrNull()?.let { " ($it ${context.getString(R.string.carpool_seats_count)})" } ?: ""
+                                    ActivityLogger.log(eventId, "carpool", "$typeLabel z $departureLocation$seatsInfo")
+                                    onCreated()
+                                } catch (_: Exception) { }
                             }
-                            val rideData = hashMapOf<String, Any?>(
-                                "driverId" to (currentUser?.uid ?: ""),
-                                "departureLocation" to departureLocation,
-                                "departureTime" to parsedTime,
-                                "availableSeats" to (availableSeats.toIntOrNull() ?: 4),
-                                "notes" to notes,
-                                "type" to type.name,
-                                "isClosed" to false,
-                                "createdAt" to System.currentTimeMillis()
-                            )
-                            FirebaseFirestore.getInstance()
-                                .collection("events").document(eventId)
-                                .collection("carpoolRides")
-                                .add(rideData).await()
-                            onCreated()
-                        } catch (_: Exception) { }
+                        },
+                        enabled = departureLocation.isNotBlank()
+                    ) {
+                        Text(stringResource(R.string.common_create))
                     }
-                },
-                enabled = departureLocation.isNotBlank()
-            ) {
-                Text("Vytvořit")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Zrušit") }
         }
-    )
+    }
 }

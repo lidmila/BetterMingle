@@ -26,10 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.BetterMingleApp
+import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.Place
@@ -118,7 +120,7 @@ fun PlacesAutocompleteField(
 
         if (!placesAvailable) {
             Text(
-                text = "Napojení na mapy není dostupné",
+                text = stringResource(R.string.places_unavailable),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(start = Spacing.md, top = Spacing.xs)
@@ -189,7 +191,7 @@ fun PlacesAutocompleteField(
                                 Text(
                                     text = prediction.getSecondaryText(null).toString(),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

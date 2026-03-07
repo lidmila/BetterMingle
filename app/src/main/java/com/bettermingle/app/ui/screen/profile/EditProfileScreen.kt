@@ -69,12 +69,11 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.draw.alpha
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,11 +84,22 @@ fun EditProfileScreen(
 ) {
     val state by profileViewModel.uiState.collectAsState()
 
-    var name by remember(state.userName) { mutableStateOf(state.userName) }
-    var contactEmail by remember(state.contactEmail) { mutableStateOf(state.contactEmail) }
-    var phone by remember(state.phone) { mutableStateOf(state.phone) }
-    var department by remember(state.department) { mutableStateOf(state.department) }
-    var bio by remember(state.bio) { mutableStateOf(state.bio) }
+    var isInitialized by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    var contactEmail by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+
+    // Initialize fields once when profile data first loads
+    if (!isInitialized && state.userName.isNotEmpty()) {
+        name = state.userName
+        contactEmail = state.contactEmail
+        phone = state.phone
+        department = state.department
+        bio = state.bio
+        isInitialized = true
+    }
     var showAvatarPicker by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -124,7 +134,7 @@ fun EditProfileScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -188,7 +198,7 @@ fun EditProfileScreen(
             Text(
                 text = stringResource(R.string.edit_profile_change_avatar_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = Spacing.xs)
             )
 
@@ -277,8 +287,8 @@ private fun AvatarPickerDialog(
     onUploadPhoto: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val currentIndex = parseAvatarIndex(currentAvatarUrl)
-    val avatarIndices = (1..AVATAR_COUNT).toList()
+    val currentIndex = remember(currentAvatarUrl) { parseAvatarIndex(currentAvatarUrl) }
+    val avatarIndices = remember { (1..AVATAR_COUNT).toList() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -292,7 +302,7 @@ private fun AvatarPickerDialog(
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                     modifier = Modifier.height(320.dp)
                 ) {
-                    items(avatarIndices) { index ->
+                    items(avatarIndices, key = { it }) { index ->
                         val resId = getAvatarResourceId(index)
                         val isSelected = currentIndex == index
                         val isLocked = index > FREE_AVATAR_LIMIT && !isPremium

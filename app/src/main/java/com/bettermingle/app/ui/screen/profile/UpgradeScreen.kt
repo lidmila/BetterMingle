@@ -71,12 +71,11 @@ import androidx.compose.ui.unit.dp
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +120,7 @@ fun UpgradeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -170,7 +169,7 @@ fun UpgradeScreen(
                     Text(
                         text = stringResource(R.string.upgrade_subheadline),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -373,7 +372,7 @@ fun UpgradeScreen(
                         Text(
                             text = stringResource(R.string.upgrade_lifetime_desc),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(Spacing.md))
@@ -393,7 +392,7 @@ fun UpgradeScreen(
             Text(
                 text = stringResource(R.string.upgrade_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 

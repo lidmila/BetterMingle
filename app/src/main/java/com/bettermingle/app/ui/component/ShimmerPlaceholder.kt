@@ -29,22 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.bettermingle.app.ui.theme.BorderColor
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.CardShadow
 import com.bettermingle.app.ui.theme.CornerRadius
-import com.bettermingle.app.ui.theme.PastelBlue
-import com.bettermingle.app.ui.theme.PastelGold
-import com.bettermingle.app.ui.theme.PastelGreen
-import com.bettermingle.app.ui.theme.PastelOrange
-import com.bettermingle.app.ui.theme.PastelPink
-import com.bettermingle.app.ui.theme.SurfacePeach
 import com.bettermingle.app.ui.theme.Spacing
 
 private val CardShape = RoundedCornerShape(CornerRadius.card)
-
-private val shimmerPastels = listOf(PastelBlue, PastelPink, PastelOrange, PastelGreen, PastelGold)
 
 @Composable
 fun ShimmerBox(
@@ -61,10 +52,11 @@ fun ShimmerBox(
         label = "shimmerTranslate"
     )
 
+    val surfacePeach = MaterialTheme.colorScheme.outlineVariant
     val shimmerColors = listOf(
-        SurfacePeach.copy(alpha = 0.2f),
-        SurfacePeach.copy(alpha = 0.4f),
-        SurfacePeach.copy(alpha = 0.2f)
+        surfacePeach.copy(alpha = 0.2f),
+        surfacePeach.copy(alpha = 0.4f),
+        surfacePeach.copy(alpha = 0.2f)
     )
 
     val brush = Brush.linearGradient(
@@ -94,7 +86,7 @@ fun ShimmerEventCard(
                 spotColor = CardShadow
             )
             .clip(CardShape)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(Spacing.cardPadding)
     ) {
         // Top row: status chip + theme tag shimmer pills
@@ -169,7 +161,7 @@ fun ShimmerEventCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         // Divider
-        HorizontalDivider(color = BorderColor, thickness = 1.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -217,7 +209,7 @@ fun ShimmerListItem(
         modifier = modifier
             .fillMaxWidth()
             .clip(CardShape)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(Spacing.cardPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -269,6 +261,8 @@ fun ShimmerModuleCard(
     modifier: Modifier = Modifier,
     index: Int = 0
 ) {
+    val ext = BetterMingleThemeColors.extended
+    val shimmerPastels = listOf(ext.pastelBlue, ext.pastelPink, ext.pastelOrange, ext.pastelGreen, ext.pastelGold)
     val pastelBg = shimmerPastels[index % shimmerPastels.size]
 
     Column(

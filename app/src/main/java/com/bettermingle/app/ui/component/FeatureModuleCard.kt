@@ -27,27 +27,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.CornerRadius
-import com.bettermingle.app.ui.theme.PastelBlue
-import com.bettermingle.app.ui.theme.PastelGold
-import com.bettermingle.app.ui.theme.PastelGray
-import com.bettermingle.app.ui.theme.PastelGreen
-import com.bettermingle.app.ui.theme.PastelOrange
-import com.bettermingle.app.ui.theme.PastelPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.debouncedClick
 import kotlinx.coroutines.launch
 
@@ -69,13 +64,14 @@ fun FeatureModuleCard(
     val scope = rememberCoroutineScope()
 
     // Map iconTint to pastel background color
+    val ext = BetterMingleThemeColors.extended
     val pastelBg = when (iconTint) {
-        PrimaryBlue -> PastelBlue
-        AccentPink -> PastelPink
-        AccentOrange -> PastelOrange
-        Success -> PastelGreen
-        AccentGold -> PastelGold
-        else -> PastelGray
+        PrimaryBlue -> ext.pastelBlue
+        AccentPink -> ext.pastelPink
+        AccentOrange -> ext.pastelOrange
+        Success -> ext.pastelGreen
+        AccentGold -> ext.pastelGold
+        else -> ext.pastelGray
     }
 
     Box(modifier = modifier) {
@@ -113,7 +109,7 @@ fun FeatureModuleCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color.White.copy(alpha = 0.7f), CircleShape),
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -139,7 +135,7 @@ fun FeatureModuleCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

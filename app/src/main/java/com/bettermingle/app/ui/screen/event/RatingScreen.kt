@@ -58,12 +58,11 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
-import com.bettermingle.app.ui.theme.PastelGold
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -134,7 +133,7 @@ fun RatingScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -270,7 +269,7 @@ fun RatingScreen(
                                 Text(
                                     text = userComment,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -432,7 +431,7 @@ private fun CategoryProgressBar(label: String, average: Float) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = "%.1f".format(average),
@@ -448,7 +447,7 @@ private fun CategoryProgressBar(label: String, average: Float) {
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp)),
             color = AccentGold,
-            trackColor = PastelGold,
+            trackColor = BetterMingleThemeColors.extended.pastelGold,
             strokeCap = StrokeCap.Round
         )
     }

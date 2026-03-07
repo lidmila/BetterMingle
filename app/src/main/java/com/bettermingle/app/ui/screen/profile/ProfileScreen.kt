@@ -37,9 +37,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AutoAwesome
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,14 +71,13 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.viewmodel.ProfileViewModel
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +87,7 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onHelp: () -> Unit = {},
     onEditProfile: () -> Unit = {},
+    onYearInReview: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
@@ -108,7 +110,7 @@ fun ProfileScreen(
                     Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineSmall)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -209,7 +211,7 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -291,13 +293,13 @@ fun ProfileScreen(
                         Text(
                             text = stringResource(R.string.profile_premium_description),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -323,10 +325,14 @@ fun ProfileScreen(
                 title = stringResource(R.string.profile_notifications),
                 iconTint = AccentGold,
                 onClick = {
-                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    try {
+                        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        }
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.e("ProfileScreen", "Cannot open notification settings", e)
                     }
-                    context.startActivity(intent)
                 }
             )
             ProfileMenuItem(
@@ -334,6 +340,12 @@ fun ProfileScreen(
                 title = stringResource(R.string.profile_help),
                 iconTint = AccentPink,
                 onClick = onHelp
+            )
+            ProfileMenuItem(
+                icon = Icons.Default.AutoAwesome,
+                title = stringResource(R.string.profile_year_in_events),
+                iconTint = PrimaryBlue,
+                onClick = onYearInReview
             )
 
             Spacer(modifier = Modifier.height(Spacing.md))
@@ -368,7 +380,7 @@ private fun ContactInfoRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
@@ -382,7 +394,7 @@ private fun ContactInfoRow(
 private fun ProfileMenuItem(
     icon: ImageVector,
     title: String,
-    iconTint: androidx.compose.ui.graphics.Color = TextSecondary,
+    iconTint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant,
     onClick: () -> Unit
 ) {
     BetterMingleCard(onClick = onClick) {
@@ -405,7 +417,7 @@ private fun ProfileMenuItem(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = TextSecondary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

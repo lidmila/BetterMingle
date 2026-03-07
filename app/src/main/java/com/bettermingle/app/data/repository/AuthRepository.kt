@@ -104,7 +104,10 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
             val isPremium = userDoc.getBoolean("isPremium") ?: false
             val premiumUntil = userDoc.getTimestamp("premiumUntil")?.toDate()?.time
                 ?: userDoc.getLong("premiumUntil")
-            settingsManager?.updatePremiumStatus(isPremium, premiumUntil)
+            val tier = try {
+                userDoc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it) }
+            } catch (_: Exception) { null }
+            settingsManager?.updatePremiumStatus(isPremium, premiumUntil, tier)
             settingsManager?.updateUserInfo(
                 name = user.displayName ?: "",
                 email = user.email ?: "",

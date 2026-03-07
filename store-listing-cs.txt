@@ -1,0 +1,45 @@
+========================================
+Google Play Store Listing – CZ
+========================================
+
+Název aplikace:
+Better Mingle – Plánuj akce s přáteli
+
+Krátký popis (max 80 znaků):
+Organizuj akce, sdílej výdaje, hlasuj a plánuj spolujízdu – vše na jednom místě.
+
+Dlouhý popis (max 4000 znaků):
+Better Mingle je aplikace pro organizaci společných akcí – ať už jde o výlet s přáteli, firemní teambuilding, narozeninovou oslavu nebo víkend na chalupě.
+
+Vytvoř akci, pozvi přátele jedním odkazem a společně plánujte vše na jednom místě.
+
+🎯 Co všechno zvládneš:
+
+• Vytváření akcí – zadej název, datum, místo a popis. Přidej moduly, které potřebuješ.
+• Sdílení výdajů – přidávej výdaje, rozděl je mezi účastníky a nech aplikaci spočítat, kdo komu kolik dluží.
+• Hlasování – vytvoř anketu a rozhodujte společně. Výsledky v reálném čase.
+• Spolujízda – nabídni místa v autě nebo se přidej ke spolujízdě. Jednoduchý přehled, kdo s kým jede.
+• Pokoje – rozděl ubytování. Vytvoř pokoje, nastav kapacitu a účastníci se sami přiřadí.
+• Balicí seznam – sdílený seznam věcí, které je potřeba vzít. Každý vidí, co už je zajištěné.
+• Úkoly – rozděl práci mezi účastníky. Přiřazuj úkoly a sleduj, co je hotové.
+• Program – naplánuj časový rozvrh akce od rána do večera.
+• Chat – komunikuj s účastníky přímo v aplikaci.
+• Aktivita – přehled všeho, co se na akci děje.
+• Zabezpečení PINem – ochraň akci PINem, aby se nepřipojil nikdo nepovolaný.
+
+📱 Pro koho je Better Mingle?
+
+• Parta přátel, co plánuje výlet nebo dovolenou
+• Organizátoři narozeninových oslav a večírků
+• Firemní týmy na teambuildingu
+• Spolubydlící, kteří sdílí výdaje
+• Kdokoliv, kdo chce mít plánování pod kontrolou
+
+💎 Plány:
+
+Free – až 2 akce, max 8 účastníků, 1 anketa
+Pro – až 5 akcí, 100 účastníků, neomezené ankety, export výdajů, bez reklam
+Business – neomezené akce i účastníci, více organizátorů
+Lifetime – jednorázová platba, funkce Business navždy
+
+Stáhni si Better Mingle a začni plánovat společné zážitky ještě dnes!

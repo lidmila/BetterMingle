@@ -1,0 +1,45 @@
+========================================
+Google Play Store Listing – EN
+========================================
+
+App name:
+Better Mingle – Group Events
+
+Short description (max 80 chars):
+Organize events, split expenses, vote and plan carpools – all in one place.
+
+Long description (max 4000 chars):
+Better Mingle is an app for organizing group events – whether it's a trip with friends, a corporate team-building, a birthday party, or a weekend getaway.
+
+Create an event, invite friends with a single link, and plan everything together in one place.
+
+🎯 What you can do:
+
+• Create events – set a name, date, location, and description. Add the modules you need.
+• Split expenses – add expenses, split them among participants, and let the app calculate who owes whom.
+• Voting – create polls and decide together. Results in real time.
+• Carpooling – offer seats in your car or join a ride. A simple overview of who's riding with whom.
+• Rooms – organize accommodation. Create rooms, set capacity, and let participants assign themselves.
+• Packing list – a shared list of things to bring. Everyone can see what's already covered.
+• Tasks – divide work among participants. Assign tasks and track what's done.
+• Schedule – plan the event's timeline from morning to evening.
+• Chat – communicate with participants directly in the app.
+• Activity feed – an overview of everything happening at the event.
+• PIN protection – secure your event with a PIN to keep uninvited guests out.
+
+📱 Who is Better Mingle for?
+
+• A group of friends planning a trip or vacation
+• Birthday party and event organizers
+• Corporate teams on a team-building
+• Roommates sharing expenses
+• Anyone who wants to keep planning under control
+
+💎 Plans:
+
+Free – up to 2 events, max 8 participants, 1 poll
+Pro – up to 5 events, 100 participants, unlimited polls, expense export, no ads
+Business – unlimited events and participants, multiple organizers
+Lifetime – one-time payment, Business features forever
+
+Download Better Mingle and start planning shared experiences today!

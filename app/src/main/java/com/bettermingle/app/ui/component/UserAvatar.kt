@@ -9,16 +9,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.TextOnColor
@@ -89,15 +91,15 @@ fun UserAvatar(
     size: Dp = 40.dp,
     modifier: Modifier = Modifier
 ) {
-    val avatarIndex = parseAvatarIndex(avatarUrl)
-    val resId = avatarIndex?.let { getAvatarResourceId(it) }
+    val avatarIndex = remember(avatarUrl) { parseAvatarIndex(avatarUrl) }
+    val resId = remember(avatarIndex) { avatarIndex?.let { getAvatarResourceId(it) } }
 
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
             .background(AvatarBackground)
-            .border(2.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+            .border(2.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         when {
@@ -112,8 +114,16 @@ fun UserAvatar(
                 )
             }
             avatarUrl.isNotEmpty() -> {
+                val context = LocalContext.current
+                val sizePx = with(androidx.compose.ui.platform.LocalDensity.current) {
+                    (size * 2f).roundToPx()
+                }
                 AsyncImage(
-                    model = avatarUrl,
+                    model = ImageRequest.Builder(context)
+                        .data(avatarUrl)
+                        .size(sizePx)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = stringResource(R.string.user_avatar_description),
                     modifier = Modifier
                         .size(size)

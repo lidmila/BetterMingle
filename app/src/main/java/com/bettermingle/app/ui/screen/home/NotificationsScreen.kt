@@ -58,11 +58,10 @@ import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.NotificationsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -98,7 +97,7 @@ fun NotificationsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.notifications_title), style = MaterialTheme.typography.titleMedium) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -194,7 +193,7 @@ private fun ActivityCard(
                 Text(
                     text = formatActivityTime(activity.timestamp, context),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -210,6 +209,7 @@ private fun ActivityCard(
     }
 }
 
+@Composable
 private fun activityIconAndColor(type: String): Pair<ImageVector, Color> = when (type) {
     "vote" -> Icons.Default.HowToVote to PrimaryBlue
     "expense" -> Icons.Default.Payments to AccentOrange
@@ -220,9 +220,9 @@ private fun activityIconAndColor(type: String): Pair<ImageVector, Color> = when 
     "task" -> Icons.Default.CheckCircle to Success
     "participant" -> Icons.Default.PersonAdd to PrimaryBlue
     "rating" -> Icons.Default.Star to AccentGold
-    "settings" -> Icons.Default.Settings to TextSecondary
+    "settings" -> Icons.Default.Settings to MaterialTheme.colorScheme.onSurfaceVariant
     "packing" -> Icons.Default.CheckCircle to AccentOrange
-    else -> Icons.Default.Notifications to TextSecondary
+    else -> Icons.Default.Notifications to MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 private fun formatActivityTime(timestamp: Long, context: android.content.Context): String {
@@ -241,6 +241,8 @@ private fun formatActivityTime(timestamp: Long, context: android.content.Context
         days < 7 -> {
             SimpleDateFormat("EEE HH:mm", Locale.getDefault()).format(Date(timestamp))
         }
-        else -> SimpleDateFormat("d. M. HH:mm", Locale.getDefault()).format(Date(timestamp))
+        else -> java.text.DateFormat.getDateTimeInstance(
+            java.text.DateFormat.SHORT, java.text.DateFormat.SHORT, Locale.getDefault()
+        ).format(Date(timestamp))
     }
 }

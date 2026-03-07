@@ -34,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.Error
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 @Composable
 fun ErrorState(
@@ -94,7 +94,7 @@ fun ErrorState(
                 Text(
                     text = resolvedDescription,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }

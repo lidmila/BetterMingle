@@ -69,16 +69,11 @@ import com.bettermingle.app.data.model.PREDEFINED_THEMES
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
-import com.bettermingle.app.ui.theme.PastelBlue
-import com.bettermingle.app.ui.theme.PastelGold
-import com.bettermingle.app.ui.theme.PastelGray
-import com.bettermingle.app.ui.theme.PastelGreen
-import com.bettermingle.app.ui.theme.PastelOrange
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -160,7 +155,7 @@ fun EventSettingsScreen(
                     Text(
                         text = stringResource(R.string.event_settings_pin_dialog_desc),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(Spacing.sm))
                     BetterMingleTextField(
@@ -220,7 +215,7 @@ fun EventSettingsScreen(
                     Text(
                         text = stringResource(R.string.event_settings_edit_formatting),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(Spacing.md))
                     BetterMingleTextField(
@@ -332,7 +327,7 @@ fun EventSettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -403,7 +398,7 @@ fun EventSettingsScreen(
                             Text(
                                 text = stringResource(R.string.event_settings_notifications_desc),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -447,12 +442,13 @@ fun EventSettingsScreen(
                             val statusOngoing = stringResource(R.string.event_status_ongoing)
                             val statusCompleted = stringResource(R.string.event_status_completed)
                             val statusCancelled = stringResource(R.string.event_status_cancelled)
+                            val ext = BetterMingleThemeColors.extended
                             val options = listOf(
-                                StatusOption(EventStatus.PLANNING, statusPlanning, PastelGold, AccentGold),
-                                StatusOption(EventStatus.CONFIRMED, statusConfirmed, PastelBlue, PrimaryBlue),
-                                StatusOption(EventStatus.ONGOING, statusOngoing, PastelGreen, Success),
-                                StatusOption(EventStatus.COMPLETED, statusCompleted, PastelGray, TextSecondary),
-                                StatusOption(EventStatus.CANCELLED, statusCancelled, PastelOrange, AccentOrange)
+                                StatusOption(EventStatus.PLANNING, statusPlanning, ext.pastelGold, AccentGold),
+                                StatusOption(EventStatus.CONFIRMED, statusConfirmed, ext.pastelBlue, PrimaryBlue),
+                                StatusOption(EventStatus.ONGOING, statusOngoing, ext.pastelGreen, Success),
+                                StatusOption(EventStatus.COMPLETED, statusCompleted, ext.pastelGray, MaterialTheme.colorScheme.onSurfaceVariant),
+                                StatusOption(EventStatus.CANCELLED, statusCancelled, ext.pastelOrange, AccentOrange)
                             )
                             options.forEach { opt ->
                                 FilterChip(
@@ -513,7 +509,7 @@ fun EventSettingsScreen(
                                     Text(
                                         text = if (securityEnabled) stringResource(R.string.event_settings_security_active) else stringResource(R.string.event_settings_security_disabled),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (securityEnabled) Success else TextSecondary
+                                        color = if (securityEnabled) Success else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -685,7 +681,7 @@ private fun SecuritySettingRow(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -730,7 +726,7 @@ private fun SettingsActionItem(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

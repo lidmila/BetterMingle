@@ -44,6 +44,7 @@ import androidx.navigation.navArgument
 import com.bettermingle.app.ui.screen.auth.ForgotPasswordScreen
 import com.bettermingle.app.ui.screen.auth.LoginScreen
 import com.bettermingle.app.ui.screen.auth.OnboardingScreen
+import com.bettermingle.app.ui.screen.auth.ProfileSetupScreen
 import com.bettermingle.app.ui.screen.auth.RegisterScreen
 import com.bettermingle.app.ui.screen.create.CreateEventScreen
 import com.bettermingle.app.ui.screen.event.CarpoolScreen
@@ -69,6 +70,7 @@ import com.bettermingle.app.ui.screen.profile.HelpScreen
 import com.bettermingle.app.ui.screen.profile.ProfileScreen
 import com.bettermingle.app.ui.screen.profile.SettingsScreen
 import com.bettermingle.app.ui.screen.profile.UpgradeScreen
+import com.bettermingle.app.data.ads.AdManager
 import com.bettermingle.app.data.preferences.SettingsManager
 import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.R
@@ -76,7 +78,7 @@ import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.AuthViewModel
 import com.bettermingle.app.viewmodel.NotificationsViewModel
 import androidx.compose.runtime.rememberCoroutineScope
@@ -109,6 +111,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val YEAR_IN_REVIEW = "year_in_review"
     const val ONBOARDING = "onboarding"
+    const val PROFILE_SETUP = "profile_setup"
     const val ACTIVITY_FEED = "activity_feed/{eventId}"
     const val EVENT_SUMMARY = "event_summary/{eventId}"
     const val INVITATION = "invitation/{inviteCode}"
@@ -159,9 +162,17 @@ fun BetterMingleNavigation() {
         initial = com.bettermingle.app.data.preferences.AppSettings()
     )
 
+    // Preload interstitial ad for FREE tier
+    LaunchedEffect(settings.premiumTier) {
+        if (AdManager.hasAds(settings.premiumTier)) {
+            AdManager.loadInterstitial(context)
+        }
+    }
+
     val startDestination = when {
         !authState.isLoggedIn && !settings.onboardingCompleted -> Routes.ONBOARDING
         !authState.isLoggedIn -> Routes.LOGIN
+        authState.isLoggedIn -> Routes.PROFILE_SETUP
         else -> Routes.EVENT_LIST
     }
 
@@ -233,8 +244,8 @@ fun BetterMingleNavigation() {
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = PrimaryBlue,
                                 selectedTextColor = PrimaryBlue,
-                                unselectedIconColor = TextSecondary,
-                                unselectedTextColor = TextSecondary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 indicatorColor = AccentPink.copy(alpha = 0.2f)
                             )
                         )
@@ -270,7 +281,7 @@ fun BetterMingleNavigation() {
                     onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
                     onNavigateToForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) },
                     onLoginSuccess = {
-                        navController.navigate(Routes.EVENT_LIST) {
+                        navController.navigate(Routes.PROFILE_SETUP) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
@@ -281,7 +292,7 @@ fun BetterMingleNavigation() {
                 RegisterScreen(
                     onNavigateToLogin = { navController.popBackStack() },
                     onRegisterSuccess = {
-                        navController.navigate(Routes.EVENT_LIST) {
+                        navController.navigate(Routes.PROFILE_SETUP) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
@@ -295,6 +306,17 @@ fun BetterMingleNavigation() {
                 )
             }
 
+            // Profile setup after first login
+            composable(Routes.PROFILE_SETUP) {
+                ProfileSetupScreen(
+                    onComplete = {
+                        navController.navigate(Routes.EVENT_LIST) {
+                            popUpTo(Routes.PROFILE_SETUP) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // Main tabs
             composable(Routes.EVENT_LIST) {
                 EventListScreen(
@@ -303,17 +325,28 @@ fun BetterMingleNavigation() {
                     },
                     onCreateEvent = {
                         navController.navigate(Routes.CREATE_EVENT)
-                    },
-                    onYearInReview = {
-                        navController.navigate(Routes.YEAR_IN_REVIEW)
                     }
                 )
             }
             composable(Routes.CREATE_EVENT) {
+                val createContext = LocalContext.current
                 CreateEventScreen(
                     onEventCreated = { eventId ->
-                        navController.navigate(Routes.eventDashboard(eventId)) {
-                            popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                        val navigateToDashboard = {
+                            navController.navigate(Routes.eventDashboard(eventId)) {
+                                popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                            }
+                        }
+                        val currentSettings = settings
+                        if (currentSettings != null && AdManager.hasAds(currentSettings.premiumTier)) {
+                            val activity = createContext as? android.app.Activity
+                            if (activity != null) {
+                                AdManager.showInterstitial(activity) { navigateToDashboard() }
+                            } else {
+                                navigateToDashboard()
+                            }
+                        } else {
+                            navigateToDashboard()
                         }
                     },
                     onNavigateBack = { navController.popBackStack() },
@@ -331,9 +364,11 @@ fun BetterMingleNavigation() {
             composable(Routes.PROFILE) {
                 ProfileScreen(
                     onLogout = {
-                        authViewModel.logout()
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
+                        scope.launch {
+                            authViewModel.logout()
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     },
                     onUpgrade = {
@@ -347,6 +382,9 @@ fun BetterMingleNavigation() {
                     },
                     onEditProfile = {
                         navController.navigate(Routes.EDIT_PROFILE)
+                    },
+                    onYearInReview = {
+                        navController.navigate(Routes.YEAR_IN_REVIEW)
                     }
                 )
             }

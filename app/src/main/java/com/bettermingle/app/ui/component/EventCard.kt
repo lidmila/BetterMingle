@@ -39,7 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,19 +56,13 @@ import com.bettermingle.app.data.model.EventStatus
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BorderColor
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.CardShadow
 import com.bettermingle.app.ui.theme.CornerRadius
-import com.bettermingle.app.ui.theme.PastelBlue
-import com.bettermingle.app.ui.theme.PastelGold
-import com.bettermingle.app.ui.theme.PastelGray
-import com.bettermingle.app.ui.theme.PastelGreen
-import com.bettermingle.app.ui.theme.PastelOrange
-import com.bettermingle.app.ui.theme.PastelPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.R
 import com.bettermingle.app.utils.debouncedClick
 import java.text.SimpleDateFormat
@@ -83,12 +77,16 @@ private data class StatusStyle(
     val labelResId: Int
 )
 
-private fun statusStyle(status: EventStatus): StatusStyle = when (status) {
-    EventStatus.PLANNING -> StatusStyle(PastelGold, AccentGold, R.string.event_status_planning)
-    EventStatus.CONFIRMED -> StatusStyle(PastelBlue, PrimaryBlue, R.string.event_status_confirmed)
-    EventStatus.ONGOING -> StatusStyle(PastelGreen, Success, R.string.event_status_ongoing)
-    EventStatus.COMPLETED -> StatusStyle(PastelGray, TextSecondary, R.string.event_status_completed)
-    EventStatus.CANCELLED -> StatusStyle(PastelOrange, AccentOrange, R.string.event_status_cancelled)
+@Composable
+private fun statusStyle(status: EventStatus): StatusStyle {
+    val ext = BetterMingleThemeColors.extended
+    return when (status) {
+        EventStatus.PLANNING -> StatusStyle(ext.pastelGold, AccentGold, R.string.event_status_planning)
+        EventStatus.CONFIRMED -> StatusStyle(ext.pastelBlue, PrimaryBlue, R.string.event_status_confirmed)
+        EventStatus.ONGOING -> StatusStyle(ext.pastelGreen, Success, R.string.event_status_ongoing)
+        EventStatus.COMPLETED -> StatusStyle(ext.pastelGray, MaterialTheme.colorScheme.onSurfaceVariant, R.string.event_status_completed)
+        EventStatus.CANCELLED -> StatusStyle(ext.pastelOrange, AccentOrange, R.string.event_status_cancelled)
+    }
 }
 
 private fun moduleIcon(module: EventModule): ImageVector = when (module) {
@@ -112,13 +110,17 @@ fun EventCard(
 ) {
     val pressScale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    val ext = BetterMingleThemeColors.extended
     val style = statusStyle(event.status)
     val dateFormat = remember { SimpleDateFormat("d. M. yyyy", Locale.forLanguageTag("cs")) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .scale(pressScale.value)
+            .graphicsLayer {
+                scaleX = pressScale.value
+                scaleY = pressScale.value
+            }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -166,7 +168,7 @@ fun EventCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = AccentPink,
                     modifier = Modifier
-                        .background(PastelPink, RoundedCornerShape(100.dp))
+                        .background(ext.pastelPink, RoundedCornerShape(100.dp))
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
             }
@@ -191,7 +193,7 @@ fun EventCard(
             Text(
                 text = event.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = if (isHero) 3 else 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -206,7 +208,7 @@ fun EventCard(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = null,
                     modifier = Modifier.size(Spacing.iconSM),
-                    tint = TextSecondary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(Spacing.xs))
                 val dateText = if (event.endDate != null && event.endDate != event.startDate) {
@@ -217,7 +219,7 @@ fun EventCard(
                 Text(
                     text = dateText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -229,13 +231,13 @@ fun EventCard(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
                     modifier = Modifier.size(Spacing.iconSM),
-                    tint = TextSecondary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(Spacing.xs))
                 Text(
                     text = event.locationName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -245,7 +247,7 @@ fun EventCard(
         // === Zone D: Participants + Module icons ===
         if (participantCount > 0 || event.enabledModules.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = BorderColor, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
@@ -260,7 +262,7 @@ fun EventCard(
                             imageVector = Icons.Default.People,
                             contentDescription = null,
                             modifier = Modifier.size(Spacing.iconXS),
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         val ratioText = if (event.maxParticipants > 0) {
@@ -271,7 +273,7 @@ fun EventCard(
                         Text(
                             text = ratioText,
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (event.maxParticipants > 0) {
                             Spacer(modifier = Modifier.width(8.dp))
@@ -284,7 +286,7 @@ fun EventCard(
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
                                 color = PrimaryBlue,
-                                trackColor = PastelBlue
+                                trackColor = ext.pastelBlue
                             )
                         }
                     }
@@ -304,7 +306,7 @@ fun EventCard(
                                 imageVector = moduleIcon(module),
                                 contentDescription = module.name,
                                 modifier = Modifier.size(Spacing.iconXS),
-                                tint = TextSecondary
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -312,7 +314,7 @@ fun EventCard(
                             Text(
                                 text = "+$remaining",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

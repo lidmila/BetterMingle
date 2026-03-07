@@ -96,7 +96,7 @@
         <!-- Google AdMob App ID (placeholder) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-0000000000000000~0000000000"/>
+            android:value="ca-app-pub-9561317089977080~9588620219"/>
     </application>
 
 </manifest>

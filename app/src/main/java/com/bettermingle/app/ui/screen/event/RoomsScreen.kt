@@ -55,24 +55,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import com.bettermingle.app.data.model.EventRoom
+import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
+import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.ActivityLogger
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,12 +85,12 @@ fun RoomsScreen(
     val context = LocalContext.current
     val rooms = remember { mutableStateListOf<EventRoom>() }
     val userNames = remember { mutableMapOf<String, String>() }
-    val allParticipants = remember { mutableStateListOf<Pair<String, String>>() } // uid to displayName
     var showCreateDialog by remember { mutableStateOf(false) }
-    var assignRoom by remember { mutableStateOf<EventRoom?>(null) }
     var roomToDelete by remember { mutableStateOf<EventRoom?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     fun loadRooms() {
         scope.launch {
@@ -123,15 +125,11 @@ fun RoomsScreen(
             rooms.clear()
             rooms.addAll(loaded)
 
-            // Load all event participants for assignment
+            // Load current user's name if not already loaded
             try {
-                val partsSnapshot = firestore.collection("events").document(eventId)
-                    .collection("participants").get().await()
-                allParticipants.clear()
-                partsSnapshot.documents.forEach { doc ->
-                    val name = doc.getString("displayName") ?: doc.id.take(8)
-                    allParticipants.add(doc.id to name)
-                    userNames[doc.id] = name
+                if (currentUserId.isNotEmpty() && currentUserId !in userNames) {
+                    val userDoc = firestore.collection("users").document(currentUserId).get().await()
+                    userNames[currentUserId] = userDoc.getString("displayName") ?: currentUserId.take(8)
                 }
             } catch (_: Exception) { }
         } catch (_: Exception) { }
@@ -151,18 +149,38 @@ fun RoomsScreen(
         )
     }
 
-    assignRoom?.let { room ->
-        AssignParticipantDialog(
-            eventId = eventId,
-            room = room,
-            allParticipants = allParticipants,
-            assignedRooms = rooms,
-            onDismiss = { assignRoom = null },
-            onUpdated = {
-                assignRoom = null
+    fun handleJoinRoom(room: EventRoom) {
+        // Join this room
+        scope.launch {
+            try {
+                val updated = room.assignments + currentUserId
+                FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("rooms").document(room.id)
+                    .update("assignments", updated)
+                    .await()
+                ActivityLogger.log(eventId, "room", context.getString(R.string.activity_joined_room, room.name))
+                snackbarHostState.showSnackbar(context.getString(R.string.rooms_joined, room.name))
                 loadRooms()
-            }
-        )
+            } catch (_: Exception) { }
+        }
+    }
+
+    fun handleLeaveRoom(room: EventRoom) {
+        // Leave this room
+        scope.launch {
+            try {
+                val updated = room.assignments - currentUserId
+                FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("rooms").document(room.id)
+                    .update("assignments", updated)
+                    .await()
+                ActivityLogger.log(eventId, "room", context.getString(R.string.activity_joined_room, room.name))
+                snackbarHostState.showSnackbar(context.getString(R.string.rooms_left, room.name))
+                loadRooms()
+            } catch (_: Exception) { }
+        }
     }
 
     if (roomToDelete != null) {
@@ -204,7 +222,7 @@ fun RoomsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -220,7 +238,8 @@ fun RoomsScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.rooms_add))
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -251,10 +270,14 @@ fun RoomsScreen(
                     verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     items(rooms, key = { it.id }) { room ->
+                        val isInAnotherRoom = rooms.any { it.id != room.id && currentUserId in it.assignments }
                         RoomCard(
                             room = room,
                             userNames = userNames,
-                            onClick = { assignRoom = room },
+                            currentUserId = currentUserId,
+                            isInAnotherRoom = isInAnotherRoom,
+                            onJoin = { handleJoinRoom(room) },
+                            onLeave = { handleLeaveRoom(room) },
                             onDelete = { roomToDelete = room }
                         )
                     }
@@ -266,8 +289,19 @@ fun RoomsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RoomCard(room: EventRoom, userNames: Map<String, String>, onClick: () -> Unit, onDelete: () -> Unit) {
-    BetterMingleCard(onClick = onClick) {
+private fun RoomCard(
+    room: EventRoom,
+    userNames: Map<String, String>,
+    currentUserId: String,
+    isInAnotherRoom: Boolean,
+    onJoin: () -> Unit,
+    onLeave: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val isInThisRoom = currentUserId in room.assignments
+    val isFull = room.assignments.size >= room.capacity
+
+    BetterMingleCard {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -284,7 +318,7 @@ private fun RoomCard(room: EventRoom, userNames: Map<String, String>, onClick: (
                 Text(
                     text = "${room.assignments.size}/${room.capacity}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (room.assignments.size >= room.capacity) AccentOrange else TextSecondary
+                    color = if (isFull) AccentOrange else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 IconButton(onClick = onDelete) {
@@ -297,7 +331,7 @@ private fun RoomCard(room: EventRoom, userNames: Map<String, String>, onClick: (
                 Text(
                     text = room.notes,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -308,27 +342,60 @@ private fun RoomCard(room: EventRoom, userNames: Map<String, String>, onClick: (
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     room.assignments.forEach { userId ->
+                        val isMe = userId == currentUserId
+                        val chipColor = if (isMe) AccentOrange else PrimaryBlue
                         Box(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.extraSmall)
-                                .background(PrimaryBlue.copy(alpha = 0.1f))
+                                .background(chipColor.copy(alpha = 0.1f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = PrimaryBlue,
+                                    tint = chipColor,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = userNames[userId] ?: userId.take(8),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = PrimaryBlue
+                                    color = chipColor,
+                                    fontWeight = if (isMe) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         }
+                    }
+                }
+            }
+
+            // Action button
+            Spacer(modifier = Modifier.height(Spacing.md))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                when {
+                    isInThisRoom -> {
+                        BetterMingleOutlinedButton(
+                            text = stringResource(R.string.rooms_leave_button),
+                            onClick = onLeave
+                        )
+                    }
+                    isInAnotherRoom || isFull -> {
+                        BetterMingleButton(
+                            text = stringResource(R.string.rooms_join_button),
+                            onClick = {},
+                            enabled = false
+                        )
+                    }
+                    else -> {
+                        BetterMingleButton(
+                            text = stringResource(R.string.rooms_join_button),
+                            onClick = onJoin,
+                            isCta = true
+                        )
                     }
                 }
             }
@@ -411,97 +478,3 @@ private fun AddRoomDialog(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun AssignParticipantDialog(
-    eventId: String,
-    room: EventRoom,
-    allParticipants: List<Pair<String, String>>,
-    assignedRooms: List<EventRoom>,
-    onDismiss: () -> Unit,
-    onUpdated: () -> Unit
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val currentAssignments = remember { mutableStateListOf(*room.assignments.toTypedArray()) }
-
-    // Participants already assigned to other rooms
-    val assignedElsewhere = remember(assignedRooms) {
-        assignedRooms.filter { it.id != room.id }.flatMap { it.assignments }.toSet()
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rooms_assign_title, room.name)) },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(R.string.rooms_assign_occupancy, currentAssignments.size, room.capacity),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (currentAssignments.size >= room.capacity) AccentOrange else TextSecondary
-                )
-                Spacer(modifier = Modifier.height(Spacing.sm))
-
-                allParticipants.forEach { (uid, name) ->
-                    val isAssigned = uid in currentAssignments
-                    val isInOtherRoom = uid in assignedElsewhere
-                    val isFull = currentAssignments.size >= room.capacity && !isAssigned
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .clickable(enabled = !isInOtherRoom && !isFull) {
-                                if (isAssigned) {
-                                    currentAssignments.remove(uid)
-                                } else {
-                                    currentAssignments.add(uid)
-                                }
-                            }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            if (isAssigned) Icons.Default.Person else Icons.Default.Add,
-                            contentDescription = null,
-                            tint = when {
-                                isAssigned -> PrimaryBlue
-                                isInOtherRoom -> TextSecondary.copy(alpha = 0.4f)
-                                else -> TextSecondary
-                            },
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.sm))
-                        Text(
-                            text = name + if (isInOtherRoom) stringResource(R.string.rooms_assign_in_other_room) else "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isInOtherRoom) TextSecondary.copy(alpha = 0.5f) else Color.Unspecified
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        try {
-                            FirebaseFirestore.getInstance()
-                                .collection("events").document(eventId)
-                                .collection("rooms").document(room.id)
-                                .update("assignments", currentAssignments.toList())
-                                .await()
-                            ActivityLogger.log(eventId, "room", context.getString(R.string.activity_joined_room, room.name))
-                            onUpdated()
-                        } catch (_: Exception) { }
-                    }
-                }
-            ) {
-                Text(stringResource(R.string.common_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-        }
-    )
-}

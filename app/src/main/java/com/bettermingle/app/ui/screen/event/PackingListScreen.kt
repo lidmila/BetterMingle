@@ -59,12 +59,11 @@ import com.bettermingle.app.data.model.PackingItem
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -129,7 +128,7 @@ fun PackingListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -228,7 +227,7 @@ private fun PackingListItem(
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
                     checkedColor = Success,
-                    uncheckedColor = TextSecondary
+                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
 
@@ -239,7 +238,7 @@ private fun PackingListItem(
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
                     textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None,
-                    color = if (item.isChecked) TextSecondary else MaterialTheme.colorScheme.onSurface
+                    color = if (item.isChecked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
                 if (item.userId != null) {
                     Text(
@@ -251,7 +250,7 @@ private fun PackingListItem(
                     Text(
                         text = stringResource(R.string.packing_shared),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

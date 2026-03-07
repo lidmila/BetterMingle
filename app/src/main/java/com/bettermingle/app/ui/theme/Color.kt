@@ -75,3 +75,42 @@ val DarkPastelGray = Color(0xFF28283A)
 val DarkGlassShadow = Color(0x1A8080FF)
 val DarkCardShadow = Color(0x26000000)
 
+// ===============================================
+// ROZŠÍŘENÁ BAREVNÁ PALETA (pro dark mode aware pastely)
+// ===============================================
+data class BetterMingleExtendedColors(
+    val pastelBlue: Color,
+    val pastelPink: Color,
+    val pastelOrange: Color,
+    val pastelGreen: Color,
+    val pastelGold: Color,
+    val pastelGray: Color,
+    val glassShadow: Color,
+    val cardShadow: Color,
+    val surfacePeach: Color,
+)
+
+val LightExtendedColors = BetterMingleExtendedColors(
+    pastelBlue = PastelBlue,
+    pastelPink = PastelPink,
+    pastelOrange = PastelOrange,
+    pastelGreen = PastelGreen,
+    pastelGold = PastelGold,
+    pastelGray = PastelGray,
+    glassShadow = GlassShadow,
+    cardShadow = CardShadow,
+    surfacePeach = SurfacePeach,
+)
+
+val DarkExtendedColors = BetterMingleExtendedColors(
+    pastelBlue = DarkPastelBlue,
+    pastelPink = DarkPastelPink,
+    pastelOrange = DarkPastelOrange,
+    pastelGreen = DarkPastelGreen,
+    pastelGold = DarkPastelGold,
+    pastelGray = DarkPastelGray,
+    glassShadow = DarkGlassShadow,
+    cardShadow = DarkCardShadow,
+    surfacePeach = DarkSurfacePeach,
+)
+

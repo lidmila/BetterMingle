@@ -120,7 +120,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun logout() {
+    suspend fun logout() {
+        try {
+            settingsManager.clearAll()
+            com.bettermingle.app.data.database.AppDatabase
+                .getDatabase(getApplication())
+                .clearAllTables()
+        } catch (_: Exception) { }
         repository.logout()
         _uiState.value = AuthUiState()
     }
@@ -130,14 +136,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun mapAuthError(e: Throwable): String {
+        val msg = e.message.orEmpty()
         return when {
-            e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true -> "Nesprávný e-mail nebo heslo"
-            e.message?.contains("EMAIL_EXISTS") == true -> "Účet s tímto e-mailem už existuje"
-            e.message?.contains("WEAK_PASSWORD") == true -> "Heslo je příliš slabé"
-            e.message?.contains("INVALID_EMAIL") == true -> "Neplatný formát e-mailu"
-            e.message?.contains("USER_NOT_FOUND") == true -> "Účet nenalezen"
-            e.message?.contains("TOO_MANY_ATTEMPTS") == true -> "Příliš mnoho pokusů. Zkus to později."
-            e.message?.contains("NETWORK") == true -> "Chyba připojení. Zkontroluj internet."
+            msg.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) ||
+                msg.contains("credential is incorrect", ignoreCase = true) -> "Nesprávný e-mail nebo heslo"
+            msg.contains("EMAIL_EXISTS", ignoreCase = true) ||
+                msg.contains("email address is already in use", ignoreCase = true) -> "Účet s tímto e-mailem už existuje"
+            msg.contains("WEAK_PASSWORD", ignoreCase = true) -> "Heslo je příliš slabé"
+            msg.contains("INVALID_EMAIL", ignoreCase = true) ||
+                msg.contains("badly formatted", ignoreCase = true) -> "Neplatný formát e-mailu"
+            msg.contains("USER_NOT_FOUND", ignoreCase = true) ||
+                msg.contains("no user record", ignoreCase = true) -> "Účet nenalezen"
+            msg.contains("TOO_MANY_ATTEMPTS", ignoreCase = true) ||
+                msg.contains("unusual activity", ignoreCase = true) -> "Příliš mnoho pokusů. Zkus to později."
+            msg.contains("NETWORK", ignoreCase = true) -> "Chyba připojení. Zkontroluj internet."
             else -> "Něco se pokazilo: ${e.localizedMessage ?: "neznámá chyba"}"
         }
     }

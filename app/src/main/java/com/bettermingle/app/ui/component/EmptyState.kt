@@ -34,7 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 @Composable
 fun EmptyState(
@@ -82,7 +82,7 @@ fun EmptyState(
                 modifier = Modifier
                     .size(Spacing.iconXXL)
                     .scale(iconScale.value),
-                tint = TextSecondary.copy(alpha = 0.5f)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
 
@@ -105,7 +105,7 @@ fun EmptyState(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }

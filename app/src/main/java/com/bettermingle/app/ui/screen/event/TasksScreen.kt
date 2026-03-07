@@ -85,14 +85,13 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
@@ -219,7 +218,7 @@ fun TasksScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -341,7 +340,7 @@ private fun TaskCard(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                    color = if (task.isCompleted) TextSecondary else MaterialTheme.colorScheme.onSurface
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
 
                 task.deadline?.let { deadline ->
@@ -349,7 +348,7 @@ private fun TaskCard(
                     Text(
                         text = stringResource(R.string.tasks_deadline, formattedDate),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (!task.isCompleted && deadline < System.currentTimeMillis()) AccentOrange else TextSecondary
+                        color = if (!task.isCompleted && deadline < System.currentTimeMillis()) AccentOrange else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -485,7 +484,7 @@ private fun CreateTaskDialog(
                 Text(
                     text = stringResource(R.string.tasks_color),
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 FlowRow(
@@ -511,7 +510,7 @@ private fun CreateTaskDialog(
                     Text(
                         text = stringResource(R.string.tasks_assign),
                         style = MaterialTheme.typography.labelMedium,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(Spacing.xs))
                     FlowRow(

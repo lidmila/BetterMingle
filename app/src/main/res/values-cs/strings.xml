@@ -38,7 +38,7 @@
 
     <!-- Auth - Login -->
     <string name="login_title">Přihlásit se</string>
-    <string name="login_subtitle">Organizuj akce snadno a na jednom místě</string>
+    <string name="login_subtitle">Plan less, mingle better</string>
     <string name="login_email">E-mail</string>
     <string name="login_password">Heslo</string>
     <string name="login_password_hide">Skrýt heslo</string>
@@ -375,6 +375,12 @@
     <string name="rooms_assign_title">Přiřadit do: %1$s</string>
     <string name="rooms_assign_occupancy">%1$d/%2$d obsazeno</string>
     <string name="rooms_assign_in_other_room"> (v jiném pokoji)</string>
+    <string name="rooms_already_assigned">Už jsi v pokoji \"%1$s\". Nejdřív ho opusť, abys mohl/a přejít do jiného.</string>
+    <string name="rooms_joined">Připojil/a ses do pokoje \"%1$s\"</string>
+    <string name="rooms_left">Opustil/a jsi pokoj \"%1$s\"</string>
+    <string name="rooms_full">Tento pokoj je plný.</string>
+    <string name="rooms_join_button">Přidat se</string>
+    <string name="rooms_leave_button">Opustit</string>
 
     <!-- Schedule -->
     <string name="schedule_title">Program</string>
@@ -530,7 +536,10 @@
     <string name="profile_premium">Mingle Pro</string>
     <string name="profile_premium_description">Odemkni neomezené akce a funkce</string>
     <string name="profile_help">Nápověda</string>
+    <string name="profile_year_in_events">Rok v akcích</string>
+    <string name="profile_year_in_events_description">Tvé statistiky a vzpomínky za tento rok</string>
     <string name="profile_logout">Odhlásit se</string>
+    <string name="places_unavailable">Napojení na mapy není dostupné</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Nastavení</string>
@@ -562,6 +571,12 @@
     <string name="settings_delete_account_desc">Trvale smazat účet a všechna data</string>
     <string name="settings_delete_account_confirm">Opravdu chceš trvale smazat svůj účet a všechna data? Tento krok nelze vrátit zpět.</string>
     <string name="settings_delete_account_error">Chyba při mazání účtu. Zkus se znovu přihlásit a opakovat.</string>
+    <string name="settings_password_confirm_title">Potvrdit heslo</string>
+    <string name="settings_password_confirm_desc">Zadej heslo pro potvrzení smazání účtu.</string>
+
+    <!-- Ads -->
+    <string name="ad_label">Reklama</string>
+    <string name="ad_headline">Reklama</string>
 
     <!-- Edit Profile -->
     <string name="edit_profile_title">Upravit profil</string>
@@ -630,6 +645,16 @@
     <string name="help_faq4_a">V modulu Hlasování vytvoříš anketu s možnostmi a ostatní účastníci mohou hlasovat. Výsledky se zobrazují v reálném čase.</string>
     <string name="help_faq5_q">Jak změnit nastavení akce?</string>
     <string name="help_faq5_a">Na dashboardu akce klepni na Nastavení. Zde můžeš upravit název, popis, zabezpečení, rozpočet a další možnosti.</string>
+    <string name="help_faq6_q">Jak funguje spolujízda?</string>
+    <string name="help_faq6_a">V modulu Spolujízda můžeš nabídnout místa ve svém autě nebo se přidat ke spolujízdě. Každý vidí, kdo řídí a kolik míst je volných.</string>
+    <string name="help_faq7_q">Jak fungují pokoje?</string>
+    <string name="help_faq7_a">V modulu Pokoje kdokoliv vytvoří pokoje s kapacitou. Klepnutím na pokoj se do něj přidáš — můžeš být jen v jednom pokoji najednou. Dalším klepnutím pokoj opustíš.</string>
+    <string name="help_faq8_q">K čemu je balicí seznam?</string>
+    <string name="help_faq8_a">Balicí seznam je sdílený seznam věcí potřebných na akci. Kdokoliv může přidat položku a označit, co je už zajištěné, aby se na nic nezapomnělo.</string>
+    <string name="help_faq9_q">Jaký je rozdíl mezi Free a Pro?</string>
+    <string name="help_faq9_a">Free plán umožňuje až 2 akce s max 8 účastníky a 1 anketou. Pro odemkne až 5 akcí, 100 účastníků, neomezené ankety, export výdajů a odstraní reklamy.</string>
+    <string name="help_faq10_q">Jak zabezpečit akci PINem?</string>
+    <string name="help_faq10_a">V nastavení akce zapni ochranu PINem a nastav kód. Každý, kdo se bude chtít připojit, bude muset nejdříve zadat PIN.</string>
 
     <!-- Notifications -->
     <string name="notifications_title">Upozornění</string>
@@ -725,6 +750,17 @@
 
     <!-- Widget -->
     <string name="widget_description">Odpočet do nejbližší akce</string>
+
+    <!-- Profile Setup (post-login onboarding) -->
+    <string name="profile_setup_title">Nastav si profil</string>
+    <string name="profile_setup_subtitle">Řekni ostatním něco o sobě. Povinné je pouze jméno.</string>
+    <string name="profile_setup_name">Jméno</string>
+    <string name="profile_setup_phone">Telefon</string>
+    <string name="profile_setup_department">Oddělení / Skupina</string>
+    <string name="profile_setup_bio">O mně</string>
+    <string name="profile_setup_choose_avatar">Klepni pro výběr avatara</string>
+    <string name="profile_setup_avatar_picker_title">Vyber si avatar</string>
+    <string name="profile_setup_save">Pokračovat</string>
 
     <!-- Language Settings -->
     <string name="settings_section_language">Jazyk</string>

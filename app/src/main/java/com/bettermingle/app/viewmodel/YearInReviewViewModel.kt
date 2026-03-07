@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.text.DateFormatSymbols
 import java.util.Calendar
+import java.util.Locale
 
 data class YearInReviewStats(
     val year: Int = Calendar.getInstance().get(Calendar.YEAR),
@@ -30,10 +32,9 @@ class YearInReviewViewModel(application: Application) : AndroidViewModel(applica
     private val _stats = MutableStateFlow(YearInReviewStats())
     val stats: StateFlow<YearInReviewStats> = _stats.asStateFlow()
 
-    private val czechMonths = listOf(
-        "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-        "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"
-    )
+    private val monthNames: List<String> = DateFormatSymbols.getInstance(
+        Locale.getDefault()
+    ).months.take(12).map { it.replaceFirstChar { c -> c.uppercase() } }
 
     init {
         loadStats()
@@ -89,7 +90,7 @@ class YearInReviewViewModel(application: Application) : AndroidViewModel(applica
                     }
                     .groupBy { it }
                     .maxByOrNull { it.value.size }
-                    ?.key?.let { czechMonths.getOrNull(it) } ?: ""
+                    ?.key?.let { monthNames.getOrNull(it) } ?: ""
 
                 // Longest event
                 val longestEntry = yearEvents

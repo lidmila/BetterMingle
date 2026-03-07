@@ -2,14 +2,13 @@ package com.bettermingle.app
 
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,9 +18,18 @@ import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.navigation.BetterMingleNavigation
 import com.bettermingle.app.ui.theme.BetterMingleTheme
 import com.bettermingle.app.utils.ActivityLogger
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Read language synchronously BEFORE setContent to avoid race condition
+        val settingsManager = SettingsManager(this)
+        val savedLanguage = runBlocking {
+            settingsManager.settingsFlow.first().appLanguage
+        }
+        applyLocale(savedLanguage)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ActivityLogger.initialize(this)
@@ -34,20 +42,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val settingsManager = remember { SettingsManager(this) }
-            val settings by settingsManager.settingsFlow.collectAsState(
+            val settingsMgr = remember { SettingsManager(this) }
+            val settings by settingsMgr.settingsFlow.collectAsState(
                 initial = com.bettermingle.app.data.preferences.AppSettings()
             )
-
-            // Apply app language
-            LaunchedEffect(settings.appLanguage) {
-                val localeList = if (settings.appLanguage == "system") {
-                    LocaleListCompat.getEmptyLocaleList()
-                } else {
-                    LocaleListCompat.forLanguageTags(settings.appLanguage)
-                }
-                AppCompatDelegate.setApplicationLocales(localeList)
-            }
 
             BetterMingleTheme(themeMode = settings.themeMode) {
                 Surface(
@@ -58,5 +56,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun applyLocale(lang: String) {
+        val localeList = if (lang == "system") {
+            LocaleListCompat.getEmptyLocaleList()
+        } else {
+            LocaleListCompat.forLanguageTags(lang)
+        }
+        AppCompatDelegate.setApplicationLocales(localeList)
     }
 }

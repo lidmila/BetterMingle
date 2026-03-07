@@ -75,11 +75,16 @@ class SettingsManager(private val context: Context) {
         )
     }
 
-    suspend fun updatePremiumStatus(isPremium: Boolean, premiumUntil: Long?) {
+    suspend fun updatePremiumStatus(isPremium: Boolean, premiumUntil: Long?, tier: PremiumTier? = null) {
         context.dataStore.edit { prefs ->
             prefs[Keys.IS_PREMIUM] = isPremium
             if (premiumUntil != null) {
                 prefs[Keys.PREMIUM_UNTIL] = premiumUntil
+            }
+            if (tier != null) {
+                prefs[Keys.PREMIUM_TIER] = tier.name
+            } else if (isPremium && prefs[Keys.PREMIUM_TIER] == PremiumTier.FREE.name) {
+                prefs[Keys.PREMIUM_TIER] = PremiumTier.PRO.name
             }
         }
     }

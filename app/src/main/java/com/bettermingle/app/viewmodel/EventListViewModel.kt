@@ -112,8 +112,11 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
                 val isPremium = doc.getBoolean("isPremium") ?: false
                 val premiumUntil = doc.getTimestamp("premiumUntil")?.toDate()?.time
                     ?: doc.getLong("premiumUntil")
-                settingsManager.updatePremiumStatus(isPremium, premiumUntil)
-                Log.d("EventListViewModel", "syncPremiumFromCloud: isPremium=$isPremium")
+                val tier = try {
+                    doc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it) }
+                } catch (_: Exception) { null }
+                settingsManager.updatePremiumStatus(isPremium, premiumUntil, tier)
+                Log.d("EventListViewModel", "syncPremiumFromCloud: isPremium=$isPremium, tier=$tier")
             } catch (e: Exception) {
                 Log.w("EventListViewModel", "Failed to sync premium status", e)
             }

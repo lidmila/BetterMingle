@@ -24,7 +24,16 @@ object CurrencyUtils {
             "CZK" -> formatCzk(amount)
             "EUR" -> String.format(Locale.GERMANY, "%.2f €", amount)
             "USD" -> String.format(Locale.US, "$%.2f", amount)
+            "GBP" -> String.format(Locale.UK, "£%.2f", amount)
             else -> String.format("%.2f %s", amount, currency)
+        }
+    }
+
+    fun getDefaultCurrency(): String {
+        return try {
+            java.util.Currency.getInstance(Locale.getDefault()).currencyCode
+        } catch (_: Exception) {
+            "CZK"
         }
     }
 }

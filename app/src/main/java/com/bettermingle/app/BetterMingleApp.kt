@@ -3,6 +3,7 @@ package com.bettermingle.app
 import android.app.Application
 import android.util.Log
 import com.bettermingle.app.notification.NotificationChannels
+import com.google.android.gms.ads.MobileAds
 import com.google.android.libraries.places.api.Places
 import com.google.firebase.FirebaseApp
 
@@ -20,6 +21,7 @@ class BetterMingleApp : Application() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
         NotificationChannels.createAll(this)
+        MobileAds.initialize(this)
         initializePlaces()
     }
 

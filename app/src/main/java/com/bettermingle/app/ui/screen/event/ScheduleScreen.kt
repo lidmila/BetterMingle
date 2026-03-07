@@ -68,11 +68,10 @@ import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.component.PlacesAutocompleteField
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
 import android.content.Intent
@@ -174,7 +173,7 @@ fun ScheduleScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -245,7 +244,7 @@ private fun ScheduleItemCard(item: ScheduleItem, onDelete: () -> Unit) {
                     Text(
                         text = DateFormatUtils.formatDayMonth(start),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = DateFormatUtils.formatTime(start),
@@ -258,7 +257,7 @@ private fun ScheduleItemCard(item: ScheduleItem, onDelete: () -> Unit) {
                     Text(
                         text = DateFormatUtils.formatTime(end),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -277,7 +276,7 @@ private fun ScheduleItemCard(item: ScheduleItem, onDelete: () -> Unit) {
                     Text(
                         text = item.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -287,14 +286,14 @@ private fun ScheduleItemCard(item: ScheduleItem, onDelete: () -> Unit) {
                         Icon(
                             Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
                             text = item.location,
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

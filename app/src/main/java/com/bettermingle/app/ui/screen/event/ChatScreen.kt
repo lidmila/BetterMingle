@@ -64,12 +64,10 @@ import com.bettermingle.app.data.repository.ChatRepository
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.SurfacePeach
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import androidx.compose.ui.platform.LocalView
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.performHapticClick
@@ -104,7 +102,7 @@ fun ChatScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -112,7 +110,7 @@ fun ChatScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SurfacePeach.copy(alpha = 0.15f))
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
                     .padding(horizontal = Spacing.screenPadding, vertical = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -142,7 +140,7 @@ fun ChatScreen(
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
                         contentDescription = stringResource(R.string.chat_send),
-                        tint = if (messageText.isNotBlank()) PrimaryBlue else TextSecondary
+                        tint = if (messageText.isNotBlank()) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -263,7 +261,7 @@ private fun ChatMessageItem(
                 .clip(MaterialTheme.shapes.medium)
                 .background(
                     if (isOwnMessage) PrimaryBlue.copy(alpha = 0.1f)
-                    else SurfacePeach.copy(alpha = 0.5f)
+                    else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -306,7 +304,7 @@ private fun ChatMessageItem(
                                     text = "${userIds.size}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isReactedByMe) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isReactedByMe) PrimaryBlue else TextSecondary
+                                    color = if (isReactedByMe) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -320,7 +318,7 @@ private fun ChatMessageItem(
         Text(
             text = DateFormatUtils.formatTime(message.createdAt),
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

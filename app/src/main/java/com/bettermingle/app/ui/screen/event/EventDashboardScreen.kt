@@ -50,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -75,13 +76,12 @@ import androidx.compose.material.icons.twotone.Timeline
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.BackgroundSecondary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -96,6 +96,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.NativeAdCard
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -142,6 +145,9 @@ fun EventDashboardScreen(
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     var showShareSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+    val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
 
     val currencyCzk = stringResource(R.string.dashboard_currency_czk)
     val activeCountStr = stringResource(R.string.dashboard_active_count)
@@ -253,7 +259,8 @@ fun EventDashboardScreen(
         onModuleClick(moduleKey)
     }
 
-    val modules = remember(participantCount, pollCount, expenseTotal, rideCount, roomCount, scheduleCount, messageCount, taskCount, packingCount, badgeCounts.toMap(), eventStatus) {
+    val settingsColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val modules = remember(participantCount, pollCount, expenseTotal, rideCount, roomCount, scheduleCount, messageCount, taskCount, packingCount, badgeCounts.toMap(), eventStatus, settingsColor) {
         buildList {
             add(ModuleInfo("voting", votingStr, if (pollCount > 0) "$pollCount $activeCountStr" else "", Icons.TwoTone.Ballot, PrimaryBlue, badgeCounts["voting"] ?: 0))
             add(ModuleInfo("participants", participantsStr, if (participantCount > 0) "$participantCount $peopleCountStr" else "", Icons.TwoTone.Groups, AccentPink))
@@ -269,7 +276,7 @@ fun EventDashboardScreen(
             if (eventStatus == "COMPLETED") {
                 add(ModuleInfo("summary", summaryStr, "", Icons.TwoTone.Assessment, AccentPink))
             }
-            add(ModuleInfo("settings", settingsStr, "", Icons.TwoTone.Settings, TextSecondary))
+            add(ModuleInfo("settings", settingsStr, "", Icons.TwoTone.Settings, settingsColor))
         }
     }
 
@@ -371,7 +378,7 @@ fun EventDashboardScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -452,7 +459,7 @@ fun EventDashboardScreen(
                     Text(
                         text = parseSimpleMarkdown(eventDescription),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -496,6 +503,14 @@ fun EventDashboardScreen(
 
                     Spacer(modifier = Modifier.height(Spacing.lg))
                 }
+            }
+
+            // Native ad for FREE tier
+            if (showAds) {
+                NativeAdCard(
+                    modifier = Modifier.padding(vertical = Spacing.sm)
+                )
+                Spacer(modifier = Modifier.height(Spacing.sm))
             }
 
             Column(

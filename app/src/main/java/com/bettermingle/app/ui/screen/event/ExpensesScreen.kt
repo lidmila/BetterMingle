@@ -95,14 +95,12 @@ import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.BackgroundSecondary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.SurfacePeach
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.CurrencyUtils
 import com.bettermingle.app.utils.Debt
 import com.bettermingle.app.utils.DebtCalculator
@@ -127,12 +125,13 @@ private fun categoryIcon(category: String): ImageVector = when (category.lowerca
     else -> Icons.Rounded.ReceiptLong
 }
 
+@Composable
 private fun categoryColor(category: String): Color = when (category.lowercase()) {
     "jídlo", "jidlo", "food" -> Color(0xFFFF6B35)
     "doprava", "transport" -> PrimaryBlue
     "ubytování", "ubytovani", "accommodation" -> AccentPink
     "nápoje", "napoje", "drinks" -> Color(0xFF8B5CF6)
-    else -> TextSecondary
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 private fun formatRelativeDate(timestamp: Long, todayStr: String, yesterdayStr: String): String {
@@ -337,7 +336,7 @@ fun ExpensesScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -685,7 +684,7 @@ private fun ExpenseItem(
                         }
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -776,13 +775,18 @@ private fun DebtItem(
             // "Jan dluží Petře" text
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = buildString {
-                        append(fromName)
-                        append(stringResource(R.string.expenses_debt_owes))
-                        append(toName)
-                    },
+                    text = fromName,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(R.string.expenses_debt_owes).trim() + " " + toName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -869,7 +873,7 @@ private fun AddExpenseDialog(
                 Text(
                     text = stringResource(R.string.expenses_category_label),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 Row(
@@ -911,7 +915,7 @@ private fun AddExpenseDialog(
                     Text(
                         text = stringResource(R.string.expenses_payer),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -959,7 +963,7 @@ private fun AddExpenseDialog(
                                 "paidBy" to selectedPayerId,
                                 "description" to description,
                                 "amount" to parsedAmount,
-                                "currency" to "CZK",
+                                "currency" to CurrencyUtils.getDefaultCurrency(),
                                 "category" to category,
                                 "receiptUrl" to "",
                                 "createdAt" to System.currentTimeMillis()

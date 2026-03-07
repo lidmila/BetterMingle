@@ -53,15 +53,13 @@ import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
@@ -73,7 +71,13 @@ private data class ActivityItem(
     val timestamp: Long
 )
 
-private fun activityIcon(type: String): Pair<ImageVector, Color> = when (type) {
+@Composable
+private fun
+
+
+
+
+        activityIcon(type: String): Pair<ImageVector, Color> = when (type) {
     "voting" -> Icons.Default.HowToVote to PrimaryBlue
     "expenses" -> Icons.Default.Payments to AccentOrange
     "chat" -> Icons.AutoMirrored.Filled.Chat to Success
@@ -81,7 +85,7 @@ private fun activityIcon(type: String): Pair<ImageVector, Color> = when (type) {
     "tasks" -> Icons.Default.CheckCircle to AccentPink
     "carpool" -> Icons.Default.DirectionsCar to Success
     "participants" -> Icons.Default.People to AccentPink
-    "settings" -> Icons.Default.Settings to TextSecondary
+    "settings" -> Icons.Default.Settings to MaterialTheme.colorScheme.onSurfaceVariant
     else -> Icons.Default.Timeline to AccentGold
 }
 
@@ -92,8 +96,8 @@ fun ActivityFeedScreen(
     onNavigateBack: () -> Unit
 ) {
     val activities = remember { mutableStateListOf<ActivityItem>() }
-    val dateFormat = remember { SimpleDateFormat("d. M. yyyy", Locale("cs", "CZ")) }
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale("cs", "CZ")) }
+    val dateFormat = remember { java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, Locale.getDefault()) }
+    val timeFormat = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, Locale.getDefault()) }
 
     LaunchedEffect(eventId) {
         try {
@@ -128,7 +132,7 @@ fun ActivityFeedScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundPrimary)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
     ) { innerPadding ->
@@ -196,14 +200,14 @@ fun ActivityFeedScreen(
                                     Text(
                                         text = activity.description,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondary
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
                                 Text(
                                     text = timeFormat.format(Date(activity.timestamp)),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

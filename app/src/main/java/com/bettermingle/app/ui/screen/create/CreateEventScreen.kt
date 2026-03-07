@@ -92,13 +92,12 @@ import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.PlacesAutocompleteField
 import com.bettermingle.app.ui.component.PlaceResult
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.CreateEventViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -259,7 +258,7 @@ fun CreateEventScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -588,7 +587,7 @@ private fun StepBasicInfo(
         Text(
             text = stringResource(R.string.create_event_formatting_hint),
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
         )
 
@@ -604,7 +603,7 @@ private fun StepBasicInfo(
         Text(
             text = stringResource(R.string.create_event_intro_hint),
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
         )
 
@@ -727,7 +726,7 @@ private fun StepInvite(
         Text(
             stringResource(R.string.create_event_invite_subtitle),
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -761,7 +760,7 @@ private fun StepInvite(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { onRemoveEmail(invitedEmail) }) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_invite_remove), tint = TextSecondary)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.create_event_invite_remove), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -829,7 +828,7 @@ private fun StepModules(
         Text(
             stringResource(R.string.create_event_modules_subtitle),
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -932,7 +931,7 @@ private fun SecuritySection(
                         Text(
                             text = stringResource(R.string.create_event_security_subtitle),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1024,7 +1023,7 @@ private fun SecuritySection(
                                 else -> stringResource(R.string.create_event_security_auto_delete_days, autoDeleteDays)
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1105,7 +1104,7 @@ private fun TemplateSelectionScreen(
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_back))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundPrimary)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
     ) { innerPadding ->
@@ -1118,7 +1117,7 @@ private fun TemplateSelectionScreen(
             Text(
                 text = stringResource(R.string.create_event_template_picker_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -1212,7 +1211,7 @@ private fun SecurityToggle(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

@@ -35,10 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.utils.ActivityLogger
 import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
@@ -97,7 +96,7 @@ fun JoinEventScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -140,7 +139,7 @@ fun JoinEventScreen(
                                 Text(
                                     text = eventDescription,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.Center
                                 )
                             }

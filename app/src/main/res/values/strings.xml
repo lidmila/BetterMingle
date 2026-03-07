@@ -38,7 +38,7 @@
 
     <!-- Auth - Login -->
     <string name="login_title">Log in</string>
-    <string name="login_subtitle">Organize events easily in one place</string>
+    <string name="login_subtitle">Plan less, mingle better</string>
     <string name="login_email">E-mail</string>
     <string name="login_password">Password</string>
     <string name="login_password_hide">Hide password</string>
@@ -375,6 +375,12 @@
     <string name="rooms_assign_title">Assign to: %1$s</string>
     <string name="rooms_assign_occupancy">%1$d/%2$d occupied</string>
     <string name="rooms_assign_in_other_room"> (in another room)</string>
+    <string name="rooms_already_assigned">You are already in room \"%1$s\". Leave it first to join another.</string>
+    <string name="rooms_joined">You joined room \"%1$s\"</string>
+    <string name="rooms_left">You left room \"%1$s\"</string>
+    <string name="rooms_full">This room is full.</string>
+    <string name="rooms_join_button">Join room</string>
+    <string name="rooms_leave_button">Leave room</string>
 
     <!-- Schedule -->
     <string name="schedule_title">Schedule</string>
@@ -530,7 +536,10 @@
     <string name="profile_premium">Mingle Pro</string>
     <string name="profile_premium_description">Unlock unlimited events and features</string>
     <string name="profile_help">Help</string>
+    <string name="profile_year_in_events">Year in events</string>
+    <string name="profile_year_in_events_description">Your stats and memories from this year</string>
     <string name="profile_logout">Log out</string>
+    <string name="places_unavailable">Map connection is not available</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
@@ -562,6 +571,12 @@
     <string name="settings_delete_account_desc">Permanently delete account and all data</string>
     <string name="settings_delete_account_confirm">Are you sure you want to permanently delete your account and all data? This action cannot be undone.</string>
     <string name="settings_delete_account_error">Error deleting account. Try logging in again and repeat.</string>
+    <string name="settings_password_confirm_title">Confirm password</string>
+    <string name="settings_password_confirm_desc">Enter your password to confirm account deletion.</string>
+
+    <!-- Ads -->
+    <string name="ad_label">Ad</string>
+    <string name="ad_headline">Advertisement</string>
 
     <!-- Edit Profile -->
     <string name="edit_profile_title">Edit profile</string>
@@ -630,6 +645,16 @@
     <string name="help_faq4_a">In the Voting module, create a poll with options and other participants can vote. Results are shown in real time.</string>
     <string name="help_faq5_q">How to change event settings?</string>
     <string name="help_faq5_a">On the event dashboard, tap Settings. Here you can change the name, description, security, budget, and more.</string>
+    <string name="help_faq6_q">How does carpool work?</string>
+    <string name="help_faq6_a">In the Carpool module, you can offer seats in your car or join someone else\'s ride. Everyone can see who is driving and how many seats are available.</string>
+    <string name="help_faq7_q">How do rooms work?</string>
+    <string name="help_faq7_a">In the Rooms module, anyone can create rooms with a set capacity. Tap a room to join it — you can only be in one room at a time. Tap again to leave.</string>
+    <string name="help_faq8_q">What is the packing list?</string>
+    <string name="help_faq8_a">The packing list is a shared checklist of items needed for the event. Anyone can add items and mark what\'s already covered, so nothing gets forgotten.</string>
+    <string name="help_faq9_q">What is the difference between Free and Pro?</string>
+    <string name="help_faq9_a">The Free plan allows up to 2 events with max 8 participants and 1 poll. Pro unlocks up to 5 events, 100 participants, unlimited polls, expense export, and removes ads.</string>
+    <string name="help_faq10_q">How to secure an event with a PIN?</string>
+    <string name="help_faq10_a">In event settings, enable PIN protection and set a code. Anyone who wants to join will need to enter the PIN first.</string>
 
     <!-- Notifications -->
     <string name="notifications_title">Notifications</string>
@@ -725,6 +750,17 @@
 
     <!-- Widget -->
     <string name="widget_description">Countdown to nearest event</string>
+
+    <!-- Profile Setup (post-login onboarding) -->
+    <string name="profile_setup_title">Set up your profile</string>
+    <string name="profile_setup_subtitle">Tell others a bit about yourself. Only your name is required.</string>
+    <string name="profile_setup_name">Name</string>
+    <string name="profile_setup_phone">Phone</string>
+    <string name="profile_setup_department">Department / Group</string>
+    <string name="profile_setup_bio">About me</string>
+    <string name="profile_setup_choose_avatar">Tap to choose an avatar</string>
+    <string name="profile_setup_avatar_picker_title">Choose an avatar</string>
+    <string name="profile_setup_save">Continue</string>
 
     <!-- Language Settings -->
     <string name="settings_section_language">Language</string>

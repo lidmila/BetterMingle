@@ -1,15 +1,10 @@
 package com.bettermingle.app.ui.screen.home
 
 import com.bettermingle.app.R
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,17 +25,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Celebration
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -71,19 +63,16 @@ import com.bettermingle.app.ui.component.EventCard
 import com.bettermingle.app.ui.component.ShimmerEventCard
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.BackgroundPrimary
-import com.bettermingle.app.ui.theme.BetterMingleMotion
-import com.bettermingle.app.ui.theme.PastelBlue
-import com.bettermingle.app.ui.theme.PastelGold
-import com.bettermingle.app.ui.theme.PastelGray
-import com.bettermingle.app.ui.theme.PastelGreen
-import com.bettermingle.app.ui.theme.PastelOrange
+import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
-import com.bettermingle.app.ui.theme.BorderColor
+
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.PremiumTier
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.viewmodel.EventListViewModel
 
 private data class StatusChipStyle(
@@ -92,13 +81,17 @@ private data class StatusChipStyle(
     val labelResId: Int
 )
 
-private val statusChipStyles = mapOf(
-    EventStatus.PLANNING to StatusChipStyle(PastelGold, AccentGold, R.string.event_status_planning),
-    EventStatus.CONFIRMED to StatusChipStyle(PastelBlue, PrimaryBlue, R.string.event_status_confirmed),
-    EventStatus.ONGOING to StatusChipStyle(PastelGreen, Success, R.string.event_status_ongoing),
-    EventStatus.COMPLETED to StatusChipStyle(PastelGray, TextSecondary, R.string.event_status_completed),
-    EventStatus.CANCELLED to StatusChipStyle(PastelOrange, AccentOrange, R.string.event_status_cancelled)
-)
+@Composable
+private fun statusChipStyles(): Map<EventStatus, StatusChipStyle> {
+    val ext = BetterMingleThemeColors.extended
+    return mapOf(
+        EventStatus.PLANNING to StatusChipStyle(ext.pastelGold, AccentGold, R.string.event_status_planning),
+        EventStatus.CONFIRMED to StatusChipStyle(ext.pastelBlue, PrimaryBlue, R.string.event_status_confirmed),
+        EventStatus.ONGOING to StatusChipStyle(ext.pastelGreen, Success, R.string.event_status_ongoing),
+        EventStatus.COMPLETED to StatusChipStyle(ext.pastelGray, MaterialTheme.colorScheme.onSurfaceVariant, R.string.event_status_completed),
+        EventStatus.CANCELLED to StatusChipStyle(ext.pastelOrange, AccentOrange, R.string.event_status_cancelled)
+    )
+}
 
 private data class EventSection(
     val titleResId: Int? = null,
@@ -111,10 +104,13 @@ private data class EventSection(
 fun EventListScreen(
     onEventClick: (String) -> Unit,
     onCreateEvent: () -> Unit,
-    onYearInReview: () -> Unit = {},
     viewModel: EventListViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+    val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
     var fabVisible by remember { mutableStateOf(false) }
     val fabScale = remember { Animatable(0f) }
 
@@ -130,7 +126,7 @@ fun EventListScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateEvent,
@@ -192,7 +188,6 @@ fun EventListScreen(
                 else -> {
                     val filteredEvents = uiState.filteredEvents
                     val hasFilter = uiState.statusFilter != null
-                    val showYearInReview = !uiState.yearInReviewDismissed && uiState.events.size >= 3
 
                     // Build sections
                     val sections = if (hasFilter) {
@@ -235,7 +230,7 @@ fun EventListScreen(
                             Text(
                                 text = stringResource(R.string.events_count, uiState.events.size),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(Spacing.md))
                         }
@@ -260,10 +255,11 @@ fun EventListScreen(
 
                         // Filter chips with pastel colors
                         item {
+                            val chipStyles = statusChipStyles()
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                             ) {
-                                items(statusChipStyles.entries.toList()) { (status, style) ->
+                                items(chipStyles.entries.toList()) { (status, style) ->
                                     val selected = uiState.statusFilter == status
                                     FilterChip(
                                         selected = selected,
@@ -278,13 +274,13 @@ fun EventListScreen(
                                             selectedContainerColor = style.bgColor,
                                             selectedLabelColor = style.textColor,
                                             containerColor = Color.Transparent,
-                                            labelColor = TextSecondary
+                                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                                         ),
                                         border = if (!selected) {
                                             FilterChipDefaults.filterChipBorder(
                                                 enabled = true,
                                                 selected = false,
-                                                borderColor = BorderColor
+                                                borderColor = MaterialTheme.colorScheme.outline
                                             )
                                         } else {
                                             null
@@ -295,19 +291,16 @@ fun EventListScreen(
                             Spacer(modifier = Modifier.height(Spacing.md))
                         }
 
-                        // Year in Review banner
-                        if (showYearInReview) {
-                            item {
-                                YearInReviewBanner(
-                                    onClick = onYearInReview,
-                                    onDismiss = { viewModel.dismissYearInReview() }
-                                )
-                                Spacer(modifier = Modifier.height(Spacing.md))
-                            }
-                        }
-
                         // Sections
-                        sections.forEach { section ->
+                        sections.forEachIndexed { sectionIndex, section ->
+                            // Native ad after first section for FREE tier
+                            if (sectionIndex == 1 && showAds) {
+                                item {
+                                    NativeAdCard(
+                                        modifier = Modifier.padding(vertical = Spacing.sm)
+                                    )
+                                }
+                            }
                             if (section.titleResId != null) {
                                 item {
                                     SectionHeader(
@@ -322,21 +315,13 @@ fun EventListScreen(
                                 key = { _, event -> event.id }
                             ) { index, event ->
                                 val isHero = section.heroFirst && index == 0
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = index * 50)) +
-                                            scaleIn(
-                                                tween(BetterMingleMotion.STANDARD, delayMillis = index * 50),
-                                                initialScale = 0.92f
-                                            )
-                                ) {
-                                    EventCard(
-                                        event = event,
-                                        participantCount = uiState.participantCounts[event.id] ?: 0,
-                                        isHero = isHero,
-                                        onClick = { onEventClick(event.id) }
-                                    )
-                                }
+                                val eventClickHandler = remember(event.id) { { onEventClick(event.id) } }
+                                EventCard(
+                                    event = event,
+                                    participantCount = uiState.participantCounts[event.id] ?: 0,
+                                    isHero = isHero,
+                                    onClick = eventClickHandler
+                                )
                             }
                         }
                     }
@@ -365,71 +350,11 @@ private fun SectionHeader(
         Text(
             text = "$count",
             style = MaterialTheme.typography.labelMedium,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .background(PastelBlue, RoundedCornerShape(100.dp))
+                .background(BetterMingleThemeColors.extended.pastelBlue, RoundedCornerShape(100.dp))
                 .padding(horizontal = 10.dp, vertical = 2.dp)
         )
     }
 }
 
-@Composable
-private fun YearInReviewBanner(
-    onClick: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(PrimaryBlue)
-            .clickable(onClick = onClick)
-            .padding(Spacing.cardPadding)
-    ) {
-        // Dismiss button
-        IconButton(
-            onClick = onDismiss,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(24.dp)
-        ) {
-            Icon(
-                Icons.Default.Close,
-                contentDescription = stringResource(R.string.events_banner_close),
-                tint = Color.White.copy(alpha = 0.7f),
-                modifier = Modifier.size(16.dp)
-            )
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(end = 28.dp)
-        ) {
-            Icon(
-                Icons.Default.AutoAwesome,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-            Spacer(modifier = Modifier.width(Spacing.md))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.events_year_review_title),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
-                )
-                Text(
-                    text = stringResource(R.string.events_year_review_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-            }
-            Icon(
-                Icons.Default.ArrowForward,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}

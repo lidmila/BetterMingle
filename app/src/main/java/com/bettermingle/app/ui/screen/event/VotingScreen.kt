@@ -77,14 +77,13 @@ import com.bettermingle.app.data.model.PollType
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import com.google.firebase.auth.FirebaseAuth
@@ -245,7 +244,7 @@ fun VotingScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -364,7 +363,7 @@ private fun PollCard(
                             Icon(
                                 Icons.Default.Lock,
                                 contentDescription = stringResource(R.string.voting_close_description),
-                                tint = TextSecondary,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -372,7 +371,7 @@ private fun PollCard(
                             Icon(
                                 Icons.Default.Edit,
                                 contentDescription = stringResource(R.string.voting_edit_description),
-                                tint = TextSecondary,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -489,7 +488,7 @@ private fun PollTypeBadge(type: PollType) {
         PollType.LOCATION -> stringResource(R.string.voting_type_location) to AccentPink
         PollType.ACTIVITY -> stringResource(R.string.voting_type_activity) to Success
         PollType.PRICE -> stringResource(R.string.voting_type_price) to AccentGold
-        PollType.CUSTOM -> stringResource(R.string.voting_type_custom) to TextSecondary
+        PollType.CUSTOM -> stringResource(R.string.voting_type_custom) to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(
@@ -535,7 +534,7 @@ fun PollOptionItem(
                             if (isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked
                         },
                         contentDescription = null,
-                        tint = if (isSelected) PrimaryBlue else TextSecondary,
+                        tint = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(Spacing.sm))
@@ -549,7 +548,7 @@ fun PollOptionItem(
                 Text(
                     text = "$voteCount ${stringResource(R.string.voting_votes_count)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -611,7 +610,7 @@ private fun CreatePollDialog(
                 Text(
                     text = stringResource(R.string.voting_poll_type),
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 FlowRow(
@@ -644,7 +643,7 @@ private fun CreatePollDialog(
                         Text(
                             text = if (allowMultiple) stringResource(R.string.voting_multiple_hint) else stringResource(R.string.voting_single_hint),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Switch(
@@ -672,7 +671,7 @@ private fun CreatePollDialog(
                 Text(
                     text = stringResource(R.string.voting_options),
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
 
@@ -689,7 +688,7 @@ private fun CreatePollDialog(
                         )
                         if (options.size > 2) {
                             IconButton(onClick = { options.removeAt(index) }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = TextSecondary)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -781,7 +780,7 @@ private fun EditPollDialog(
                 Text(
                     text = stringResource(R.string.voting_existing_options),
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
 
@@ -818,7 +817,7 @@ private fun EditPollDialog(
                                 modifier = Modifier.weight(1f)
                             )
                             IconButton(onClick = { newOptions.removeAt(index) }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = TextSecondary)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_remove), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                         if (index < newOptions.lastIndex) {

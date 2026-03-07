@@ -44,7 +44,7 @@ import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
@@ -103,7 +103,7 @@ fun OnboardingScreen(
         ) {
             AnimatedVisibility(visible = !isLastPage, enter = fadeIn(), exit = fadeOut()) {
                 TextButton(onClick = onComplete) {
-                    Text(stringResource(R.string.onboarding_skip), color = TextSecondary)
+                    Text(stringResource(R.string.onboarding_skip), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -154,7 +154,7 @@ fun OnboardingScreen(
                     text = stringResource(item.descriptionRes),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

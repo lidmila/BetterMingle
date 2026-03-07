@@ -5,8 +5,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 
-private val BitterbalLightColorScheme = lightColorScheme(
+private val BetterMingleLightColorScheme = lightColorScheme(
     primary = PrimaryBlue,
     onPrimary = TextOnColor,
     primaryContainer = PrimaryBlue.copy(alpha = 0.08f),
@@ -39,7 +41,7 @@ private val BitterbalLightColorScheme = lightColorScheme(
     onErrorContainer = TextPrimary
 )
 
-private val BitterbalDarkColorScheme = darkColorScheme(
+private val BetterMingleDarkColorScheme = darkColorScheme(
     primary = PrimaryBlue,
     onPrimary = TextOnColor,
     primaryContainer = PrimaryBlue.copy(alpha = 0.15f),
@@ -72,6 +74,8 @@ private val BitterbalDarkColorScheme = darkColorScheme(
     onErrorContainer = DarkTextPrimary
 )
 
+val LocalBetterMingleColors = staticCompositionLocalOf { LightExtendedColors }
+
 @Composable
 fun BetterMingleTheme(
     themeMode: String = "system",
@@ -83,10 +87,19 @@ fun BetterMingleTheme(
         else -> isSystemInDarkTheme()
     }
 
-    MaterialTheme(
-        colorScheme = if (useDark) BitterbalDarkColorScheme else BitterbalLightColorScheme,
-        typography = BetterMingleTypography,
-        shapes = BetterMingleShapes,
-        content = content
-    )
+    val extendedColors = if (useDark) DarkExtendedColors else LightExtendedColors
+
+    CompositionLocalProvider(LocalBetterMingleColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = if (useDark) BetterMingleDarkColorScheme else BetterMingleLightColorScheme,
+            typography = BetterMingleTypography,
+            shapes = BetterMingleShapes,
+            content = content
+        )
+    }
+}
+
+object BetterMingleThemeColors {
+    val extended: BetterMingleExtendedColors
+        @Composable get() = LocalBetterMingleColors.current
 }

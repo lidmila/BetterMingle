@@ -27,7 +27,7 @@ import com.bettermingle.app.R
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 @Composable
 fun PinVerificationDialog(
@@ -61,7 +61,7 @@ fun PinVerificationDialog(
                 Text(
                     text = stringResource(R.string.pin_dialog_description),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
@@ -102,7 +102,7 @@ fun PinVerificationDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel), color = TextSecondary)
+                Text(stringResource(R.string.common_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )

@@ -1,16 +1,15 @@
 package com.bettermingle.app.ui.screen.auth
 
+import android.app.Activity
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +31,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -46,19 +46,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+import coil.request.repeatCount
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleButton
@@ -69,8 +74,11 @@ import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
@@ -86,7 +94,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var formVisible by remember { mutableStateOf(false) }
-    val logoScale = remember { Animatable(0.3f) }
 
     val uiState by authViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -95,15 +102,42 @@ fun LoginScreen(
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
 
+    // Legacy Google Sign-In fallback (for emulators / devices without Credential Manager)
+    val legacyGoogleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                val account = task.getResult(ApiException::class.java)
+                account.idToken?.let { token ->
+                    authViewModel.signInWithGoogle(token)
+                }
+            } catch (e: ApiException) {
+                if (com.bettermingle.app.BuildConfig.DEBUG) {
+                    Log.e("LoginScreen", "Legacy Google Sign-In failed", e)
+                }
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.login_google_failed))
+                }
+            }
+        }
+    }
+
+    val gifImageLoader = remember {
+        ImageLoader.Builder(context)
+            .components {
+                if (Build.VERSION.SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
+            .build()
+    }
+
     LaunchedEffect(Unit) {
         formVisible = true
-        logoScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        )
     }
 
     LaunchedEffect(uiState.isLoggedIn) {
@@ -119,9 +153,13 @@ fun LoginScreen(
         }
     }
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -135,12 +173,15 @@ fun LoginScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(
-                    painter = painterResource(id = R.drawable.bettermingle_logo),
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(R.drawable.bettermingle_gif)
+                        .repeatCount(0)
+                        .build(),
+                    imageLoader = gifImageLoader,
                     contentDescription = stringResource(R.string.login_logo_description),
                     modifier = Modifier
-                        .size(120.dp)
-                        .scale(logoScale.value)
+                        .size(160.dp)
                         .clip(RoundedCornerShape(20.dp)),
                     contentScale = ContentScale.Fit
                 )
@@ -233,7 +274,8 @@ fun LoginScreen(
                     BetterMingleButton(
                         text = stringResource(R.string.login_button),
                         onClick = { authViewModel.login(email, password) },
-                        isCta = true
+                        isCta = true,
+                        enabled = email.isNotBlank() && password.isNotBlank()
                     )
                 }
 
@@ -258,8 +300,18 @@ fun LoginScreen(
                                 authViewModel.signInWithGoogle(googleIdToken.idToken)
                             } catch (_: GetCredentialCancellationException) {
                                 // User cancelled
+                            } catch (_: NoCredentialException) {
+                                // Credential Manager unavailable – fall back to legacy Google Sign-In
+                                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                    .requestIdToken(com.bettermingle.app.BuildConfig.GOOGLE_CLIENT_ID)
+                                    .requestEmail()
+                                    .build()
+                                val client = GoogleSignIn.getClient(context, gso)
+                                legacyGoogleSignInLauncher.launch(client.signInIntent)
                             } catch (e: Exception) {
-                                Log.e("LoginScreen", "Google Sign-In failed", e)
+                                if (com.bettermingle.app.BuildConfig.DEBUG) {
+                                    Log.e("LoginScreen", "Google Sign-In failed", e)
+                                }
                                 snackbarHostState.showSnackbar(context.getString(R.string.login_google_failed))
                             }
                         }
@@ -276,9 +328,6 @@ fun LoginScreen(
             }
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.padding(horizontal = Spacing.lg)
-        )
+    }
     }
 }

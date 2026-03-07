@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -36,7 +37,7 @@ import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.bettermingle.app.viewmodel.AuthViewModel
 
 @Composable
@@ -56,9 +57,13 @@ fun ForgotPasswordScreen(
         }
     }
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -81,7 +86,7 @@ fun ForgotPasswordScreen(
             Text(
                 text = stringResource(R.string.forgot_password_success),
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(Spacing.lg))
@@ -93,7 +98,7 @@ fun ForgotPasswordScreen(
             Text(
                 text = stringResource(R.string.forgot_password_description),
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -116,7 +121,8 @@ fun ForgotPasswordScreen(
                 BetterMingleButton(
                     text = stringResource(R.string.forgot_password_button),
                     onClick = { authViewModel.sendPasswordReset(email) },
-                    isCta = true
+                    isCta = true,
+                    enabled = email.isNotBlank()
                 )
             }
 
@@ -128,6 +134,6 @@ fun ForgotPasswordScreen(
             )
         }
 
-        SnackbarHost(hostState = snackbarHostState)
+    }
     }
 }

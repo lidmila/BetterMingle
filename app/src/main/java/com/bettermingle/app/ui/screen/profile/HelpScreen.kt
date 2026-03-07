@@ -46,10 +46,9 @@ import androidx.compose.ui.unit.dp
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.theme.AccentPink
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 
 private data class FaqItem(val questionResId: Int, val answerResId: Int)
 
@@ -58,7 +57,12 @@ private val faqItems = listOf(
     FaqItem(R.string.help_faq2_q, R.string.help_faq2_a),
     FaqItem(R.string.help_faq3_q, R.string.help_faq3_a),
     FaqItem(R.string.help_faq4_q, R.string.help_faq4_a),
-    FaqItem(R.string.help_faq5_q, R.string.help_faq5_a)
+    FaqItem(R.string.help_faq5_q, R.string.help_faq5_a),
+    FaqItem(R.string.help_faq6_q, R.string.help_faq6_a),
+    FaqItem(R.string.help_faq7_q, R.string.help_faq7_a),
+    FaqItem(R.string.help_faq8_q, R.string.help_faq8_a),
+    FaqItem(R.string.help_faq9_q, R.string.help_faq9_a),
+    FaqItem(R.string.help_faq10_q, R.string.help_faq10_a)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,7 +82,7 @@ fun HelpScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -117,7 +121,7 @@ fun HelpScreen(
                             Icon(
                                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                 contentDescription = if (expanded) stringResource(R.string.help_faq_collapse) else stringResource(R.string.help_faq_expand),
-                                tint = TextSecondary
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         AnimatedVisibility(
@@ -130,7 +134,7 @@ fun HelpScreen(
                                 Text(
                                     text = stringResource(faq.answerResId),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -151,10 +155,12 @@ fun HelpScreen(
 
             item {
                 BetterMingleCard(onClick = {
-                    val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:hello@codewhiskers.app")
-                    }
-                    context.startActivity(intent)
+                    try {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:hello@codewhiskers.app")
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) { }
                 }) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -176,7 +182,7 @@ fun HelpScreen(
                             Text(
                                 text = stringResource(R.string.help_contact_email),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

@@ -66,14 +66,13 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.theme.AccentGold
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -188,7 +187,7 @@ fun ParticipantsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -310,7 +309,7 @@ private fun ParticipantItem(
                             ParticipantRole.PARTICIPANT -> stringResource(R.string.participants_role_participant)
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (participant.customRole.isNotEmpty()) {
                         Text(
@@ -367,7 +366,7 @@ private fun ParticipantProfileSheet(
             Text(
                 text = profile.bio,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -419,7 +418,7 @@ private fun ProfileInfoRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
@@ -435,7 +434,7 @@ private fun RsvpBadge(status: RsvpStatus) {
         RsvpStatus.ACCEPTED -> stringResource(R.string.participants_rsvp_accepted) to Success
         RsvpStatus.DECLINED -> stringResource(R.string.participants_rsvp_declined) to AccentOrange
         RsvpStatus.MAYBE -> stringResource(R.string.participants_rsvp_maybe) to AccentGold
-        RsvpStatus.PENDING -> stringResource(R.string.participants_rsvp_pending) to TextSecondary
+        RsvpStatus.PENDING -> stringResource(R.string.participants_rsvp_pending) to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(

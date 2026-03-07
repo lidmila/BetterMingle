@@ -45,7 +45,15 @@
       "WebFetch(domain:dribbble.com)",
       "Bash(cat:*)",
       "Bash(powershell.exe:*)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(xargs basename:*)",
+      "Bash(identify:*)",
+      "Bash(gcloud auth:*)",
+      "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/$APPDATA/**)",
+      "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/$HOME/.config/configstore/**)",
+      "Bash(wc:*)",
+      "WebFetch(domain:support.google.com)",
+      "WebFetch(domain:www.apptweak.com)"
     ]
   }
 }

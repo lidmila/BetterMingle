@@ -9,7 +9,9 @@ import com.bettermingle.app.data.model.UserProfile
 import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.repository.AuthRepository
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -102,8 +104,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 val isPremium = doc.getBoolean("isPremium") ?: false
                 val premiumUntil = doc.getTimestamp("premiumUntil")?.toDate()?.time
                     ?: doc.getLong("premiumUntil")
-                settingsManager.updatePremiumStatus(isPremium, premiumUntil)
-                Log.d("ProfileViewModel", "syncPremiumFromCloud: isPremium=$isPremium")
+                val tier = try {
+                    doc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it) }
+                } catch (_: Exception) { null }
+                settingsManager.updatePremiumStatus(isPremium, premiumUntil, tier)
+                Log.d("ProfileViewModel", "syncPremiumFromCloud: isPremium=$isPremium, tier=$tier")
             } catch (e: Exception) {
                 Log.w("ProfileViewModel", "Failed to sync premium status", e)
             }
@@ -249,10 +254,86 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun logout() {
+    fun updateDisplayName(newName: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
         viewModelScope.launch {
-            settingsManager.clearAll()
+            try {
+                user.updateProfile(userProfileChangeRequest { displayName = newName }).await()
+
+                val uid = user.uid
+                FirebaseFirestore.getInstance()
+                    .collection("users").document(uid)
+                    .update("displayName", newName).await()
+
+                settingsManager.updateUserInfo(
+                    name = newName,
+                    email = user.email ?: "",
+                    avatarUrl = _uiState.value.userAvatarUrl
+                )
+
+                _uiState.value = _uiState.value.copy(userName = newName)
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Failed to update display name", e)
+                onError(e.message ?: "Unknown error")
+            }
         }
+    }
+
+    fun sendPasswordReset(onSuccess: () -> Unit = {}, onError: () -> Unit = {}) {
+        val email = _uiState.value.userEmail
+        if (email.isBlank()) return
+        viewModelScope.launch {
+            try {
+                FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Failed to send password reset", e)
+                onError()
+            }
+        }
+    }
+
+    fun deleteAccount(password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        viewModelScope.launch {
+            try {
+                // Re-authenticate before deletion
+                val email = user.email
+                if (email != null && password.isNotEmpty()) {
+                    val credential = EmailAuthProvider.getCredential(email, password)
+                    user.reauthenticate(credential).await()
+                }
+
+                // Delete Firestore user document
+                val uid = user.uid
+                FirebaseFirestore.getInstance()
+                    .collection("users").document(uid)
+                    .delete().await()
+
+                // Clear local data
+                settingsManager.clearAll()
+
+                // Delete Firebase Auth account
+                user.delete().await()
+
+                onSuccess()
+            } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                onError("re-auth-required")
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Failed to delete account", e)
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    suspend fun logout() {
+        settingsManager.clearAll()
+        try {
+            com.bettermingle.app.data.database.AppDatabase
+                .getDatabase(getApplication())
+                .clearAllTables()
+        } catch (_: Exception) { }
         authRepository.logout()
     }
 }

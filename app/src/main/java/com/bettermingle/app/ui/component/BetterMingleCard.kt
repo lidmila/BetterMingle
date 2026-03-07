@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.ui.theme.CardShadow
 import com.bettermingle.app.ui.theme.CornerRadius
@@ -34,7 +34,7 @@ fun BetterMingleCard(
             spotColor = CardShadow
         )
         .clip(CardShape)
-        .background(Color.White)
+        .background(MaterialTheme.colorScheme.surface)
 
     val clickModifier = if (onClick != null) {
         baseModifier.clickable(onClick = onClick)

@@ -52,18 +52,19 @@ import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.BackgroundPrimary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.TextSecondary
+
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.bettermingle.app.viewmodel.ProfileViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.userProfileChangeRequest
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,7 @@ fun SettingsScreen(
 
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
 
     if (showEditNameDialog) {
         var newName by remember { mutableStateOf(profileState.userName) }
@@ -94,34 +96,16 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        scope.launch {
-                            try {
-                                val user = FirebaseAuth.getInstance().currentUser
-                                val profileUpdates = userProfileChangeRequest {
-                                    displayName = newName
-                                }
-                                user?.updateProfile(profileUpdates)?.await()
-
-                                val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
-                                settingsManager.updateUserInfo(
-                                    name = newName,
-                                    email = user?.email ?: "",
-                                    avatarUrl = user?.photoUrl?.toString() ?: ""
-                                )
-
-                                val uid = user?.uid
-                                if (uid != null) {
-                                    FirebaseFirestore.getInstance()
-                                        .collection("users").document(uid)
-                                        .update("displayName", newName).await()
-                                }
-
+                        profileViewModel.updateDisplayName(
+                            newName = newName,
+                            onSuccess = {
                                 Toast.makeText(context, context.getString(R.string.settings_name_updated), Toast.LENGTH_SHORT).show()
                                 showEditNameDialog = false
-                            } catch (_: Exception) {
+                            },
+                            onError = {
                                 Toast.makeText(context, context.getString(R.string.settings_name_update_error), Toast.LENGTH_SHORT).show()
                             }
-                        }
+                        )
                     },
                     enabled = newName.isNotBlank()
                 ) { Text(stringResource(R.string.common_save)) }
@@ -142,27 +126,8 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        scope.launch {
-                            try {
-                                val user = FirebaseAuth.getInstance().currentUser
-                                val uid = user?.uid
-
-                                if (uid != null) {
-                                    FirebaseFirestore.getInstance()
-                                        .collection("users").document(uid)
-                                        .delete().await()
-                                }
-
-                                val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
-                                settingsManager.clearAll()
-
-                                user?.delete()?.await()
-
-                                onAccountDeleted()
-                            } catch (_: Exception) {
-                                Toast.makeText(context, context.getString(R.string.settings_delete_account_error), Toast.LENGTH_LONG).show()
-                            }
-                        }
+                        showDeleteAccountDialog = false
+                        showPasswordDialog = true
                     }
                 ) {
                     Text(stringResource(R.string.common_delete), color = AccentOrange)
@@ -170,6 +135,69 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAccountDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
+    if (showPasswordDialog) {
+        var password by remember { mutableStateOf("") }
+        var passwordVisible by remember { mutableStateOf(false) }
+        var isDeleting by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isDeleting) showPasswordDialog = false },
+            title = { Text(stringResource(R.string.settings_password_confirm_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.settings_password_confirm_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    BetterMingleTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = stringResource(R.string.common_password_label),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isDeleting = true
+                        profileViewModel.deleteAccount(
+                            password = password,
+                            onSuccess = {
+                                showPasswordDialog = false
+                                onAccountDeleted()
+                            },
+                            onError = { error ->
+                                isDeleting = false
+                                Toast.makeText(context, context.getString(R.string.settings_delete_account_error), Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    },
+                    enabled = password.isNotBlank() && !isDeleting
+                ) {
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showPasswordDialog = false },
+                    enabled = !isDeleting
+                ) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -184,7 +212,7 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -229,7 +257,7 @@ fun SettingsScreen(
                             Text(
                                 text = profileState.userName.ifBlank { stringResource(R.string.settings_name_not_set) },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -259,7 +287,7 @@ fun SettingsScreen(
                             Text(
                                 text = profileState.userEmail.ifBlank { stringResource(R.string.settings_email_not_found) },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -269,16 +297,14 @@ fun SettingsScreen(
             // Change password
             item {
                 BetterMingleCard(onClick = {
-                    val email = profileState.userEmail
-                    if (email.isNotBlank()) {
-                        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                            .addOnSuccessListener {
-                                Toast.makeText(context, context.getString(R.string.settings_password_reset_sent), Toast.LENGTH_LONG).show()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(context, context.getString(R.string.settings_password_reset_error), Toast.LENGTH_SHORT).show()
-                            }
-                    }
+                    profileViewModel.sendPasswordReset(
+                        onSuccess = {
+                            Toast.makeText(context, context.getString(R.string.settings_password_reset_sent), Toast.LENGTH_LONG).show()
+                        },
+                        onError = {
+                            Toast.makeText(context, context.getString(R.string.settings_password_reset_error), Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -460,6 +486,13 @@ fun SettingsScreen(
                                             val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
                                             settingsManager.setAppLanguage(langCode)
                                         }
+                                        // Apply locale immediately — AppCompat handles Activity recreation
+                                        val localeList = if (langCode == "system") {
+                                            androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+                                        } else {
+                                            androidx.core.os.LocaleListCompat.forLanguageTags(langCode)
+                                        }
+                                        androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(localeList)
                                     },
                                     label = { Text(label) },
                                     colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
@@ -495,7 +528,7 @@ fun SettingsScreen(
                         Text(
                             text = stringResource(R.string.settings_copyright),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -525,7 +558,7 @@ fun SettingsScreen(
                             Text(
                                 text = stringResource(R.string.settings_debug_tier_current, profileState.settings.premiumTier.name),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(Spacing.sm))
                             Row(
@@ -545,12 +578,12 @@ fun SettingsScreen(
                                         label = { Text(tier.name) },
                                         colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                             selectedContainerColor = when (tier) {
-                                                PremiumTier.FREE -> TextSecondary.copy(alpha = 0.15f)
+                                                PremiumTier.FREE -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
                                                 PremiumTier.PRO -> PrimaryBlue.copy(alpha = 0.15f)
                                                 PremiumTier.BUSINESS -> AccentGold.copy(alpha = 0.15f)
                                             },
                                             selectedLabelColor = when (tier) {
-                                                PremiumTier.FREE -> TextSecondary
+                                                PremiumTier.FREE -> MaterialTheme.colorScheme.onSurfaceVariant
                                                 PremiumTier.PRO -> PrimaryBlue
                                                 PremiumTier.BUSINESS -> AccentGold
                                             }
@@ -597,7 +630,7 @@ fun SettingsScreen(
                             Text(
                                 text = stringResource(R.string.settings_delete_account_desc),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

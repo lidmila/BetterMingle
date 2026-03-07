@@ -40,7 +40,8 @@ android {
 
         buildConfigField("String", "POSTHOG_API_KEY", "\"$phApiKey\"")
         buildConfigField("String", "POSTHOG_HOST", "\"$phHost\"")
-        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"116136511693-0b7dumps5q1lb6gjffs3rdns05n2h0kh.apps.googleusercontent.com\"")
+        val googleClientId = localProps.getProperty("GOOGLE_CLIENT_ID") ?: ""
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
         manifestPlaceholders["GEO_API_KEY"] = geoApiKey
     }
 
@@ -123,6 +124,7 @@ dependencies {
 
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-gif:2.5.0")
 
     // Icons
     implementation("androidx.compose.material:material-icons-extended:1.5.8")
@@ -150,6 +152,9 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    // Legacy Google Sign-In (fallback for emulators)
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
     // Google Play Billing
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 
@@ -158,9 +163,6 @@ dependencies {
 
     // Google Places
     implementation("com.google.android.libraries.places:places:4.1.0")
-
-    // Lottie for Compose animations
-    implementation("com.airbnb.android:lottie-compose:6.4.0")
 
     // QR Code generation
     implementation("com.google.zxing:core:3.5.3")

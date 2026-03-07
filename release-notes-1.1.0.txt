@@ -1,0 +1,22 @@
+<cs-CZ>
+Co je nového v 1.1.0:
+
+• Rozšířená podpora reklam pro FREE uživatele
+  - Bannerová reklama ve spodní části hlavních obrazovek (události, profil, oznámení)
+  - Nativní reklamy v chatu, výdajích a seznamu účastníků
+  - Přechodová reklama při návratu z detailu události (max 1× za 5 minut)
+• Kompaktnější vzhled nativních reklam — nezasahují do obsahu
+• Vylepšení stability zobrazování reklam
+• PRO a BUSINESS uživatelé zůstávají zcela bez reklam
+</cs-CZ>
+<en-US>
+What's new in 1.1.0:
+
+• Expanded ad support for FREE users
+  - Banner ads at the bottom of main screens (events, profile, notifications)
+  - Native ads in chat, expenses, and participants list
+  - Interstitial ad when returning from event detail (max once per 5 minutes)
+• More compact native ad layout — doesn't block content
+• Improved ad display stability
+• PRO and BUSINESS users remain completely ad-free
+</en-US>

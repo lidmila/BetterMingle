@@ -71,6 +71,7 @@ import com.bettermingle.app.ui.screen.profile.ProfileScreen
 import com.bettermingle.app.ui.screen.profile.SettingsScreen
 import com.bettermingle.app.ui.screen.profile.UpgradeScreen
 import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.billing.BillingManager
 import com.bettermingle.app.data.preferences.SettingsManager
 import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.R
@@ -158,9 +159,17 @@ fun BetterMingleNavigation() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val settingsManager = remember { SettingsManager(context) }
+    val billingManager = remember { BillingManager(context, settingsManager) }
+    val billingState by billingManager.uiState.collectAsState()
     val settings by settingsManager.settingsFlow.collectAsState(
         initial = com.bettermingle.app.data.preferences.AppSettings()
     )
+
+    // Start billing connection and reset ad session state
+    LaunchedEffect(Unit) {
+        billingManager.startConnection()
+        AdManager.resetSession()
+    }
 
     // Preload interstitial ad for FREE tier
     LaunchedEffect(settings.premiumTier) {
@@ -390,7 +399,22 @@ fun BetterMingleNavigation() {
             }
             composable(Routes.UPGRADE) {
                 UpgradeScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onSubscribe = { productId, isYearly ->
+                        val activity = context as? android.app.Activity ?: return@UpgradeScreen
+                        val product = billingState.products.find { it.productId == productId }
+                            ?: return@UpgradeScreen
+                        val productDetails = product.productDetails ?: return@UpgradeScreen
+
+                        if (productId == BillingManager.PRODUCT_LIFETIME) {
+                            billingManager.launchInappPurchaseFlow(activity, productDetails)
+                        } else {
+                            val offerToken = if (isYearly) product.yearlyOfferToken else product.monthlyOfferToken
+                            if (offerToken != null) {
+                                billingManager.launchPurchaseFlow(activity, productDetails, offerToken)
+                            }
+                        }
+                    }
                 )
             }
             composable(Routes.SETTINGS) {
@@ -425,9 +449,24 @@ fun BetterMingleNavigation() {
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val eventId = backStackEntry.arguments?.getString("eventId") ?: return@composable
+                val dashboardContext = LocalContext.current
                 EventDashboardScreen(
                     eventId = eventId,
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = {
+                        val currentSettings = settings
+                        if (currentSettings != null && AdManager.hasAds(currentSettings.premiumTier)) {
+                            val activity = dashboardContext as? android.app.Activity
+                            if (activity != null) {
+                                AdManager.showReturnInterstitial(activity) {
+                                    navController.popBackStack()
+                                }
+                            } else {
+                                navController.popBackStack()
+                            }
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
                     onModuleClick = { module ->
                         val route = when (module) {
                             "voting" -> Routes.voting(eventId)
@@ -474,7 +513,11 @@ fun BetterMingleNavigation() {
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) {
                 val eventId = it.arguments?.getString("eventId") ?: ""
-                ExpensesScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+                ExpensesScreen(
+                    eventId = eventId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                )
             }
             composable(
                 route = Routes.CARPOOL,
@@ -543,7 +586,8 @@ fun BetterMingleNavigation() {
                         navController.navigate(Routes.CREATE_EVENT) {
                             popUpTo(Routes.EVENT_LIST) { inclusive = false }
                         }
-                    }
+                    },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
                 )
             }
 
@@ -562,7 +606,11 @@ fun BetterMingleNavigation() {
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) {
                 val eventId = it.arguments?.getString("eventId") ?: ""
-                EventSummaryScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+                EventSummaryScreen(
+                    eventId = eventId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                )
             }
 
             // Invitation

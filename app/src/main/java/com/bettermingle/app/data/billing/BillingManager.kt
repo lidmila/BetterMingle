@@ -188,12 +188,13 @@ class BillingManager(
     }
 
     private suspend fun queryExistingPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
+        // Query subscriptions
+        val subsParams = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .build()
 
-        val result = suspendCancellableCoroutine { cont ->
-            billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
+        val subsResult = suspendCancellableCoroutine { cont ->
+            billingClient.queryPurchasesAsync(subsParams) { billingResult, purchases ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     cont.resume(purchases)
                 } else {
@@ -202,15 +203,43 @@ class BillingManager(
             }
         }
 
-        val hasActiveSub = result.any { purchase ->
-            purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+        // Query in-app purchases (lifetime)
+        val inappParams = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.INAPP)
+            .build()
+
+        val inappResult = suspendCancellableCoroutine { cont ->
+            billingClient.queryPurchasesAsync(inappParams) { billingResult, purchases ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    cont.resume(purchases)
+                } else {
+                    cont.resume(emptyList())
+                }
+            }
         }
 
-        _uiState.value = _uiState.value.copy(isPremium = hasActiveSub)
-        settingsManager.updatePremiumStatus(hasActiveSub, null)
+        val allPurchases = subsResult + inappResult
+        val activePurchases = allPurchases.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+        val hasActive = activePurchases.isNotEmpty()
+
+        // Determine the highest tier from active purchases
+        val tier = if (hasActive) {
+            val allProducts = activePurchases.flatMap { it.products }
+            tierFromProducts(allProducts)
+        } else {
+            com.bettermingle.app.data.preferences.PremiumTier.FREE
+        }
+
+        _uiState.value = _uiState.value.copy(isPremium = hasActive)
+
+        // Only update settings from billing when there are actual purchases.
+        // In debug builds with no purchases, preserve the debug tier set via setDebugTier().
+        if (hasActive) {
+            settingsManager.updatePremiumStatus(true, null, tier)
+        }
 
         // Acknowledge any unacknowledged purchases
-        result.filter {
+        allPurchases.filter {
             it.purchaseState == Purchase.PurchaseState.PURCHASED && !it.isAcknowledged
         }.forEach { purchase ->
             acknowledgePurchase(purchase)
@@ -234,20 +263,46 @@ class BillingManager(
         billingClient.launchBillingFlow(activity, billingFlowParams)
     }
 
+    fun launchInappPurchaseFlow(
+        activity: Activity,
+        productDetails: ProductDetails
+    ) {
+        val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+            .setProductDetails(productDetails)
+            .build()
+
+        val billingFlowParams = BillingFlowParams.newBuilder()
+            .setProductDetailsParamsList(listOf(productDetailsParams))
+            .build()
+
+        billingClient.launchBillingFlow(activity, billingFlowParams)
+    }
+
+    private fun tierFromProducts(products: List<String>): com.bettermingle.app.data.preferences.PremiumTier {
+        return when {
+            products.contains(PRODUCT_BUSINESS) -> com.bettermingle.app.data.preferences.PremiumTier.BUSINESS
+            products.contains(PRODUCT_PRO) -> com.bettermingle.app.data.preferences.PremiumTier.PRO
+            products.contains(PRODUCT_LIFETIME) -> com.bettermingle.app.data.preferences.PremiumTier.PRO
+            else -> com.bettermingle.app.data.preferences.PremiumTier.PRO
+        }
+    }
+
     private suspend fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
             if (!purchase.isAcknowledged) {
                 acknowledgePurchase(purchase)
             }
 
+            val tier = tierFromProducts(purchase.products)
+
             // Update local premium status
             _uiState.value = _uiState.value.copy(isPremium = true)
-            settingsManager.updatePremiumStatus(true, null)
+            settingsManager.updatePremiumStatus(true, null, tier)
 
             // Sync to Firestore
             syncPurchaseToCloud(purchase)
 
-            Log.d(TAG, "Purchase successful: ${purchase.products}")
+            Log.d(TAG, "Purchase successful: ${purchase.products}, tier: $tier")
         }
     }
 
@@ -270,8 +325,10 @@ class BillingManager(
 
     private fun syncPurchaseToCloud(purchase: Purchase) {
         val userId = auth.currentUser?.uid ?: return
+        val tier = tierFromProducts(purchase.products)
         val data = mapOf(
             "isPremium" to true,
+            "premiumTier" to tier.name,
             "purchaseToken" to purchase.purchaseToken,
             "products" to purchase.products,
             "purchaseTime" to purchase.purchaseTime,

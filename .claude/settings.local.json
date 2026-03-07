@@ -53,7 +53,9 @@
       "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/$HOME/.config/configstore/**)",
       "Bash(wc:*)",
       "WebFetch(domain:support.google.com)",
-      "WebFetch(domain:www.apptweak.com)"
+      "WebFetch(domain:www.apptweak.com)",
+      "Bash(./gradlew bundleRelease:*)",
+      "Bash(./gradlew assembleRelease:*)"
     ]
   }
 }

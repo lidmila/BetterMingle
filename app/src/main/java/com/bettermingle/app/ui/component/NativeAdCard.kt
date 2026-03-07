@@ -1,8 +1,9 @@
 package com.bettermingle.app.ui.component
 
-import android.view.LayoutInflater
-import android.widget.Button
+import android.view.Gravity
+import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -56,7 +57,11 @@ fun NativeAdCard(
                     adLoaded = false
                 }
             })
-            .withNativeAdOptions(NativeAdOptions.Builder().build())
+            .withNativeAdOptions(
+                NativeAdOptions.Builder()
+                    .setMediaAspectRatio(NativeAdOptions.NATIVE_MEDIA_ASPECT_RATIO_LANDSCAPE)
+                    .build()
+            )
             .build()
 
         adLoader.loadAd(AdRequest.Builder().build())
@@ -73,34 +78,125 @@ fun NativeAdCard(
                 .shadow(2.dp, RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(Spacing.md)
+                .padding(Spacing.sm)
         ) {
             val ad = nativeAd!!
 
             AndroidView(
                 modifier = Modifier.fillMaxWidth(),
                 factory = { ctx ->
+                    val dp = ctx.resources.displayMetrics.density
+
                     val adView = NativeAdView(ctx)
+                    adView.layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+
+                    // Horizontal layout: icon on left, text content on right
+                    val rootLayout = LinearLayout(ctx).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                    }
+
+                    // Icon (40x40dp — meets 32x32dp minimum)
+                    val iconView = ImageView(ctx).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            (40 * dp).toInt(),
+                            (40 * dp).toInt()
+                        ).apply {
+                            marginEnd = (10 * dp).toInt()
+                        }
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                    }
+                    adView.iconView = iconView
+                    rootLayout.addView(iconView)
+
+                    // Right side: headline + body + CTA
+                    val textColumn = LinearLayout(ctx).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
 
                     val headlineView = TextView(ctx).apply {
-                        textSize = 16f
+                        textSize = 14f
                         setTextColor(ctx.getColor(android.R.color.black))
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
                     }
                     adView.headlineView = headlineView
-                    adView.addView(headlineView)
+                    textColumn.addView(headlineView)
 
                     val bodyView = TextView(ctx).apply {
-                        textSize = 14f
+                        textSize = 12f
                         setTextColor(ctx.getColor(android.R.color.darker_gray))
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            topMargin = (2 * dp).toInt()
+                        }
+                        maxLines = 2
+                        ellipsize = android.text.TextUtils.TruncateAt.END
                     }
                     adView.bodyView = bodyView
-                    adView.addView(bodyView)
+                    textColumn.addView(bodyView)
 
+                    val ctaView = TextView(ctx).apply {
+                        textSize = 12f
+                        setTextColor(android.graphics.Color.WHITE)
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            setColor(0xFF4285F4.toInt())
+                            cornerRadius = 16 * dp
+                        }
+                        gravity = Gravity.CENTER
+                        setPadding(
+                            (12 * dp).toInt(),
+                            (6 * dp).toInt(),
+                            (12 * dp).toInt(),
+                            (6 * dp).toInt()
+                        )
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            topMargin = (4 * dp).toInt()
+                        }
+                    }
+                    adView.callToActionView = ctaView
+                    textColumn.addView(ctaView)
+
+                    rootLayout.addView(textColumn)
+                    adView.addView(rootLayout)
                     adView
                 },
                 update = { adView ->
                     (adView.headlineView as? TextView)?.text = ad.headline ?: ""
                     (adView.bodyView as? TextView)?.text = ad.body ?: ""
+
+                    val icon = ad.icon
+                    val iconImageView = adView.iconView as? ImageView
+                    if (icon != null) {
+                        iconImageView?.setImageDrawable(icon.drawable)
+                        iconImageView?.visibility = View.VISIBLE
+                    } else {
+                        iconImageView?.visibility = View.GONE
+                    }
+
+                    (adView.callToActionView as? TextView)?.text = ad.callToAction ?: ""
+
                     adView.setNativeAd(ad)
                 }
             )

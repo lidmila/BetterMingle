@@ -34,8 +34,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +63,9 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.data.preferences.AppSettings
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -79,10 +85,14 @@ private data class SummaryStats(
 @Composable
 fun EventSummaryScreen(
     eventId: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
     var stats by remember { mutableStateOf(SummaryStats()) }
     val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
+    var showExportLimitDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         val firestore = FirebaseFirestore.getInstance()
@@ -290,10 +300,31 @@ fun EventSummaryScreen(
             val shareMessagesStr = stringResource(R.string.summary_share_messages, stats.messageCount)
             val sharePollsStr = stringResource(R.string.summary_share_polls, stats.pollCount)
             val shareFooterStr = stringResource(R.string.summary_share_footer)
+            if (showExportLimitDialog) {
+                AlertDialog(
+                    onDismissRequest = { showExportLimitDialog = false },
+                    title = { Text(stringResource(R.string.tier_export_summary_title)) },
+                    text = { Text(stringResource(R.string.tier_export_summary_message)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showExportLimitDialog = false
+                            onNavigateToUpgrade()
+                        }) { Text(stringResource(R.string.tier_upgrade_button)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showExportLimitDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                    }
+                )
+            }
+
             val shareChooserStr = stringResource(R.string.summary_share_chooser)
             BetterMingleButton(
                 text = stringResource(R.string.summary_share_button),
                 onClick = {
+                    if (!TierLimits.canExportSummary(settings.premiumTier)) {
+                        showExportLimitDialog = true
+                        return@BetterMingleButton
+                    }
                     val shareText = buildString {
                         appendLine("\uD83D\uDCCA $shareHeaderStr")
                         appendLine("\uD83D\uDC65 $shareParticipantsStr")

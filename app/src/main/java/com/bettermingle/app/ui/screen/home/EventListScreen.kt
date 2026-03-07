@@ -72,6 +72,7 @@ import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.data.ads.AdManager
 import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.BannerAdView
 import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.viewmodel.EventListViewModel
 
@@ -139,12 +140,17 @@ fun EventListScreen(
             }
         }
     ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+                .weight(1f)
+                .fillMaxWidth()
         ) {
             when {
                 uiState.error != null && uiState.events.isEmpty() -> {
@@ -327,6 +333,11 @@ fun EventListScreen(
                     }
                 }
             }
+        }
+
+        if (showAds) {
+            BannerAdView()
+        }
         }
     }
 }

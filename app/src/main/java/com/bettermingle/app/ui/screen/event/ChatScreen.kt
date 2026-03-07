@@ -63,6 +63,9 @@ import com.bettermingle.app.data.repository.ChatMessageUi
 import com.bettermingle.app.data.repository.ChatRepository
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
@@ -83,6 +86,9 @@ fun ChatScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+    val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
     val chatRepository = remember { ChatRepository(context) }
     val messages by chatRepository.getMessagesFlow(eventId).collectAsState(initial = emptyList())
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
@@ -189,6 +195,14 @@ fun ChatScreen(
                             }
                         }
                     )
+                }
+
+                if (showAds && messages.isNotEmpty()) {
+                    item(key = "native_ad") {
+                        NativeAdCard(
+                            modifier = Modifier.padding(vertical = Spacing.sm)
+                        )
+                    }
                 }
             }
         }

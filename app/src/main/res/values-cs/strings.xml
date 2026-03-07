@@ -766,4 +766,17 @@
     <string name="settings_section_language">Jazyk</string>
     <string name="settings_language">Jazyk aplikace</string>
     <string name="settings_language_system">Systém</string>
+
+    <!-- Tier Enforcement -->
+    <string name="tier_export_expenses_title">Export výdajů</string>
+    <string name="tier_export_expenses_message">Export výdajů do CSV je dostupný v plánu Pro a vyšším.</string>
+    <string name="tier_export_summary_title">Export shrnutí</string>
+    <string name="tier_export_summary_message">Sdílení shrnutí akce je dostupné v plánu Pro a vyšším.</string>
+    <string name="tier_co_organizers_title">Spoluorganizátoři</string>
+    <string name="tier_co_organizers_message">Přidávání spoluorganizátorů je dostupné v plánu Pro a vyšším.</string>
+    <string name="tier_repeat_event_title">Opakování akce</string>
+    <string name="tier_repeat_event_message">Opakování akcí je dostupné v plánu Pro a vyšším.</string>
+    <string name="tier_upgrade_button">Upgradovat</string>
+    <string name="expenses_export">Export CSV</string>
+    <string name="summary_export">Sdílet shrnutí</string>
 </resources>

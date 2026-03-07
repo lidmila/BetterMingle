@@ -96,6 +96,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun syncPremiumFromCloud() {
+        // In debug builds, skip cloud sync to preserve debug tier set via setDebugTier()
+        if (com.bettermingle.app.BuildConfig.DEBUG) return
+
         viewModelScope.launch {
             try {
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch

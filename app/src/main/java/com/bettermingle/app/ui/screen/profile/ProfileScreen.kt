@@ -77,6 +77,9 @@ import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.BannerAdView
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,6 +118,10 @@ fun ProfileScreen(
             )
         }
     ) { innerPadding ->
+        val settingsManager = remember { SettingsManager(context) }
+        val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+        val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
+
         var visible by remember { mutableStateOf(false) }
         val avatarScale = remember { Animatable(0.5f) }
 
@@ -133,6 +140,11 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(Spacing.screenPadding)
         ) {
@@ -358,6 +370,11 @@ fun ProfileScreen(
             )
             }
             }
+        }
+
+        if (showAds) {
+            BannerAdView()
+        }
         }
     }
 }

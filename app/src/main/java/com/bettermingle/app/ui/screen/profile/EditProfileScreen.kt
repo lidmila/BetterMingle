@@ -56,8 +56,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.AVATAR_COUNT
 import com.bettermingle.app.ui.component.UserAvatar
@@ -83,6 +87,9 @@ fun EditProfileScreen(
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val state by profileViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
 
     var isInitialized by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -112,6 +119,7 @@ fun EditProfileScreen(
         AvatarPickerDialog(
             currentAvatarUrl = state.userAvatarUrl,
             isPremium = state.isPremium,
+            premiumTier = settings.premiumTier,
             onSelectAvatar = { index ->
                 profileViewModel.selectAvatar(builtInAvatarUrl(index))
                 showAvatarPicker = false
@@ -277,16 +285,16 @@ fun EditProfileScreen(
     }
 }
 
-private const val FREE_AVATAR_LIMIT = 15
-
 @Composable
 private fun AvatarPickerDialog(
     currentAvatarUrl: String,
     isPremium: Boolean,
+    premiumTier: com.bettermingle.app.data.preferences.PremiumTier = com.bettermingle.app.data.preferences.PremiumTier.FREE,
     onSelectAvatar: (Int) -> Unit,
     onUploadPhoto: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val avatarLimit = TierLimits.maxAvatars(premiumTier)
     val currentIndex = remember(currentAvatarUrl) { parseAvatarIndex(currentAvatarUrl) }
     val avatarIndices = remember { (1..AVATAR_COUNT).toList() }
 
@@ -305,7 +313,7 @@ private fun AvatarPickerDialog(
                     items(avatarIndices, key = { it }) { index ->
                         val resId = getAvatarResourceId(index)
                         val isSelected = currentIndex == index
-                        val isLocked = index > FREE_AVATAR_LIMIT && !isPremium
+                        val isLocked = index > avatarLimit && !isPremium
                         Box(
                             modifier = Modifier
                                 .size(64.dp)

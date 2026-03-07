@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,6 +63,9 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.BannerAdView
 import com.bettermingle.app.viewmodel.NotificationsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,6 +90,10 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+    val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
 
     // Mark as read when screen is shown
     LaunchedEffect(Unit) {
@@ -102,12 +110,17 @@ fun NotificationsScreen(
             )
         }
     ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+                .weight(1f)
+                .fillMaxWidth()
         ) {
             if (uiState.activities.isEmpty() && !uiState.isLoading) {
                 EmptyState(
@@ -130,6 +143,11 @@ fun NotificationsScreen(
                     }
                 }
             }
+        }
+
+        if (showAds) {
+            BannerAdView()
+        }
         }
     }
 }

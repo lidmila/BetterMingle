@@ -104,6 +104,9 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun syncPremiumFromCloud() {
+        // In debug builds, skip cloud sync to preserve debug tier set via setDebugTier()
+        if (com.bettermingle.app.BuildConfig.DEBUG) return
+
         viewModelScope.launch {
             try {
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch

@@ -766,4 +766,17 @@
     <string name="settings_section_language">Language</string>
     <string name="settings_language">App language</string>
     <string name="settings_language_system">System</string>
+
+    <!-- Tier Enforcement -->
+    <string name="tier_export_expenses_title">Export expenses</string>
+    <string name="tier_export_expenses_message">Exporting expenses to CSV is available in the Pro plan and above.</string>
+    <string name="tier_export_summary_title">Export summary</string>
+    <string name="tier_export_summary_message">Sharing event summary is available in the Pro plan and above.</string>
+    <string name="tier_co_organizers_title">Co-organizers</string>
+    <string name="tier_co_organizers_message">Adding co-organizers is available in the Pro plan and above.</string>
+    <string name="tier_repeat_event_title">Repeat event</string>
+    <string name="tier_repeat_event_message">Repeating events is available in the Pro plan and above.</string>
+    <string name="tier_upgrade_button">Upgrade</string>
+    <string name="expenses_export">Export CSV</string>
+    <string name="summary_export">Share summary</string>
 </resources>

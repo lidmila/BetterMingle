@@ -73,6 +73,10 @@ import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 
+import androidx.compose.runtime.collectAsState
+import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.ui.component.NativeAdCard
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -87,6 +91,9 @@ fun ParticipantsScreen(
     var inviteCode by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = null)
+    val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
 
     // Bottom sheet state for participant profile
     var selectedProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -270,6 +277,14 @@ fun ParticipantsScreen(
                             }
                         }
                     )
+                }
+
+                if (showAds && participants.isNotEmpty()) {
+                    item(key = "native_ad") {
+                        NativeAdCard(
+                            modifier = Modifier.padding(vertical = Spacing.sm)
+                        )
+                    }
                 }
             }
         }

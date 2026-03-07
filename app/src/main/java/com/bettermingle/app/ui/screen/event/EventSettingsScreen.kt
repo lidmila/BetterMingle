@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +75,9 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -85,8 +89,13 @@ fun EventSettingsScreen(
     eventId: String,
     onNavigateBack: () -> Unit,
     onEventDeleted: () -> Unit = onNavigateBack,
-    onRepeatEvent: ((String, String, String, String, List<String>) -> Unit)? = null
+    onRepeatEvent: ((String, String, String, String, List<String>) -> Unit)? = null,
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
+    val context2 = LocalContext.current
+    val settingsManager = remember { SettingsManager(context2) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
+    var showRepeatLimitDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
     var inviteCode by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
@@ -279,6 +288,23 @@ fun EventSettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
+    if (showRepeatLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showRepeatLimitDialog = false },
+            title = { Text(stringResource(R.string.tier_repeat_event_title)) },
+            text = { Text(stringResource(R.string.tier_repeat_event_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showRepeatLimitDialog = false
+                    onNavigateToUpgrade()
+                }) { Text(stringResource(R.string.tier_upgrade_button)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRepeatLimitDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -612,13 +638,17 @@ fun EventSettingsScreen(
                         title = stringResource(R.string.event_settings_repeat),
                         description = stringResource(R.string.event_settings_repeat_desc),
                         onClick = {
-                            onRepeatEvent?.invoke(
-                                eventName,
-                                eventDescription,
-                                eventTheme,
-                                eventLocationName,
-                                enabledModuleNames
-                            )
+                            if (TierLimits.canRepeatEvent(settings.premiumTier)) {
+                                onRepeatEvent?.invoke(
+                                    eventName,
+                                    eventDescription,
+                                    eventTheme,
+                                    eventLocationName,
+                                    enabledModuleNames
+                                )
+                            } else {
+                                showRepeatLimitDialog = true
+                            }
                         }
                     )
                 }

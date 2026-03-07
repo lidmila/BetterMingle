@@ -66,6 +66,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -89,9 +90,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.data.model.Expense
 import com.bettermingle.app.data.model.ExpenseSplit
+import com.bettermingle.app.data.ads.AdManager
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
@@ -101,6 +104,9 @@ import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 
+import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.utils.CurrencyUtils
 import com.bettermingle.app.utils.Debt
 import com.bettermingle.app.utils.DebtCalculator
@@ -152,9 +158,13 @@ private fun formatRelativeDate(timestamp: Long, todayStr: String, yesterdayStr: 
 @Composable
 fun ExpensesScreen(
     eventId: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
+    var showExportLimitDialog by remember { mutableStateOf(false) }
     val expenses = remember { mutableStateListOf<Expense>() }
     val debts = remember { mutableStateListOf<Debt>() }
     val payerNames = remember { mutableMapOf<String, String>() }
@@ -311,6 +321,23 @@ fun ExpensesScreen(
     val expenseAddedMsg = stringResource(R.string.expenses_added)
     val expenseDeletedMsg = stringResource(R.string.expenses_deleted)
 
+    if (showExportLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportLimitDialog = false },
+            title = { Text(stringResource(R.string.tier_export_expenses_title)) },
+            text = { Text(stringResource(R.string.tier_export_expenses_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExportLimitDialog = false
+                    onNavigateToUpgrade()
+                }) { Text(stringResource(R.string.tier_upgrade_button)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportLimitDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+            }
+        )
+    }
+
     if (showCreateDialog) {
         AddExpenseDialog(
             eventId = eventId,
@@ -333,6 +360,19 @@ fun ExpensesScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (expenses.isNotEmpty()) {
+                        IconButton(onClick = {
+                            if (TierLimits.canExportExpenses(settings.premiumTier)) {
+                                // TODO: implement actual CSV export
+                            } else {
+                                showExportLimitDialog = true
+                            }
+                        }) {
+                            Icon(Icons.Default.Receipt, contentDescription = stringResource(R.string.expenses_export))
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -411,7 +451,8 @@ fun ExpensesScreen(
                     onDelete = { expense ->
                         deleteExpense(expense)
                         scope.launch { snackbarHostState.showSnackbar(expenseDeletedMsg) }
-                    }
+                    },
+                    showAds = AdManager.hasAds(settings.premiumTier)
                 )
                 1 -> DebtsList(
                     debts = debts,
@@ -543,7 +584,8 @@ private fun ExpensesList(
     expenses: List<Expense>,
     payerNames: Map<String, String>,
     currentUserId: String,
-    onDelete: (Expense) -> Unit
+    onDelete: (Expense) -> Unit,
+    showAds: Boolean = false
 ) {
     if (expenses.isEmpty()) {
         EmptyState(
@@ -603,6 +645,14 @@ private fun ExpensesList(
                         payerName = payerNames[expense.paidBy] ?: expense.paidBy.take(8),
                         currentUserId = currentUserId,
                         onDelete = onDelete
+                    )
+                }
+            }
+
+            if (showAds && expenses.isNotEmpty()) {
+                item(key = "native_ad") {
+                    NativeAdCard(
+                        modifier = Modifier.padding(vertical = Spacing.sm)
                     )
                 }
             }

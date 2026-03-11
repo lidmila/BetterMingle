@@ -55,7 +55,13 @@
       "WebFetch(domain:support.google.com)",
       "WebFetch(domain:www.apptweak.com)",
       "Bash(./gradlew bundleRelease:*)",
-      "Bash(./gradlew assembleRelease:*)"
+      "Bash(./gradlew assembleRelease:*)",
+      "Bash(where keytool)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files/Android/Android Studio/jbr/bin/**)",
+      "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/$JAVA_HOME/bin/**)",
+      "Read(//c/Program Files//**)",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/keytool.exe\":*)"
     ]
   }
 }

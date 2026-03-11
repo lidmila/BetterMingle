@@ -1,0 +1,10 @@
+<cs-CZ>
+Co je nového v 1.1.1:
+
+• Oprava přihlášení přes Google účet
+</cs-CZ>
+<en-US>
+What's new in 1.1.1:
+
+• Fixed Google Sign-In
+</en-US>

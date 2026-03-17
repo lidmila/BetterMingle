@@ -141,6 +141,10 @@
     <string name="dashboard_messages_count">messages</string>
     <string name="dashboard_tasks_count">tasks</string>
     <string name="dashboard_things_count">things</string>
+    <string name="dashboard_wishlist">Gifts</string>
+    <string name="dashboard_gifts_count">gifts</string>
+    <string name="dashboard_add_module">Add module</string>
+    <string name="dashboard_remove_module">Remove module</string>
 
     <!-- Create Event -->
     <string name="create_event_step_basics">New event</string>
@@ -187,6 +191,7 @@
     <string name="create_event_module_chat">Chat</string>
     <string name="create_event_module_schedule">Schedule</string>
     <string name="create_event_module_tasks">Tasks</string>
+    <string name="create_event_module_wishlist">Gifts</string>
     <string name="create_event_create_button">Create event</string>
     <string name="create_event_security_title">Enhanced security</string>
     <string name="create_event_security_subtitle">For corporate and sensitive events</string>
@@ -405,6 +410,24 @@
     <string name="packing_name_label">Item name</string>
     <string name="packing_personal">Personal</string>
     <string name="packing_shared">Shared</string>
+
+    <!-- Wishlist -->
+    <string name="wishlist_title">Gifts</string>
+    <string name="wishlist_empty_title">No gifts yet</string>
+    <string name="wishlist_empty_description">The organizer can add gifts or items to this list.</string>
+    <string name="wishlist_add">Add gift</string>
+    <string name="wishlist_name_label">Item name</string>
+    <string name="wishlist_price_label">Price (optional)</string>
+    <string name="wishlist_url_label">Product URL (optional)</string>
+    <string name="wishlist_description_label">Description (optional)</string>
+    <string name="wishlist_reserve">Reserve</string>
+    <string name="wishlist_buy">I\'ll buy this</string>
+    <string name="wishlist_mark_bought">Mark as bought</string>
+    <string name="wishlist_unclaim">Cancel reservation</string>
+    <string name="wishlist_reserved_by">Reserved by %1$s</string>
+    <string name="wishlist_bought_by">Bought by %1$s</string>
+    <string name="wishlist_back_to_reserved">Back to reserved</string>
+    <string name="wishlist_open_url">Open link</string>
 
     <!-- Participants -->
     <string name="participants_title">Participants</string>
@@ -651,6 +674,8 @@
     <string name="help_faq7_a">In the Rooms module, anyone can create rooms with a set capacity. Tap a room to join it — you can only be in one room at a time. Tap again to leave.</string>
     <string name="help_faq8_q">What is the packing list?</string>
     <string name="help_faq8_a">The packing list is a shared checklist of items needed for the event. Anyone can add items and mark what\'s already covered, so nothing gets forgotten.</string>
+    <string name="help_faq_wishlist_q">What is the gift list?</string>
+    <string name="help_faq_wishlist_a">The gift list lets the organizer add desired gifts. Participants can reserve items or mark them as bought so nothing is purchased twice.</string>
     <string name="help_faq9_q">What is the difference between Free and Pro?</string>
     <string name="help_faq9_a">The Free plan allows up to 2 events with max 8 participants and 1 poll. Pro unlocks up to 5 events, 100 participants, unlimited polls, expense export, and removes ads.</string>
     <string name="help_faq10_q">How to secure an event with a PIN?</string>
@@ -710,6 +735,9 @@
     <string name="activity_created_task">created task: %1$s</string>
     <string name="activity_removed_from_packing">removed from packing list: %1$s</string>
     <string name="activity_added_to_packing">added to packing list: %1$s</string>
+    <string name="activity_added_to_wishlist">added to gift list: %1$s</string>
+    <string name="activity_removed_from_wishlist">removed from gift list: %1$s</string>
+    <string name="activity_claimed_wishlist">will buy: %1$s</string>
     <string name="activity_rated_event">rated the event (%1$s/5 \u2B50)</string>
     <string name="activity_edited_event">edited %1$s of event</string>
     <string name="activity_deleted_event">deleted event: %1$s</string>

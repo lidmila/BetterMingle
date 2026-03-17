@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Backpack
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.CheckCircle
@@ -98,6 +99,7 @@ private fun moduleIcon(module: EventModule): ImageVector = when (module) {
     EventModule.SCHEDULE -> Icons.Default.Schedule
     EventModule.TASKS -> Icons.Default.CheckCircle
     EventModule.PACKING_LIST -> Icons.Default.Backpack
+    EventModule.WISHLIST -> Icons.Default.CardGiftcard
 }
 
 @Composable

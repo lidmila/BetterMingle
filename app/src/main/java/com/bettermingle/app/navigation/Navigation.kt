@@ -59,6 +59,7 @@ import com.bettermingle.app.ui.screen.event.TasksScreen
 import com.bettermingle.app.ui.screen.event.ParticipantsScreen
 import com.bettermingle.app.ui.screen.event.RatingScreen
 import com.bettermingle.app.ui.screen.event.PackingListScreen
+import com.bettermingle.app.ui.screen.event.WishlistScreen
 import com.bettermingle.app.ui.screen.event.RoomsScreen
 import com.bettermingle.app.ui.screen.event.ScheduleScreen
 import com.bettermingle.app.ui.screen.event.VotingScreen
@@ -105,6 +106,7 @@ object Routes {
     const val EVENT_SETTINGS = "event_settings/{eventId}"
     const val TASKS = "tasks/{eventId}"
     const val PACKING_LIST = "packing_list/{eventId}"
+    const val WISHLIST = "wishlist/{eventId}"
     const val SETTINGS = "settings"
     const val HELP = "help"
     const val UPGRADE = "upgrade"
@@ -128,6 +130,7 @@ object Routes {
     fun rating(eventId: String) = "rating/$eventId"
     fun tasks(eventId: String) = "tasks/$eventId"
     fun packingList(eventId: String) = "packing_list/$eventId"
+    fun wishlist(eventId: String) = "wishlist/$eventId"
     fun eventSettings(eventId: String) = "event_settings/$eventId"
     fun activityFeed(eventId: String) = "activity_feed/$eventId"
     fun eventSummary(eventId: String) = "event_summary/$eventId"
@@ -478,6 +481,7 @@ fun BetterMingleNavigation() {
                             "chat" -> Routes.chat(eventId)
                             "tasks" -> Routes.tasks(eventId)
                             "packing" -> Routes.packingList(eventId)
+                            "wishlist" -> Routes.wishlist(eventId)
                             "rating" -> Routes.rating(eventId)
                             "settings" -> Routes.eventSettings(eventId)
                             "activity" -> Routes.activityFeed(eventId)
@@ -553,6 +557,13 @@ fun BetterMingleNavigation() {
             ) {
                 val eventId = it.arguments?.getString("eventId") ?: ""
                 PackingListScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Routes.WISHLIST,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                WishlistScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
             }
             composable(
                 route = Routes.CHAT,

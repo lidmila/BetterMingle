@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Hotel
@@ -814,7 +815,8 @@ private fun StepModules(
         ModuleOption(EventModule.ROOMS, stringResource(R.string.create_event_module_rooms), Icons.Default.Hotel),
         ModuleOption(EventModule.CHAT, stringResource(R.string.create_event_module_chat), Icons.AutoMirrored.Filled.Chat),
         ModuleOption(EventModule.SCHEDULE, stringResource(R.string.create_event_module_schedule), Icons.Default.CalendarMonth),
-        ModuleOption(EventModule.TASKS, stringResource(R.string.create_event_module_tasks), Icons.AutoMirrored.Filled.Assignment)
+        ModuleOption(EventModule.TASKS, stringResource(R.string.create_event_module_tasks), Icons.AutoMirrored.Filled.Assignment),
+        ModuleOption(EventModule.WISHLIST, stringResource(R.string.create_event_module_wishlist), Icons.Default.CardGiftcard)
     )
 
     Column(

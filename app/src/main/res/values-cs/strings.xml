@@ -141,6 +141,10 @@
     <string name="dashboard_messages_count">zpráv</string>
     <string name="dashboard_tasks_count">úkolů</string>
     <string name="dashboard_things_count">věcí</string>
+    <string name="dashboard_wishlist">Dárky</string>
+    <string name="dashboard_gifts_count">dárků</string>
+    <string name="dashboard_add_module">Přidat modul</string>
+    <string name="dashboard_remove_module">Odebrat modul</string>
 
     <!-- Create Event -->
     <string name="create_event_step_basics">Nová akce</string>
@@ -187,6 +191,7 @@
     <string name="create_event_module_chat">Chat</string>
     <string name="create_event_module_schedule">Program</string>
     <string name="create_event_module_tasks">Úkoly</string>
+    <string name="create_event_module_wishlist">Dárky</string>
     <string name="create_event_create_button">Vytvořit akci</string>
     <string name="create_event_security_title">Zvýšená ochrana</string>
     <string name="create_event_security_subtitle">Pro firemní a citlivé akce</string>
@@ -405,6 +410,24 @@
     <string name="packing_name_label">Název věci</string>
     <string name="packing_personal">Osobní</string>
     <string name="packing_shared">Sdílené</string>
+
+    <!-- Wishlist -->
+    <string name="wishlist_title">Dárky</string>
+    <string name="wishlist_empty_title">Zatím žádné dárky</string>
+    <string name="wishlist_empty_description">Organizátor může přidat dárky nebo věci do seznamu.</string>
+    <string name="wishlist_add">Přidat dárek</string>
+    <string name="wishlist_name_label">Název</string>
+    <string name="wishlist_price_label">Cena (nepovinné)</string>
+    <string name="wishlist_url_label">URL produktu (nepovinné)</string>
+    <string name="wishlist_description_label">Popis (nepovinné)</string>
+    <string name="wishlist_reserve">Rezervovat</string>
+    <string name="wishlist_buy">Koupím já</string>
+    <string name="wishlist_mark_bought">Označit jako koupené</string>
+    <string name="wishlist_unclaim">Zrušit rezervaci</string>
+    <string name="wishlist_reserved_by">Rezervoval/a %1$s</string>
+    <string name="wishlist_bought_by">Koupil/a %1$s</string>
+    <string name="wishlist_back_to_reserved">Zpět na rezervováno</string>
+    <string name="wishlist_open_url">Otevřít odkaz</string>
 
     <!-- Participants -->
     <string name="participants_title">Účastníci</string>
@@ -651,6 +674,8 @@
     <string name="help_faq7_a">V modulu Pokoje kdokoliv vytvoří pokoje s kapacitou. Klepnutím na pokoj se do něj přidáš — můžeš být jen v jednom pokoji najednou. Dalším klepnutím pokoj opustíš.</string>
     <string name="help_faq8_q">K čemu je balicí seznam?</string>
     <string name="help_faq8_a">Balicí seznam je sdílený seznam věcí potřebných na akci. Kdokoliv může přidat položku a označit, co je už zajištěné, aby se na nic nezapomnělo.</string>
+    <string name="help_faq_wishlist_q">Co je seznam dárků?</string>
+    <string name="help_faq_wishlist_a">Seznam dárků umožňuje organizátorovi přidat dárky. Účastníci si mohou položky zarezervovat nebo označit jako koupené, aby se nic nekupovalo dvakrát.</string>
     <string name="help_faq9_q">Jaký je rozdíl mezi Free a Pro?</string>
     <string name="help_faq9_a">Free plán umožňuje až 2 akce s max 8 účastníky a 1 anketou. Pro odemkne až 5 akcí, 100 účastníků, neomezené ankety, export výdajů a odstraní reklamy.</string>
     <string name="help_faq10_q">Jak zabezpečit akci PINem?</string>
@@ -710,6 +735,9 @@
     <string name="activity_created_task">vytvořil/a úkol: %1$s</string>
     <string name="activity_removed_from_packing">odebral/a z balicího seznamu: %1$s</string>
     <string name="activity_added_to_packing">přidal/a do balicího seznamu: %1$s</string>
+    <string name="activity_added_to_wishlist">přidal/a do seznamu dárků: %1$s</string>
+    <string name="activity_removed_from_wishlist">odebral/a ze seznamu dárků: %1$s</string>
+    <string name="activity_claimed_wishlist">koupí: %1$s</string>
     <string name="activity_rated_event">ohodnotil/a akci (%1$s/5 \u2B50)</string>
     <string name="activity_edited_event">upravil/a %1$s akce</string>
     <string name="activity_deleted_event">smazal/a akci: %1$s</string>

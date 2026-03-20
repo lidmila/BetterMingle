@@ -61,6 +61,9 @@ private val faqItems = listOf(
     FaqItem(R.string.help_faq6_q, R.string.help_faq6_a),
     FaqItem(R.string.help_faq7_q, R.string.help_faq7_a),
     FaqItem(R.string.help_faq8_q, R.string.help_faq8_a),
+    FaqItem(R.string.help_faq_wishlist_q, R.string.help_faq_wishlist_a),
+    FaqItem(R.string.help_faq_catering_q, R.string.help_faq_catering_a),
+    FaqItem(R.string.help_faq_roles_q, R.string.help_faq_roles_a),
     FaqItem(R.string.help_faq9_q, R.string.help_faq9_a),
     FaqItem(R.string.help_faq10_q, R.string.help_faq10_a)
 )

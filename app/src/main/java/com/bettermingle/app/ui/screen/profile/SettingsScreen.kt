@@ -56,7 +56,11 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.PersonRemove
+import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.foundation.text.KeyboardOptions
@@ -71,6 +75,9 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onAccountDeleted: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit = {},
+    onNavigateToTerms: () -> Unit = {},
+    onNavigateToDeleteRequest: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
@@ -506,6 +513,42 @@ fun SettingsScreen(
                 }
             }
 
+            // Reset coach marks
+            item {
+                BetterMingleCard(onClick = {
+                    scope.launch {
+                        val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
+                        settingsManager.resetCoachMarks()
+                        Toast.makeText(context, context.getString(R.string.settings_coach_marks_reset_done), Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_coach_marks_reset),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_coach_marks_reset_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
             // Section: O aplikaci
             item {
                 Spacer(modifier = Modifier.height(Spacing.sm))
@@ -530,6 +573,90 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+            }
+
+            // Section: Legal
+            item {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = stringResource(R.string.settings_section_legal),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryBlue
+                )
+            }
+
+            item {
+                BetterMingleCard(onClick = onNavigateToPrivacyPolicy) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Policy,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.settings_privacy_policy),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            item {
+                BetterMingleCard(onClick = onNavigateToTerms) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.settings_terms_of_service),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            item {
+                BetterMingleCard(onClick = onNavigateToDeleteRequest) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonRemove,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_delete_account_request),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_delete_account_request_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

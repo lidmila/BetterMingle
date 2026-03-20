@@ -1,5 +1,6 @@
 package com.bettermingle.app.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -96,7 +97,7 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
                 .set(userData, SetOptions.merge())
                 .await()
 
-            // Read premium status from Firestore and sync to local settings
+            // Read full profile from Firestore and sync to local settings
             val userDoc = firestore.collection("users")
                 .document(user.uid)
                 .get()
@@ -108,13 +109,25 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
                 userDoc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it) }
             } catch (_: Exception) { null }
             settingsManager?.updatePremiumStatus(isPremium, premiumUntil, tier)
-            settingsManager?.updateUserInfo(
-                name = user.displayName ?: "",
+
+            // Restore full profile from Firestore (survives logout/re-login)
+            val firestoreName = userDoc.getString("displayName") ?: user.displayName ?: ""
+            val firestoreAvatar = userDoc.getString("avatarUrl") ?: user.photoUrl?.toString() ?: ""
+            val firestorePhone = userDoc.getString("phone") ?: ""
+            val firestoreDepartment = userDoc.getString("department") ?: ""
+            val firestoreBio = userDoc.getString("bio") ?: ""
+            val profileCompleted = userDoc.getBoolean("profileSetupCompleted") ?: false
+            settingsManager?.updateFullProfile(
+                name = firestoreName,
                 email = user.email ?: "",
-                avatarUrl = user.photoUrl?.toString() ?: ""
+                avatarUrl = firestoreAvatar,
+                phone = firestorePhone,
+                department = firestoreDepartment,
+                bio = firestoreBio,
+                profileSetupCompleted = profileCompleted
             )
-        } catch (_: Exception) {
-            // Non-critical, continue
+        } catch (e: Exception) {
+            Log.w("AuthRepository", "Failed to sync user profile to Firestore", e)
         }
     }
 }

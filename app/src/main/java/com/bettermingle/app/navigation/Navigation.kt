@@ -62,6 +62,8 @@ import com.bettermingle.app.ui.screen.event.PackingListScreen
 import com.bettermingle.app.ui.screen.event.WishlistScreen
 import com.bettermingle.app.ui.screen.event.RoomsScreen
 import com.bettermingle.app.ui.screen.event.ScheduleScreen
+import com.bettermingle.app.ui.screen.event.CateringScreen
+import com.bettermingle.app.ui.screen.event.BudgetScreen
 import com.bettermingle.app.ui.screen.event.VotingScreen
 import com.bettermingle.app.ui.screen.home.EventListScreen
 import com.bettermingle.app.ui.screen.home.NotificationsScreen
@@ -69,6 +71,7 @@ import com.bettermingle.app.ui.screen.home.YearInReviewScreen
 import com.bettermingle.app.ui.screen.profile.EditProfileScreen
 import com.bettermingle.app.ui.screen.profile.HelpScreen
 import com.bettermingle.app.ui.screen.profile.ProfileScreen
+import com.bettermingle.app.ui.screen.profile.LegalWebViewScreen
 import com.bettermingle.app.ui.screen.profile.SettingsScreen
 import com.bettermingle.app.ui.screen.profile.UpgradeScreen
 import com.bettermingle.app.data.ads.AdManager
@@ -117,6 +120,11 @@ object Routes {
     const val PROFILE_SETUP = "profile_setup"
     const val ACTIVITY_FEED = "activity_feed/{eventId}"
     const val EVENT_SUMMARY = "event_summary/{eventId}"
+    const val PRIVACY_POLICY = "privacy_policy"
+    const val TERMS_OF_SERVICE = "terms_of_service"
+    const val DELETE_ACCOUNT_REQUEST = "delete_account_request"
+    const val CATERING = "catering/{eventId}"
+    const val BUDGET = "budget/{eventId}"
     const val INVITATION = "invitation/{inviteCode}"
 
     fun eventDashboard(eventId: String) = "event_dashboard/$eventId"
@@ -134,6 +142,8 @@ object Routes {
     fun eventSettings(eventId: String) = "event_settings/$eventId"
     fun activityFeed(eventId: String) = "activity_feed/$eventId"
     fun eventSummary(eventId: String) = "event_summary/$eventId"
+    fun catering(eventId: String) = "catering/$eventId"
+    fun budget(eventId: String) = "budget/$eventId"
     fun invitation(inviteCode: String) = "invitation/$inviteCode"
 }
 
@@ -342,7 +352,20 @@ fun BetterMingleNavigation() {
             }
             composable(Routes.CREATE_EVENT) {
                 val createContext = LocalContext.current
+                val savedState = it.savedStateHandle
+                val prefillName = savedState.remove<String>("prefill_name")
+                val prefillDescription = savedState.remove<String>("prefill_description")
+                val prefillLocation = savedState.remove<String>("prefill_location")
+                val prefillIntroText = savedState.remove<String>("prefill_introText")
+                val prefillTheme = savedState.remove<String>("prefill_theme")
+                val prefillModules = savedState.remove<ArrayList<String>>("prefill_modules")
                 CreateEventScreen(
+                    prefillName = prefillName,
+                    prefillDescription = prefillDescription,
+                    prefillLocation = prefillLocation,
+                    prefillIntroText = prefillIntroText,
+                    prefillTheme = prefillTheme,
+                    prefillModules = prefillModules,
                     onEventCreated = { eventId ->
                         val navigateToDashboard = {
                             navController.navigate(Routes.eventDashboard(eventId)) {
@@ -427,7 +450,10 @@ fun BetterMingleNavigation() {
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }
-                    }
+                    },
+                    onNavigateToPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
+                    onNavigateToTerms = { navController.navigate(Routes.TERMS_OF_SERVICE) },
+                    onNavigateToDeleteRequest = { navController.navigate(Routes.DELETE_ACCOUNT_REQUEST) }
                 )
             }
             composable(Routes.HELP) {
@@ -442,6 +468,35 @@ fun BetterMingleNavigation() {
             }
             composable(Routes.YEAR_IN_REVIEW) {
                 YearInReviewScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // Legal screens
+            composable(Routes.PRIVACY_POLICY) {
+                val isCzech = java.util.Locale.getDefault().language == "cs"
+                LegalWebViewScreen(
+                    title = stringResource(R.string.settings_privacy_policy),
+                    url = if (isCzech) "https://www.codewhiskers.app/zasady-ochrany-osobnich-udaju"
+                          else "https://www.codewhiskers.app/en/privacy-policy",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.TERMS_OF_SERVICE) {
+                val isCzech = java.util.Locale.getDefault().language == "cs"
+                LegalWebViewScreen(
+                    title = stringResource(R.string.settings_terms_of_service),
+                    url = if (isCzech) "https://www.codewhiskers.app/obchodni-podminky"
+                          else "https://www.codewhiskers.app/en/terms",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.DELETE_ACCOUNT_REQUEST) {
+                val isCzech = java.util.Locale.getDefault().language == "cs"
+                LegalWebViewScreen(
+                    title = stringResource(R.string.settings_delete_account_request),
+                    url = if (isCzech) "https://www.codewhiskers.app/smazani-uctu"
+                          else "https://www.codewhiskers.app/en/delete-account",
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -485,10 +540,31 @@ fun BetterMingleNavigation() {
                             "rating" -> Routes.rating(eventId)
                             "settings" -> Routes.eventSettings(eventId)
                             "activity" -> Routes.activityFeed(eventId)
+                            "catering" -> Routes.catering(eventId)
+                            "budget" -> Routes.budget(eventId)
                             "summary" -> Routes.eventSummary(eventId)
                             else -> return@EventDashboardScreen
                         }
                         navController.navigate(route)
+                    },
+                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) },
+                    onDeleteEvent = {
+                        navController.navigate(Routes.EVENT_LIST) {
+                            popUpTo(Routes.EVENT_LIST) { inclusive = true }
+                        }
+                    },
+                    onDuplicateEvent = { name, description, location, introText, theme, modules ->
+                        navController.navigate(Routes.CREATE_EVENT) {
+                            popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                        }
+                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                            set("prefill_name", name)
+                            set("prefill_description", description)
+                            set("prefill_location", location)
+                            set("prefill_introText", introText)
+                            set("prefill_theme", theme)
+                            set("prefill_modules", ArrayList(modules))
+                        }
                     }
                 )
             }
@@ -519,8 +595,7 @@ fun BetterMingleNavigation() {
                 val eventId = it.arguments?.getString("eventId") ?: ""
                 ExpensesScreen(
                     eventId = eventId,
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable(
@@ -566,6 +641,20 @@ fun BetterMingleNavigation() {
                 WishlistScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
             }
             composable(
+                route = Routes.CATERING,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                CateringScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Routes.BUDGET,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                val eventId = it.arguments?.getString("eventId") ?: ""
+                BudgetScreen(eventId = eventId, onNavigateBack = { navController.popBackStack() })
+            }
+            composable(
                 route = Routes.CHAT,
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
             ) {
@@ -592,13 +681,19 @@ fun BetterMingleNavigation() {
                             popUpTo(Routes.EVENT_LIST) { inclusive = true }
                         }
                     },
-                    onRepeatEvent = { name, desc, theme, location, modules ->
-                        // Navigate to create event (user creates fresh copy)
+                    onDuplicateEvent = { name, desc, location, introText, theme, modules ->
                         navController.navigate(Routes.CREATE_EVENT) {
                             popUpTo(Routes.EVENT_LIST) { inclusive = false }
                         }
-                    },
-                    onNavigateToUpgrade = { navController.navigate(Routes.UPGRADE) }
+                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                            set("prefill_name", name)
+                            set("prefill_description", desc)
+                            set("prefill_location", location)
+                            set("prefill_introText", introText)
+                            set("prefill_theme", theme)
+                            set("prefill_modules", ArrayList(modules))
+                        }
+                    }
                 )
             }
 

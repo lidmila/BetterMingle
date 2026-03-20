@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -39,6 +40,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -47,7 +50,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,10 +76,17 @@ import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
+import com.bettermingle.app.ui.theme.MODULE_COLOR_PALETTE
+import com.bettermingle.app.ui.theme.hexToColor
+import com.bettermingle.app.ui.component.ModuleColorPickerDialog
+import com.bettermingle.app.data.model.EventModule
+import com.bettermingle.app.data.repository.EventRepository
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 
-import com.bettermingle.app.data.preferences.SettingsManager
-import com.bettermingle.app.data.preferences.TierLimits
-import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -89,13 +98,8 @@ fun EventSettingsScreen(
     eventId: String,
     onNavigateBack: () -> Unit,
     onEventDeleted: () -> Unit = onNavigateBack,
-    onRepeatEvent: ((String, String, String, String, List<String>) -> Unit)? = null,
-    onNavigateToUpgrade: () -> Unit = {}
+    onDuplicateEvent: ((String, String, String, String, String, List<String>) -> Unit)? = null
 ) {
-    val context2 = LocalContext.current
-    val settingsManager = remember { SettingsManager(context2) }
-    val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
-    var showRepeatLimitDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
     var inviteCode by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
@@ -103,12 +107,15 @@ fun EventSettingsScreen(
     var showPinDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var eventDescription by remember { mutableStateOf("") }
+    var eventIntroText by remember { mutableStateOf("") }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Security state (would be loaded from event data)
     val currentUserId = remember { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     var isOrganizer by remember { mutableStateOf(false) }
+    var isCreator by remember { mutableStateOf(false) }
     var securityEnabled by remember { mutableStateOf(false) }
     var hideFinancials by remember { mutableStateOf(false) }
     var screenshotProtection by remember { mutableStateOf(false) }
@@ -117,6 +124,8 @@ fun EventSettingsScreen(
     var eventTheme by remember { mutableStateOf("") }
     var eventLocationName by remember { mutableStateOf("") }
     var enabledModuleNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var moduleColors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var colorPickerModuleName by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(eventId) {
         try {
@@ -125,6 +134,7 @@ fun EventSettingsScreen(
             inviteCode = doc.getString("inviteCode") ?: ""
             eventName = doc.getString("name") ?: ""
             eventDescription = doc.getString("description") ?: ""
+            eventIntroText = doc.getString("introText") ?: ""
             securityEnabled = doc.getBoolean("securityEnabled") ?: false
             hideFinancials = doc.getBoolean("hideFinancials") ?: false
             screenshotProtection = doc.getBoolean("screenshotProtection") ?: false
@@ -133,11 +143,30 @@ fun EventSettingsScreen(
             eventLocationName = doc.getString("locationName") ?: ""
             @Suppress("UNCHECKED_CAST")
             enabledModuleNames = (doc.get("enabledModules") as? List<String>) ?: emptyList()
+            @Suppress("UNCHECKED_CAST")
+            moduleColors = (doc.get("moduleColors") as? Map<String, String>) ?: emptyMap()
             val statusStr = doc.getString("status") ?: "PLANNING"
             eventStatus = try { EventStatus.valueOf(statusStr) } catch (_: Exception) { EventStatus.PLANNING }
             val createdBy = doc.getString("createdBy") ?: ""
-            isOrganizer = createdBy == currentUserId
-        } catch (_: Exception) { }
+            isCreator = createdBy == currentUserId
+            isOrganizer = isCreator
+        } catch (_: Exception) {
+            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+        }
+
+        // Check if current user is a co-organizer
+        if (!isOrganizer && currentUserId.isNotEmpty()) {
+            try {
+                val parts = FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("participants").get().await()
+                val userParticipant = parts.documents.firstOrNull { it.getString("userId") == currentUserId }
+                val role = userParticipant?.getString("role") ?: ""
+                if (role.equals("CO_ORGANIZER", ignoreCase = true)) {
+                    isOrganizer = true
+                }
+            } catch (_: Exception) { }
+        }
 
         // Load notification preference
         try {
@@ -292,23 +321,6 @@ fun EventSettingsScreen(
         )
     }
 
-    if (showRepeatLimitDialog) {
-        AlertDialog(
-            onDismissRequest = { showRepeatLimitDialog = false },
-            title = { Text(stringResource(R.string.tier_repeat_event_title)) },
-            text = { Text(stringResource(R.string.tier_repeat_event_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showRepeatLimitDialog = false
-                    onNavigateToUpgrade()
-                }) { Text(stringResource(R.string.tier_upgrade_button)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRepeatLimitDialog = false }) { Text(stringResource(R.string.common_cancel)) }
-            }
-        )
-    }
-
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -331,7 +343,9 @@ fun EventSettingsScreen(
                             eventRef.delete().await()
                             ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_deleted_event, eventName), eventName = eventName)
                             onEventDeleted()
-                        } catch (_: Exception) { }
+                        } catch (_: Exception) {
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed)) }
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.common_delete), color = AccentOrange)
@@ -344,6 +358,7 @@ fun EventSettingsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.event_settings_title), style = MaterialTheme.typography.titleMedium) },
@@ -631,29 +646,88 @@ fun EventSettingsScreen(
                     )
                 }
 
-                // Repeat event
+                // Duplicate event
                 item {
                     SettingsActionItem(
                         icon = Icons.Default.ContentCopy,
                         title = stringResource(R.string.event_settings_repeat),
                         description = stringResource(R.string.event_settings_repeat_desc),
                         onClick = {
-                            if (TierLimits.canRepeatEvent(settings.premiumTier)) {
-                                onRepeatEvent?.invoke(
-                                    eventName,
-                                    eventDescription,
-                                    eventTheme,
-                                    eventLocationName,
-                                    enabledModuleNames
-                                )
-                            } else {
-                                showRepeatLimitDialog = true
-                            }
+                            onDuplicateEvent?.invoke(
+                                eventName,
+                                eventDescription,
+                                eventLocationName,
+                                eventIntroText,
+                                eventTheme,
+                                enabledModuleNames
+                            )
                         }
                     )
                 }
 
-                // Danger zone
+                // Module colors section
+                if (enabledModuleNames.isNotEmpty()) {
+                    item {
+                        // Color picker dialog
+                        colorPickerModuleName?.let { moduleName ->
+                            val currentColorHex = moduleColors[moduleName]
+                            val currentColor = currentColorHex?.let { hexToColor(it) }
+                                ?: defaultModuleColor(moduleName)
+                            ModuleColorPickerDialog(
+                                currentColor = currentColor,
+                                onColorSelected = { option ->
+                                    moduleColors = moduleColors + (moduleName to option.hex)
+                                    colorPickerModuleName = null
+                                    scope.launch {
+                                        EventRepository(context).updateModuleColor(eventId, moduleName, option.hex)
+                                    }
+                                },
+                                onDismiss = { colorPickerModuleName = null }
+                            )
+                        }
+
+                        BetterMingleCard {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.module_colors_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                enabledModuleNames.forEach { moduleName ->
+                                    val colorHex = moduleColors[moduleName]
+                                    val color = colorHex?.let { hexToColor(it) }
+                                        ?: defaultModuleColor(moduleName)
+                                    val displayName = moduleDisplayName(moduleName)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = Spacing.xs),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = displayName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .clip(CircleShape)
+                                                .background(color, CircleShape)
+                                                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), CircleShape)
+                                                .clickable { colorPickerModuleName = moduleName }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Danger zone (only for event creator, not co-organizers)
+            if (isCreator) {
                 item {
                     Spacer(modifier = Modifier.height(Spacing.md))
                     Text(
@@ -761,4 +835,35 @@ private fun SettingsActionItem(
             }
         }
     }
+}
+
+private fun defaultModuleColor(moduleName: String): androidx.compose.ui.graphics.Color = when (moduleName) {
+    "VOTING" -> PrimaryBlue
+    "EXPENSES" -> AccentOrange
+    "CARPOOL" -> Success
+    "ROOMS" -> AccentGold
+    "CHAT" -> AccentOrange
+    "SCHEDULE" -> PrimaryBlue
+    "TASKS" -> AccentPink
+    "PACKING_LIST" -> Success
+    "WISHLIST" -> AccentPink
+    "CATERING" -> Success
+    "BUDGET" -> AccentGold
+    else -> PrimaryBlue
+}
+
+@Composable
+private fun moduleDisplayName(moduleName: String): String = when (moduleName) {
+    "VOTING" -> stringResource(R.string.create_event_module_voting)
+    "EXPENSES" -> stringResource(R.string.create_event_module_expenses)
+    "CARPOOL" -> stringResource(R.string.create_event_module_carpool)
+    "ROOMS" -> stringResource(R.string.create_event_module_rooms)
+    "CHAT" -> stringResource(R.string.create_event_module_chat)
+    "SCHEDULE" -> stringResource(R.string.create_event_module_schedule)
+    "TASKS" -> stringResource(R.string.create_event_module_tasks)
+    "PACKING_LIST" -> stringResource(R.string.create_event_module_packing)
+    "WISHLIST" -> stringResource(R.string.create_event_module_wishlist)
+    "CATERING" -> stringResource(R.string.create_event_module_catering)
+    "BUDGET" -> stringResource(R.string.create_event_module_budget)
+    else -> moduleName
 }

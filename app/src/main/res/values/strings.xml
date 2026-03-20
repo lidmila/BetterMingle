@@ -143,8 +143,12 @@
     <string name="dashboard_things_count">things</string>
     <string name="dashboard_wishlist">Gifts</string>
     <string name="dashboard_gifts_count">gifts</string>
+    <string name="dashboard_catering">Catering</string>
     <string name="dashboard_add_module">Add module</string>
     <string name="dashboard_remove_module">Remove module</string>
+    <string name="module_colors_title">Module colors</string>
+    <string name="color_picker_title">Choose color</string>
+    <string name="menu_change_color">Change color</string>
 
     <!-- Create Event -->
     <string name="create_event_step_basics">New event</string>
@@ -192,6 +196,9 @@
     <string name="create_event_module_schedule">Schedule</string>
     <string name="create_event_module_tasks">Tasks</string>
     <string name="create_event_module_wishlist">Gifts</string>
+    <string name="create_event_module_catering">Catering</string>
+    <string name="create_event_module_packing">Packing list</string>
+    <string name="create_event_module_budget">Budget</string>
     <string name="create_event_create_button">Create event</string>
     <string name="create_event_security_title">Enhanced security</string>
     <string name="create_event_security_subtitle">For corporate and sensitive events</string>
@@ -229,6 +236,14 @@
     <string name="create_event_template_corporate_desc">Corporate event</string>
     <string name="create_event_template_party">Party</string>
     <string name="create_event_template_party_desc">Party with friends</string>
+    <string name="create_event_template_bachelor">Bachelor party</string>
+    <string name="create_event_template_bachelor_desc">The last party before the wedding</string>
+    <string name="create_event_template_workshop">Workshop</string>
+    <string name="create_event_template_workshop_desc">Work workshop</string>
+    <string name="create_event_template_family">Family reunion</string>
+    <string name="create_event_template_family_desc">Family get-together</string>
+    <string name="create_event_template_sports">Sports tournament</string>
+    <string name="create_event_template_sports_desc">Sports competition</string>
 
     <!-- Tasks -->
     <string name="tasks_title">Tasks</string>
@@ -328,6 +343,12 @@
     <string name="voting_limit_message">You\'ve reached the poll limit in the Free version. Upgrade to Pro for unlimited polls.</string>
     <string name="voting_limit_upgrade">Upgrade to Pro</string>
     <string name="voting_votes_count">votes</string>
+    <string name="voting_deadline_toggle">Set deadline</string>
+    <string name="voting_deadline_select_date">Select date</string>
+    <string name="voting_deadline_select_time">Select time</string>
+    <string name="voting_deadline_hint">Poll will auto-lock at deadline</string>
+    <string name="voting_expired">Expired</string>
+    <string name="voting_ends_in">Ends in %1$s</string>
 
     <!-- Chat -->
     <string name="chat_input_placeholder">Message…</string>
@@ -448,6 +469,13 @@
     <string name="participants_rsvp_declined">Declined</string>
     <string name="participants_rsvp_maybe">Maybe</string>
     <string name="participants_rsvp_pending">Pending</string>
+    <string name="participants_manage_role">Manage role</string>
+    <string name="participants_promote_message">Promote this participant to co-organizer? They will be able to edit event settings.</string>
+    <string name="participants_demote_message">Demote this co-organizer back to participant?</string>
+    <string name="participants_role_updated">Role updated</string>
+    <string name="participants_role_update_error">Failed to update role</string>
+    <string name="participants_coorg_limit_title">Premium feature</string>
+    <string name="participants_coorg_limit_message">Co-organizers are available on Pro and Business plans.</string>
 
     <!-- Rating -->
     <string name="rating_title">Rating</string>
@@ -515,8 +543,8 @@
     <string name="event_settings_edit_error">Error updating event</string>
     <string name="event_settings_edit_action">Edit event</string>
     <string name="event_settings_edit_action_desc">Change name, date, and description</string>
-    <string name="event_settings_repeat">Repeat event</string>
-    <string name="event_settings_repeat_desc">Create a copy with the same modules</string>
+    <string name="event_settings_repeat">Duplicate event</string>
+    <string name="event_settings_repeat_desc">Create a copy with the same settings</string>
     <string name="event_settings_delete_title">Delete event</string>
     <string name="event_settings_delete_confirm">Are you sure you want to permanently delete event \"%1$s\" and all its data? This action cannot be undone.</string>
     <string name="event_settings_delete_action">Delete event</string>
@@ -529,7 +557,7 @@
     <string name="activity_empty_description">Activities will appear once something happens in the event.</string>
 
     <!-- Event Summary -->
-    <string name="summary_title">Event summary</string>
+    <string name="summary_title">Organizer overview</string>
     <string name="summary_subtitle">Your event overview</string>
     <string name="summary_participants">Participants</string>
     <string name="summary_total_expenses">Total expenses</string>
@@ -538,7 +566,7 @@
     <string name="summary_rides">Rides</string>
     <string name="summary_most_active">Most active</string>
     <string name="summary_top_payer">Biggest spender</string>
-    <string name="summary_share_button">Share summary</string>
+    <string name="summary_share_button">Download overview</string>
     <string name="summary_share_chooser">Share summary</string>
     <string name="summary_share_header">Event summary: %1$s</string>
     <string name="summary_share_participants">%1$d participants</string>
@@ -546,6 +574,26 @@
     <string name="summary_share_messages">%1$d messages</string>
     <string name="summary_share_polls">%1$d polls</string>
     <string name="summary_share_footer">Created in BetterMingle</string>
+    <string name="summary_event_info">Event info</string>
+    <string name="summary_location">Location</string>
+    <string name="summary_status">Status</string>
+    <string name="summary_rsvp_accepted">Accepted</string>
+    <string name="summary_rsvp_declined">Declined</string>
+    <string name="summary_rsvp_maybe">Maybe</string>
+    <string name="summary_rsvp_pending">Pending</string>
+    <string name="summary_polls_active">Active</string>
+    <string name="summary_polls_closed">Closed</string>
+    <string name="summary_tasks">Tasks</string>
+    <string name="summary_packing_items">Packing items</string>
+    <string name="summary_wishlist_items">Wishlist items</string>
+    <string name="summary_invite_code">Invite code</string>
+    <string name="summary_download_overview">Download overview</string>
+    <string name="summary_share_rsvp">RSVP: %1$d accepted, %2$d declined, %3$d maybe, %4$d pending</string>
+    <string name="summary_share_polls_breakdown">%1$d polls (%2$d active, %3$d closed)</string>
+    <string name="summary_share_tasks">%1$d tasks</string>
+    <string name="summary_share_packing">%1$d packing items</string>
+    <string name="summary_share_wishlist">%1$d wishlist items</string>
+    <string name="summary_other_modules">Other modules</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -589,6 +637,12 @@
     <string name="settings_copyright">Better Mingle © 2026</string>
     <string name="settings_debug_tier_switch">Tier switching</string>
     <string name="settings_debug_tier_current">Current: %1$s</string>
+    <!-- Legal -->
+    <string name="settings_section_legal">Legal</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_terms_of_service">Terms of service</string>
+    <string name="settings_delete_account_request">Request account deletion</string>
+    <string name="settings_delete_account_request_desc">Request deletion via website</string>
     <string name="settings_section_danger">Danger zone</string>
     <string name="settings_delete_account">Delete account</string>
     <string name="settings_delete_account_desc">Permanently delete account and all data</string>
@@ -625,23 +679,26 @@
     <string name="upgrade_plan_business">Business</string>
     <string name="upgrade_billing_monthly">Monthly</string>
     <string name="upgrade_billing_yearly">Yearly (save)</string>
-    <string name="upgrade_price_pro_monthly">79 CZK</string>
-    <string name="upgrade_price_pro_yearly">799 CZK</string>
-    <string name="upgrade_price_business_monthly">119 CZK</string>
-    <string name="upgrade_price_business_yearly">1 190 CZK</string>
+    <string name="upgrade_price_pro_monthly">129 CZK</string>
+    <string name="upgrade_price_pro_yearly">1 299 CZK</string>
+    <string name="upgrade_price_business_monthly">199 CZK</string>
+    <string name="upgrade_price_business_yearly">1 999 CZK</string>
     <string name="upgrade_period_monthly">/ month</string>
     <string name="upgrade_period_yearly">/ year</string>
     <string name="upgrade_card_title_pro">Mingle Pro</string>
     <string name="upgrade_card_title_business">Mingle Business</string>
-    <string name="upgrade_feature_pro_events">Up to 5 events (Free: max 2)</string>
-    <string name="upgrade_feature_pro_participants">Up to 100 participants (Free: max 8)</string>
-    <string name="upgrade_feature_pro_polls">Unlimited polls (Free: max 1)</string>
-    <string name="upgrade_feature_export_csv">Export expenses (CSV)</string>
+    <string name="upgrade_feature_pro_events">Up to 3 events (Free: max 1)</string>
+    <string name="upgrade_feature_pro_participants">Up to 100 participants (Free: max 20)</string>
+    <string name="upgrade_feature_pro_polls">Up to 3 polls (Free: max 1)</string>
+    <string name="upgrade_feature_organizer_overview">Organizer overview</string>
     <string name="upgrade_feature_multi_organizers">Multiple organizers</string>
+    <string name="upgrade_feature_premium_modules">Premium modules (Catering, Rooms, Carpool)</string>
     <string name="upgrade_feature_no_ads">No ads</string>
     <string name="upgrade_feature_business_events">Unlimited events</string>
     <string name="upgrade_feature_business_participants">Unlimited participants</string>
     <string name="upgrade_feature_business_polls">Unlimited polls</string>
+    <string name="upgrade_feature_business_modules">Exclusive modules (Budget)</string>
+    <string name="upgrade_feature_business_templates">Premium templates</string>
     <string name="upgrade_button_pro">Get Mingle Pro</string>
     <string name="upgrade_button_business">Get Mingle Business</string>
     <string name="upgrade_lifetime_title">Lifetime</string>
@@ -649,6 +706,55 @@
     <string name="upgrade_lifetime_desc">one-time · Business features forever</string>
     <string name="upgrade_lifetime_button">Buy Lifetime</string>
     <string name="upgrade_disclaimer">Subscription auto-renews. You can cancel anytime in Google Play.</string>
+    <string name="upgrade_has_plan">You have an active plan: %1$s</string>
+    <string name="upgrade_has_lifetime">You have lifetime access</string>
+    <string name="upgrade_expires">Expires: %1$s</string>
+    <string name="upgrade_active_badge">Active</string>
+    <string name="upgrade_downgrade">Downgrade</string>
+    <string name="upgrade_compare_title">Compare all plans</string>
+    <string name="upgrade_compare_feature">Feature</string>
+    <string name="upgrade_compare_free">Free</string>
+    <string name="upgrade_compare_pro">Pro</string>
+    <string name="upgrade_compare_business">Business</string>
+    <string name="upgrade_compare_events">Events</string>
+    <string name="upgrade_compare_events_free">max 1</string>
+    <string name="upgrade_compare_events_pro">max 3</string>
+    <string name="upgrade_compare_participants">Participants / event</string>
+    <string name="upgrade_compare_participants_free">max 20</string>
+    <string name="upgrade_compare_participants_pro">max 100</string>
+    <string name="upgrade_compare_polls">Polls</string>
+    <string name="upgrade_compare_polls_free">max 1</string>
+    <string name="upgrade_compare_polls_pro">max 3</string>
+    <string name="upgrade_compare_avatars">Avatars</string>
+    <string name="upgrade_compare_avatars_free">15</string>
+    <string name="upgrade_compare_avatars_premium">40</string>
+    <string name="upgrade_compare_templates">Premium templates</string>
+    <string name="upgrade_compare_ads">No ads</string>
+    <string name="upgrade_compare_export_summary">Organizer overview</string>
+    <string name="upgrade_compare_co_organizers">Co-organizers</string>
+    <string name="upgrade_compare_repeat_event">Repeat event</string>
+    <string name="upgrade_compare_unlimited">Unlimited</string>
+    <string name="upgrade_compare_chat">Chat</string>
+    <string name="upgrade_compare_expenses">Expenses</string>
+    <string name="upgrade_compare_carpool">Carpool</string>
+    <string name="upgrade_compare_rooms">Rooms</string>
+    <string name="upgrade_compare_schedule">Schedule</string>
+    <string name="upgrade_compare_tasks">Tasks</string>
+    <string name="upgrade_compare_packing">Packing list</string>
+    <string name="upgrade_compare_wishlist">Wishlist</string>
+    <string name="upgrade_compare_catering">Catering</string>
+    <string name="upgrade_compare_budget">Budget</string>
+
+    <!-- Coach marks -->
+    <string name="coach_mark_got_it">Got it</string>
+    <string name="coach_mark_event_list">Tap + to create your first event</string>
+    <string name="coach_mark_dashboard">Tap a module to enter. Organizers can hold to reorder and add or remove modules.</string>
+    <string name="coach_mark_create_event">Choose a template for quick setup</string>
+
+    <!-- Settings: Coach marks -->
+    <string name="settings_coach_marks_reset">Show hints again</string>
+    <string name="settings_coach_marks_reset_desc">Reset all in-app hints and tips</string>
+    <string name="settings_coach_marks_reset_done">Hints have been reset</string>
 
     <!-- Help -->
     <string name="help_title">Help</string>
@@ -659,27 +765,31 @@
     <string name="help_contact_send_email">Send e-mail</string>
     <string name="help_contact_email">hello@codewhiskers.app</string>
     <string name="help_faq1_q">How to create a new event?</string>
-    <string name="help_faq1_a">Tap the + button on the bottom bar and fill in the name, date, and description. After creating the event, you can add modules like voting, expenses, or carpool.</string>
+    <string name="help_faq1_a">Tap the + button on the bottom bar, choose a template or start from scratch, and fill in the name, date, and description. You then select which modules to enable. Note: Carpool, Rooms, and Catering modules are available only in PRO and above.</string>
     <string name="help_faq2_q">How to invite friends?</string>
-    <string name="help_faq2_a">In the event settings, you\'ll find a sharing link. You can copy it or share it directly through any app. Invitees join with one tap.</string>
+    <string name="help_faq2_a">On the event dashboard, tap the share icon or go to Settings to find the invite link. You can copy it or share it via any app. Invitees join with one tap. If approval is required, the organizer must confirm each new participant.</string>
     <string name="help_faq3_q">How do expenses work?</string>
-    <string name="help_faq3_a">In the Expenses module, add an expense and enter the amount. You can choose who paid and how to split it. The app automatically calculates settlements.</string>
+    <string name="help_faq3_a">In the Expenses module, anyone can add an expense — enter the amount, choose who paid, and how to split it. The app calculates settlements automatically. Only the organizer can delete expenses.</string>
     <string name="help_faq4_q">How does voting work?</string>
-    <string name="help_faq4_a">In the Voting module, create a poll with options and other participants can vote. Results are shown in real time.</string>
+    <string name="help_faq4_a">The organizer creates polls with options in the Voting module. All participants can vote and results appear in real time. The Free plan allows 1 poll, PRO up to 3, and Business unlimited.</string>
     <string name="help_faq5_q">How to change event settings?</string>
-    <string name="help_faq5_a">On the event dashboard, tap Settings. Here you can change the name, description, security, budget, and more.</string>
+    <string name="help_faq5_a">On the event dashboard, tap Settings. Only the organizer and co-organizers can change the name, description, status, security settings, and other options. Regular participants can view but not edit settings.</string>
     <string name="help_faq6_q">How does carpool work?</string>
-    <string name="help_faq6_a">In the Carpool module, you can offer seats in your car or join someone else\'s ride. Everyone can see who is driving and how many seats are available.</string>
+    <string name="help_faq6_a">In the Carpool module (PRO and above), you can offer seats in your car or join someone else\'s ride. Everyone sees who is driving and available seats. The organizer can remove rides.</string>
     <string name="help_faq7_q">How do rooms work?</string>
-    <string name="help_faq7_a">In the Rooms module, anyone can create rooms with a set capacity. Tap a room to join it — you can only be in one room at a time. Tap again to leave.</string>
+    <string name="help_faq7_a">In the Rooms module (PRO and above), anyone can create rooms with a set capacity. Tap a room to join — you can be in one room at a time. Tap again to leave. The organizer can delete rooms.</string>
     <string name="help_faq8_q">What is the packing list?</string>
-    <string name="help_faq8_a">The packing list is a shared checklist of items needed for the event. Anyone can add items and mark what\'s already covered, so nothing gets forgotten.</string>
+    <string name="help_faq8_a">The packing list is a shared checklist of items needed for the event. Any participant can add items and mark them as covered. The organizer can delete items.</string>
     <string name="help_faq_wishlist_q">What is the gift list?</string>
     <string name="help_faq_wishlist_a">The gift list lets the organizer add desired gifts. Participants can reserve items or mark them as bought so nothing is purchased twice.</string>
-    <string name="help_faq9_q">What is the difference between Free and Pro?</string>
-    <string name="help_faq9_a">The Free plan allows up to 2 events with max 8 participants and 1 poll. Pro unlocks up to 5 events, 100 participants, unlimited polls, expense export, and removes ads.</string>
+    <string name="help_faq_catering_q">What is the Catering module?</string>
+    <string name="help_faq_catering_a">The Catering module (PRO and above) shows a dietary preference overview for all event participants. Each participant can set their preferences (vegetarian, vegan, gluten-free, etc.) in their profile. The organizer sees a summary of how many people have each preference.</string>
+    <string name="help_faq9_q">What is the difference between Free, Pro, and Business?</string>
+    <string name="help_faq9_a">Free: 1 event, 20 participants, 1 poll, ads. PRO: 3 events, 100 participants, 3 polls, no ads, co-organizers, premium modules (Catering, Rooms, Carpool), organizer overview, summary export, event repetition. Business: unlimited events, participants, polls, plus premium templates and everything in PRO.</string>
     <string name="help_faq10_q">How to secure an event with a PIN?</string>
-    <string name="help_faq10_a">In event settings, enable PIN protection and set a code. Anyone who wants to join will need to enter the PIN first.</string>
+    <string name="help_faq10_a">In event settings, the organizer can enable PIN protection and set a code. Anyone who wants to join must enter the PIN first.</string>
+    <string name="help_faq_roles_q">What can organizers and participants do?</string>
+    <string name="help_faq_roles_a">The organizer (event creator) can add/remove/reorder modules, change event settings, manage participants, promote co-organizers (PRO+), delete the event, and export summary (PRO+). Co-organizers have the same permissions except deleting the event. Regular participants can view content, vote, add expenses, tasks, messages, and join carpool/rooms.</string>
 
     <!-- Notifications -->
     <string name="notifications_title">Notifications</string>
@@ -796,15 +906,78 @@
     <string name="settings_language_system">System</string>
 
     <!-- Tier Enforcement -->
-    <string name="tier_export_expenses_title">Export expenses</string>
-    <string name="tier_export_expenses_message">Exporting expenses to CSV is available in the Pro plan and above.</string>
-    <string name="tier_export_summary_title">Export summary</string>
-    <string name="tier_export_summary_message">Sharing event summary is available in the Pro plan and above.</string>
+    <string name="tier_export_summary_title">Organizer overview</string>
+    <string name="tier_export_summary_message">The organizer overview is available in the Pro plan and above.</string>
     <string name="tier_co_organizers_title">Co-organizers</string>
     <string name="tier_co_organizers_message">Adding co-organizers is available in the Pro plan and above.</string>
     <string name="tier_repeat_event_title">Repeat event</string>
     <string name="tier_repeat_event_message">Repeating events is available in the Pro plan and above.</string>
     <string name="tier_upgrade_button">Upgrade</string>
-    <string name="expenses_export">Export CSV</string>
     <string name="summary_export">Share summary</string>
+
+    <!-- Catering module -->
+    <string name="catering_title">Catering</string>
+    <string name="catering_empty">No dietary preferences found among participants</string>
+    <string name="catering_summary_title">Dietary overview</string>
+    <string name="catering_participants_count">%1$d participants</string>
+    <string name="catering_participant_count">%1$d participant</string>
+
+    <!-- Dietary preferences -->
+    <string name="dietary_preferences_label">Dietary preferences</string>
+    <string name="dietary_vegetarian">Vegetarian</string>
+    <string name="dietary_vegan">Vegan</string>
+    <string name="dietary_gluten_free">Gluten-free</string>
+    <string name="dietary_lactose_free">Lactose-free</string>
+    <string name="dietary_halal">Halal</string>
+    <string name="dietary_kosher">Kosher</string>
+    <string name="dietary_add_custom">Add custom</string>
+
+    <!-- Premium modules -->
+    <string name="module_premium_locked">Available in PRO</string>
+
+    <!-- Error messages -->
+    <string name="error_load_failed">Failed to load data. Try again.</string>
+    <string name="error_save_failed">Failed to save. Try again.</string>
+    <string name="error_delete_failed">Failed to delete. Try again.</string>
+    <string name="error_network">Connection error. Check your internet.</string>
+
+    <!-- Accessibility -->
+    <string name="cd_toggle_password">Toggle password visibility</string>
+    <string name="cd_delete_item">Delete item</string>
+    <string name="cd_open_menu">Open menu</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_add_item">Add item</string>
+
+    <!-- Poll close confirmation -->
+    <string name="voting_close_poll_confirm_title">Close poll?</string>
+    <string name="voting_close_poll_confirm_message">Once closed, no more votes can be cast. This cannot be undone.</string>
+
+    <!-- Create event validation -->
+    <string name="create_event_name_required">Event name is required</string>
+    <string name="create_event_name_too_long">Event name must be under 100 characters</string>
+    <string name="create_event_desc_too_long">Description must be under 500 characters</string>
+
+    <!-- Budget module -->
+    <string name="budget_title">Budget</string>
+    <string name="budget_empty">No budget set yet</string>
+    <string name="budget_empty_description">Tap + to create your first budget category.</string>
+    <string name="budget_total">Total budget</string>
+    <string name="budget_spent">Spent</string>
+    <string name="budget_remaining">Remaining</string>
+    <string name="budget_add_category">Add category</string>
+    <string name="budget_edit_category">Edit category</string>
+    <string name="budget_category_name">Category name</string>
+    <string name="budget_category_amount">Planned amount</string>
+    <string name="budget_add_expense">Add expense</string>
+    <string name="budget_expense_amount">Expense amount</string>
+    <string name="budget_expense_note">Note (optional)</string>
+    <string name="budget_delete_title">Delete category</string>
+    <string name="budget_delete_confirm">Delete \"%1$s\" and all its expenses?</string>
+    <string name="budget_over_budget">Over budget!</string>
+    <string name="budget_expense_history">Expenses</string>
+    <string name="budget_no_expenses">No expenses yet</string>
+    <string name="dashboard_budget">Budget</string>
+
+    <!-- Business tier modules -->
+    <string name="module_business_locked">Available in Business</string>
 </resources>

@@ -94,7 +94,23 @@ service cloud.firestore {
         }
       }
 
-      // Rooms, schedule, messages, packing, photos, ratings
+      // Budget categories
+      match /budgetCategories/{categoryId} {
+        allow read: if request.auth != null && isEventParticipant(eventId);
+        allow create: if request.auth != null && isEventOrganizer(eventId);
+        allow update, delete: if request.auth != null && isEventOrganizer(eventId);
+
+        match /expenses/{expenseId} {
+          allow read: if request.auth != null && isEventParticipant(eventId);
+          allow create: if request.auth != null && isEventParticipant(eventId);
+          allow update, delete: if request.auth != null && (
+            isEventOrganizer(eventId) ||
+            resource.data.addedBy == request.auth.uid
+          );
+        }
+      }
+
+      // Rooms, schedule, messages, packing, ratings, lastSeen, etc.
       match /{subcollection}/{docId} {
         allow read: if request.auth != null && isEventParticipant(eventId);
         allow write: if request.auth != null && isEventParticipant(eventId);

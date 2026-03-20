@@ -90,7 +90,9 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
                             participantCounts = _uiState.value.participantCounts + (eventId to count)
                         )
                     }
-                } catch (_: Exception) { }
+                } catch (e: Exception) {
+                    Log.w("EventListViewModel", "Failed to load participant count for $eventId", e)
+                }
             }
         }
     }
@@ -99,7 +101,9 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             try {
                 repository.syncFromCloud()
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.e("EventListViewModel", "Cloud sync failed", e)
+            }
         }
     }
 
@@ -150,7 +154,9 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             try {
                 repository.deleteEvent(eventId)
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.e("EventListViewModel", "Failed to delete event $eventId", e)
+            }
         }
     }
 }

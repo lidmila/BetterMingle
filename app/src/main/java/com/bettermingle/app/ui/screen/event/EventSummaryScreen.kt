@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,17 +22,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.HowToVote
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Redeem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -42,6 +49,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,20 +76,40 @@ import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.data.preferences.AppSettings
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private data class SummaryStats(
     val eventName: String = "",
+    val eventDescription: String = "",
+    val eventTheme: String = "",
+    val locationName: String = "",
+    val locationAddress: String = "",
+    val startDate: Long? = null,
+    val endDate: Long? = null,
+    val status: String = "",
+    val inviteCode: String = "",
     val participantCount: Int = 0,
+    val acceptedCount: Int = 0,
+    val declinedCount: Int = 0,
+    val maybeCount: Int = 0,
+    val pendingCount: Int = 0,
     val totalExpenses: Double = 0.0,
     val topPayer: String = "",
     val topPayerAmount: Double = 0.0,
     val messageCount: Int = 0,
     val pollCount: Int = 0,
+    val activePollCount: Int = 0,
+    val closedPollCount: Int = 0,
     val rideCount: Int = 0,
+    val taskCount: Int = 0,
+    val packingItemCount: Int = 0,
+    val wishlistItemCount: Int = 0,
     val mostActiveParticipant: String = ""
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EventSummaryScreen(
     eventId: String,
@@ -90,6 +118,8 @@ fun EventSummaryScreen(
 ) {
     var stats by remember { mutableStateOf(SummaryStats()) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     val settingsManager = remember { SettingsManager(context) }
     val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
     var showExportLimitDialog by remember { mutableStateOf(false) }
@@ -101,10 +131,32 @@ fun EventSummaryScreen(
         try {
             val eventDoc = eventRef.get().await()
             val eventName = eventDoc.getString("name") ?: ""
+            val eventDescription = eventDoc.getString("description") ?: ""
+            val eventTheme = eventDoc.getString("theme") ?: ""
+            val locationName = eventDoc.getString("locationName") ?: ""
+            val locationAddress = eventDoc.getString("locationAddress") ?: ""
+            val startDate = (eventDoc.get("startDate") as? Number)?.toLong()
+            val endDate = (eventDoc.get("endDate") as? Number)?.toLong()
+            val status = eventDoc.getString("status") ?: ""
+            val inviteCode = eventDoc.getString("inviteCode") ?: ""
 
+            // Participants + RSVP breakdown
             val parts = eventRef.collection("participants").get().await()
             val participantCount = parts.size()
+            var acceptedCount = 0
+            var declinedCount = 0
+            var maybeCount = 0
+            var pendingCount = 0
+            for (doc in parts.documents) {
+                when ((doc.getString("rsvp") ?: "PENDING").uppercase()) {
+                    "ACCEPTED" -> acceptedCount++
+                    "DECLINED" -> declinedCount++
+                    "MAYBE" -> maybeCount++
+                    else -> pendingCount++
+                }
+            }
 
+            // Expenses
             val expenses = eventRef.collection("expenses").get().await()
             val totalExpenses = expenses.documents.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
 
@@ -116,8 +168,6 @@ fun EventSummaryScreen(
                 payerTotals[payer] = (payerTotals[payer] ?: 0.0) + amount
             }
             val topPayerEntry = payerTotals.maxByOrNull { it.value }
-
-            // Resolve top payer name
             var topPayerName = ""
             if (topPayerEntry != null) {
                 try {
@@ -126,16 +176,40 @@ fun EventSummaryScreen(
                 } catch (_: Exception) { }
             }
 
+            // Messages
             val messages = eventRef.collection("messages").get().await()
             val messageCount = messages.size()
 
+            // Polls — active vs closed
             val polls = eventRef.collection("polls").get().await()
             val pollCount = polls.size()
+            val now = System.currentTimeMillis()
+            var activePollCount = 0
+            var closedPollCount = 0
+            for (doc in polls.documents) {
+                val isClosed = doc.getBoolean("isClosed") ?: false
+                val deadline = (doc.get("deadline") as? Number)?.toLong()
+                val isExpired = deadline != null && now > deadline
+                if (isClosed || isExpired) closedPollCount++ else activePollCount++
+            }
 
+            // Rides
             val rides = eventRef.collection("carpoolRides").get().await()
             val rideCount = rides.size()
 
-            // Most active: count activity logs per actor
+            // Tasks
+            val tasks = eventRef.collection("tasks").get().await()
+            val taskCount = tasks.size()
+
+            // Packing items
+            val packingItems = eventRef.collection("packingItems").get().await()
+            val packingItemCount = packingItems.size()
+
+            // Wishlist items
+            val wishlistItems = eventRef.collection("wishlistItems").get().await()
+            val wishlistItemCount = wishlistItems.size()
+
+            // Most active participant
             val activities = eventRef.collection("activity").get().await()
             val actorCounts = mutableMapOf<String, Int>()
             for (doc in activities.documents) {
@@ -146,21 +220,42 @@ fun EventSummaryScreen(
 
             stats = SummaryStats(
                 eventName = eventName,
+                eventDescription = eventDescription,
+                eventTheme = eventTheme,
+                locationName = locationName,
+                locationAddress = locationAddress,
+                startDate = startDate,
+                endDate = endDate,
+                status = status,
+                inviteCode = inviteCode,
                 participantCount = participantCount,
+                acceptedCount = acceptedCount,
+                declinedCount = declinedCount,
+                maybeCount = maybeCount,
+                pendingCount = pendingCount,
                 totalExpenses = totalExpenses,
                 topPayer = topPayerName,
                 topPayerAmount = topPayerEntry?.value ?: 0.0,
                 messageCount = messageCount,
                 pollCount = pollCount,
+                activePollCount = activePollCount,
+                closedPollCount = closedPollCount,
                 rideCount = rideCount,
+                taskCount = taskCount,
+                packingItemCount = packingItemCount,
+                wishlistItemCount = wishlistItemCount,
                 mostActiveParticipant = mostActive
             )
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+        }
     }
 
     val currencyCzk = stringResource(R.string.dashboard_currency_czk)
+    val dateFormat = remember { SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.summary_title), style = MaterialTheme.typography.titleMedium) },
@@ -181,76 +276,133 @@ fun EventSummaryScreen(
                 .padding(Spacing.screenPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Event name header
-            Text(
-                text = stats.eventName,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(Spacing.xs))
-            Text(
-                text = stringResource(R.string.summary_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // ── Section 1: Event Info ──
+            BetterMingleCard {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.summary_event_info),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    Text(
+                        text = stats.eventName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (stats.eventTheme.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = stats.eventTheme,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PrimaryBlue
+                        )
+                    }
+                    val sd = stats.startDate
+                    val ed = stats.endDate
+                    if (sd != null) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        val dateStr = buildString {
+                            append(dateFormat.format(Date(sd)))
+                            if (ed != null) {
+                                append(" – ")
+                                append(dateFormat.format(Date(ed)))
+                            }
+                        }
+                        Text(
+                            text = dateStr,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (stats.locationName.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = "${stringResource(R.string.summary_location)}: ${stats.locationName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (stats.status.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = "${stringResource(R.string.summary_status)}: ${stats.status}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (stats.inviteCode.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = "${stringResource(R.string.summary_invite_code)}: ${stats.inviteCode}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
 
-            Spacer(modifier = Modifier.height(Spacing.xl))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
-            // Stats grid
+            // ── Section 2: Participants + RSVP breakdown ──
+            BetterMingleCard {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(AccentPink.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.People,
+                                contentDescription = null,
+                                tint = AccentPink,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Column {
+                            Text(
+                                text = "${stats.participantCount}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.summary_participants),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        RsvpChip(stringResource(R.string.summary_rsvp_accepted), stats.acceptedCount, Success)
+                        RsvpChip(stringResource(R.string.summary_rsvp_declined), stats.declinedCount, AccentPink)
+                        RsvpChip(stringResource(R.string.summary_rsvp_maybe), stats.maybeCount, AccentOrange)
+                        RsvpChip(stringResource(R.string.summary_rsvp_pending), stats.pendingCount, MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // ── Section 3: Expenses ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
-                StatCard(
-                    icon = Icons.Default.People,
-                    value = "${stats.participantCount}",
-                    label = stringResource(R.string.summary_participants),
-                    color = AccentPink,
-                    modifier = Modifier.weight(1f)
-                )
                 StatCard(
                     icon = Icons.Default.Payments,
                     value = if (stats.totalExpenses > 0) "${String.format("%,.0f", stats.totalExpenses)} $currencyCzk" else "0 $currencyCzk",
                     label = stringResource(R.string.summary_total_expenses),
                     color = AccentOrange,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Spacing.sm))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-            ) {
-                StatCard(
-                    icon = Icons.AutoMirrored.Filled.Chat,
-                    value = "${stats.messageCount}",
-                    label = stringResource(R.string.summary_messages),
-                    color = Success,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Default.HowToVote,
-                    value = "${stats.pollCount}",
-                    label = stringResource(R.string.summary_polls),
-                    color = PrimaryBlue,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Spacing.sm))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-            ) {
-                StatCard(
-                    icon = Icons.Default.DirectionsCar,
-                    value = "${stats.rideCount}",
-                    label = stringResource(R.string.summary_rides),
-                    color = Success,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
@@ -264,7 +416,7 @@ fun EventSummaryScreen(
 
             // Top payer highlight
             if (stats.topPayer.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Spacing.lg))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 BetterMingleCard {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -291,15 +443,106 @@ fun EventSummaryScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // ── Section 4: Polls ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                StatCard(
+                    icon = Icons.Default.HowToVote,
+                    value = "${stats.pollCount}",
+                    label = stringResource(R.string.summary_polls),
+                    color = PrimaryBlue,
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    icon = Icons.AutoMirrored.Filled.Chat,
+                    value = "${stats.messageCount}",
+                    label = stringResource(R.string.summary_messages),
+                    color = Success,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (stats.pollCount > 0) {
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    RsvpChip(stringResource(R.string.summary_polls_active), stats.activePollCount, PrimaryBlue)
+                    RsvpChip(stringResource(R.string.summary_polls_closed), stats.closedPollCount, Success)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // ── Section 5: Other modules ──
+            Text(
+                text = stringResource(R.string.summary_other_modules),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                StatCard(
+                    icon = Icons.Default.DirectionsCar,
+                    value = "${stats.rideCount}",
+                    label = stringResource(R.string.summary_rides),
+                    color = Success,
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    icon = Icons.Default.Checklist,
+                    value = "${stats.taskCount}",
+                    label = stringResource(R.string.summary_tasks),
+                    color = PrimaryBlue,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                StatCard(
+                    icon = Icons.Default.Inventory2,
+                    value = "${stats.packingItemCount}",
+                    label = stringResource(R.string.summary_packing_items),
+                    color = AccentOrange,
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    icon = Icons.Default.Redeem,
+                    value = "${stats.wishlistItemCount}",
+                    label = stringResource(R.string.summary_wishlist_items),
+                    color = AccentPink,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
             Spacer(modifier = Modifier.height(Spacing.xl))
 
-            // Share button
+            // ── CTA: Download overview ──
             val shareHeaderStr = stringResource(R.string.summary_share_header, stats.eventName)
             val shareParticipantsStr = stringResource(R.string.summary_share_participants, stats.participantCount)
+            val shareRsvpStr = stringResource(R.string.summary_share_rsvp, stats.acceptedCount, stats.declinedCount, stats.maybeCount, stats.pendingCount)
             val shareExpensesStr = stringResource(R.string.summary_share_expenses, String.format("%,.0f", stats.totalExpenses))
             val shareMessagesStr = stringResource(R.string.summary_share_messages, stats.messageCount)
-            val sharePollsStr = stringResource(R.string.summary_share_polls, stats.pollCount)
+            val sharePollsStr = stringResource(R.string.summary_share_polls_breakdown, stats.pollCount, stats.activePollCount, stats.closedPollCount)
+            val shareTasksStr = stringResource(R.string.summary_share_tasks, stats.taskCount)
+            val sharePackingStr = stringResource(R.string.summary_share_packing, stats.packingItemCount)
+            val shareWishlistStr = stringResource(R.string.summary_share_wishlist, stats.wishlistItemCount)
             val shareFooterStr = stringResource(R.string.summary_share_footer)
+
             if (showExportLimitDialog) {
                 AlertDialog(
                     onDismissRequest = { showExportLimitDialog = false },
@@ -328,9 +571,14 @@ fun EventSummaryScreen(
                     val shareText = buildString {
                         appendLine("\uD83D\uDCCA $shareHeaderStr")
                         appendLine("\uD83D\uDC65 $shareParticipantsStr")
+                        appendLine(shareRsvpStr)
                         if (stats.totalExpenses > 0) appendLine("\uD83D\uDCB0 $shareExpensesStr")
                         appendLine("\uD83D\uDCAC $shareMessagesStr")
                         appendLine("\uD83D\uDDF3\uFE0F $sharePollsStr")
+                        if (stats.rideCount > 0) appendLine("\uD83D\uDE97 ${stats.rideCount} rides")
+                        if (stats.taskCount > 0) appendLine("\u2705 $shareTasksStr")
+                        if (stats.packingItemCount > 0) appendLine("\uD83C\uDF92 $sharePackingStr")
+                        if (stats.wishlistItemCount > 0) appendLine("\uD83C\uDF81 $shareWishlistStr")
                         appendLine("\n$shareFooterStr")
                     }
                     val intent = Intent(Intent.ACTION_SEND).apply {
@@ -342,6 +590,23 @@ fun EventSummaryScreen(
                 isCta = true
             )
         }
+    }
+}
+
+@Composable
+private fun RsvpChip(label: String, count: Int, color: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = "$label: $count",
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

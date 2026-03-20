@@ -67,7 +67,25 @@
       "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/$HOME/.config/firebase/**)",
       "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/Roaming/**)",
       "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/**)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/lidmi/Documents/GitHub/BetterMingle/app/src/main/java/com/bettermingle/app/ui/screen/event/**)",
+      "Bash(done)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew.bat assembleDebug)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(./gradlew :app:compileDebugKotlin --no-daemon)",
+      "Bash(./gradlew.bat :app:compileDebugKotlin --console=plain)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" ./gradlew.bat :app:compileDebugKotlin --console=plain)",
+      "Bash(./gradlew.bat compileDebugKotlin)",
+      "Bash(tee /tmp/build.log)",
+      "Bash(git status:*)",
+      "Bash(./gradlew.bat :app:compileDebugKotlin)",
+      "Bash(echo \"EXIT_CODE: $?\")"
     ]
   }
 }

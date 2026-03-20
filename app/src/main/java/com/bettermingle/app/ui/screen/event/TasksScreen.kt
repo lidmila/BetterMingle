@@ -31,7 +31,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -94,6 +97,8 @@ import com.bettermingle.app.ui.theme.TextOnColor
 
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -119,6 +124,16 @@ fun TasksScreen(
     val userNames = remember { mutableMapOf<String, String>() }
     var showCreateDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    var isOrganizer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(eventId) {
+        try {
+            val eventDoc = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId).get().await()
+            isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+    }
 
     fun loadTasks() {
         scope.launch {
@@ -215,6 +230,27 @@ fun TasksScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "TASKS")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

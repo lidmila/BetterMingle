@@ -74,6 +74,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -87,6 +88,8 @@ import com.bettermingle.app.data.model.PREDEFINED_THEMES
 import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
+import com.bettermingle.app.ui.component.CoachMarkBanner
+import com.bettermingle.app.ui.component.CoachMarkIds
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
@@ -123,6 +126,9 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Backpack
+import androidx.compose.material.icons.filled.Restaurant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +136,12 @@ fun CreateEventScreen(
     onEventCreated: (String) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToUpgrade: () -> Unit = {},
+    prefillName: String? = null,
+    prefillDescription: String? = null,
+    prefillLocation: String? = null,
+    prefillIntroText: String? = null,
+    prefillTheme: String? = null,
+    prefillModules: List<String>? = null,
     viewModel: CreateEventViewModel = viewModel(),
     eventListViewModel: EventListViewModel = viewModel()
 ) {
@@ -179,15 +191,16 @@ fun CreateEventScreen(
     var currentStep by remember { mutableIntStateOf(0) }
     val totalSteps = 3
 
-    // Template state
-    var showTemplateSelection by remember { mutableStateOf(true) }
+    // Template state — skip template selection when prefilling
+    val hasPrefill = prefillName != null
+    var showTemplateSelection by remember { mutableStateOf(!hasPrefill) }
 
     // Step 1 state
-    var eventName by remember { mutableStateOf("") }
-    var eventDescription by remember { mutableStateOf("") }
-    var eventIntroText by remember { mutableStateOf("") }
-    var eventTheme by remember { mutableStateOf("") }
-    var eventLocation by remember { mutableStateOf("") }
+    var eventName by remember { mutableStateOf(prefillName ?: "") }
+    var eventDescription by remember { mutableStateOf(prefillDescription ?: "") }
+    var eventIntroText by remember { mutableStateOf(prefillIntroText ?: "") }
+    var eventTheme by remember { mutableStateOf(prefillTheme ?: "") }
+    var eventLocation by remember { mutableStateOf(prefillLocation ?: "") }
     var startDateMillis by remember { mutableStateOf<Long?>(null) }
     var endDateMillis by remember { mutableStateOf<Long?>(null) }
     var locationLat by remember { mutableStateOf<Double?>(null) }
@@ -201,9 +214,16 @@ fun CreateEventScreen(
     val invitedEmails = remember { mutableStateListOf<String>() }
 
     // Step 3 state
-    val selectedModules = remember { mutableStateListOf(
-        EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT
-    ) }
+    val selectedModules = remember {
+        val prefilled = prefillModules?.mapNotNull { name ->
+            try { EventModule.valueOf(name) } catch (_: Exception) { null }
+        }
+        if (prefilled.isNullOrEmpty()) {
+            mutableStateListOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT)
+        } else {
+            mutableStateListOf(*prefilled.toTypedArray())
+        }
+    }
 
     // Security state
     var securityEnabled by remember { mutableStateOf(false) }
@@ -224,7 +244,7 @@ fun CreateEventScreen(
                     eventTheme = template.theme
                     eventDescription = createContext.getString(template.descriptionHintResId)
                     selectedModules.clear()
-                    selectedModules.addAll(template.modules)
+                    selectedModules.addAll(template.modules.filter { TierLimits.canUseModule(premiumTier, it) })
                 }
                 showTemplateSelection = false
             },
@@ -303,9 +323,9 @@ fun CreateEventScreen(
                 when (step) {
                     0 -> StepBasicInfo(
                         name = eventName,
-                        onNameChange = { eventName = it },
+                        onNameChange = { if (it.length <= 100) eventName = it },
                         description = eventDescription,
-                        onDescriptionChange = { eventDescription = it },
+                        onDescriptionChange = { if (it.length <= 500) eventDescription = it },
                         introText = eventIntroText,
                         onIntroTextChange = { eventIntroText = it },
                         theme = eventTheme,
@@ -342,6 +362,7 @@ fun CreateEventScreen(
                     )
                     2 -> StepModules(
                         selectedModules = selectedModules,
+                        premiumTier = premiumTier,
                         onToggleModule = { module ->
                             if (selectedModules.contains(module)) {
                                 selectedModules.remove(module)
@@ -349,6 +370,7 @@ fun CreateEventScreen(
                                 selectedModules.add(module)
                             }
                         },
+                        onNavigateToUpgrade = onNavigateToUpgrade,
                         securityEnabled = securityEnabled,
                         onSecurityEnabledChange = { securityEnabled = it },
                         eventPin = eventPin,
@@ -375,7 +397,7 @@ fun CreateEventScreen(
                                 }
                                 coverImageUrl = uploadedUrl
                                 viewModel.createEvent(
-                                    name = eventName,
+                                    name = eventName.trim(),
                                     description = eventDescription,
                                     theme = eventTheme,
                                     location = eventLocation,
@@ -575,6 +597,15 @@ private fun StepBasicInfo(
             label = stringResource(R.string.create_event_name_label)
         )
 
+        if (name.length > 90) {
+            Text(
+                text = "${name.length}/100",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (name.length >= 100) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
+            )
+        }
+
         Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
 
         BetterMingleTextField(
@@ -584,6 +615,15 @@ private fun StepBasicInfo(
             singleLine = false,
             maxLines = 5
         )
+
+        if (description.length > 450) {
+            Text(
+                text = "${description.length}/500",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (description.length >= 500) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
+            )
+        }
 
         Text(
             text = stringResource(R.string.create_event_formatting_hint),
@@ -793,7 +833,9 @@ data class ModuleOption(
 @Composable
 private fun StepModules(
     selectedModules: List<EventModule>,
+    premiumTier: PremiumTier = PremiumTier.FREE,
     onToggleModule: (EventModule) -> Unit,
+    onNavigateToUpgrade: () -> Unit = {},
     securityEnabled: Boolean,
     onSecurityEnabledChange: (Boolean) -> Unit,
     eventPin: String,
@@ -816,8 +858,13 @@ private fun StepModules(
         ModuleOption(EventModule.CHAT, stringResource(R.string.create_event_module_chat), Icons.AutoMirrored.Filled.Chat),
         ModuleOption(EventModule.SCHEDULE, stringResource(R.string.create_event_module_schedule), Icons.Default.CalendarMonth),
         ModuleOption(EventModule.TASKS, stringResource(R.string.create_event_module_tasks), Icons.AutoMirrored.Filled.Assignment),
-        ModuleOption(EventModule.WISHLIST, stringResource(R.string.create_event_module_wishlist), Icons.Default.CardGiftcard)
+        ModuleOption(EventModule.PACKING_LIST, stringResource(R.string.create_event_module_packing), Icons.Default.Backpack),
+        ModuleOption(EventModule.WISHLIST, stringResource(R.string.create_event_module_wishlist), Icons.Default.CardGiftcard),
+        ModuleOption(EventModule.CATERING, stringResource(R.string.create_event_module_catering), Icons.Default.Restaurant),
+        ModuleOption(EventModule.BUDGET, stringResource(R.string.create_event_module_budget), Icons.Default.Payments)
     )
+    val premiumLockedStr = stringResource(R.string.module_premium_locked)
+    val businessLockedStr = stringResource(R.string.module_business_locked)
 
     Column(
         modifier = Modifier
@@ -840,10 +887,27 @@ private fun StepModules(
         ) {
             moduleOptions.forEach { option ->
                 val isSelected = selectedModules.contains(option.module)
+                val isLocked = !TierLimits.canUseModule(premiumTier, option.module)
                 FilterChip(
-                    selected = isSelected,
-                    onClick = { onToggleModule(option.module) },
-                    label = { Text(option.label) },
+                    selected = isSelected && !isLocked,
+                    onClick = {
+                        if (isLocked) onNavigateToUpgrade() else onToggleModule(option.module)
+                    },
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(option.label)
+                            if (isLocked) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                val isBusiness = option.module in TierLimits.BUSINESS_MODULES
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = if (isBusiness) businessLockedStr else premiumLockedStr,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = AccentGold
+                                )
+                            }
+                        }
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = option.icon,
@@ -856,7 +920,8 @@ private fun StepModules(
                         selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
                         selectedLabelColor = PrimaryBlue,
                         selectedLeadingIconColor = PrimaryBlue
-                    )
+                    ),
+                    enabled = !isLocked
                 )
             }
         }
@@ -1081,6 +1146,14 @@ private val eventTemplates = listOf(
         listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS)),
     EventTemplate(R.string.create_event_template_trip, "\uD83C\uDFD5\uFE0F", "Výlet", R.string.create_event_template_trip_desc,
         listOf(EventModule.CARPOOL, EventModule.ROOMS, EventModule.SCHEDULE, EventModule.PACKING_LIST, EventModule.EXPENSES)),
+    EventTemplate(R.string.create_event_template_bachelor, "\uD83D\uDC83", "Rozlučka", R.string.create_event_template_bachelor_desc,
+        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.CARPOOL, EventModule.TASKS)),
+    EventTemplate(R.string.create_event_template_workshop, "\uD83D\uDCCB", "Workshop", R.string.create_event_template_workshop_desc,
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.ROOMS)),
+    EventTemplate(R.string.create_event_template_family, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66", "Rodinné setkání", R.string.create_event_template_family_desc,
+        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.PACKING_LIST, EventModule.WISHLIST)),
+    EventTemplate(R.string.create_event_template_sports, "\u26BD", "Sport", R.string.create_event_template_sports_desc,
+        listOf(EventModule.SCHEDULE, EventModule.VOTING, EventModule.TASKS, EventModule.ROOMS)),
     EventTemplate(R.string.create_event_template_festival, "\uD83C\uDFB5", "Festival", R.string.create_event_template_festival_desc,
         listOf(EventModule.SCHEDULE, EventModule.CARPOOL, EventModule.EXPENSES, EventModule.CHAT), isPremium = true),
     EventTemplate(R.string.create_event_template_corporate, "\uD83C\uDFE2", "Firemní akce", R.string.create_event_template_corporate_desc,
@@ -1121,7 +1194,14 @@ private fun TemplateSelectionScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(Spacing.lg))
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            CoachMarkBanner(
+                id = CoachMarkIds.CREATE_EVENT_TEMPLATE,
+                message = stringResource(R.string.coach_mark_create_event)
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -1130,7 +1210,7 @@ private fun TemplateSelectionScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 items(eventTemplates) { template ->
-                    val isLocked = template.isPremium && premiumTier == PremiumTier.FREE
+                    val isLocked = template.isPremium && premiumTier != PremiumTier.BUSINESS
                     BetterMingleCard(
                         onClick = {
                             if (isLocked) {
@@ -1153,6 +1233,14 @@ private fun TemplateSelectionScreen(
                                 text = stringResource(template.nameResId),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(template.descriptionHintResId),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2
                             )
                             if (isLocked) {
                                 Spacer(modifier = Modifier.height(Spacing.xs))

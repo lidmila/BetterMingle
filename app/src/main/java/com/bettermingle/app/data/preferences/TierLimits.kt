@@ -1,27 +1,35 @@
 package com.bettermingle.app.data.preferences
 
+import com.bettermingle.app.data.model.EventModule
 import com.bettermingle.app.ui.component.AVATAR_COUNT
 
 object TierLimits {
+    val PREMIUM_MODULES = setOf(EventModule.CATERING, EventModule.ROOMS, EventModule.CARPOOL)
+    val BUSINESS_MODULES = setOf(EventModule.BUDGET)
+
+    fun canUseModule(tier: PremiumTier, module: EventModule): Boolean = when {
+        module in BUSINESS_MODULES -> tier == PremiumTier.BUSINESS
+        module in PREMIUM_MODULES -> tier != PremiumTier.FREE
+        else -> true
+    }
+
     fun maxEvents(tier: PremiumTier) = when (tier) {
-        PremiumTier.FREE -> 2
-        PremiumTier.PRO -> 5
+        PremiumTier.FREE -> 1
+        PremiumTier.PRO -> 3
         PremiumTier.BUSINESS -> Int.MAX_VALUE
     }
 
     fun maxParticipants(tier: PremiumTier) = when (tier) {
-        PremiumTier.FREE -> 8
+        PremiumTier.FREE -> 20
         PremiumTier.PRO -> 100
         PremiumTier.BUSINESS -> Int.MAX_VALUE
     }
 
     fun maxPolls(tier: PremiumTier) = when (tier) {
         PremiumTier.FREE -> 1
-        PremiumTier.PRO -> Int.MAX_VALUE
+        PremiumTier.PRO -> 3
         PremiumTier.BUSINESS -> Int.MAX_VALUE
     }
-
-    fun canExportExpenses(tier: PremiumTier) = tier == PremiumTier.PRO || tier == PremiumTier.BUSINESS
 
     fun canAddCoOrganizers(tier: PremiumTier) = tier == PremiumTier.PRO || tier == PremiumTier.BUSINESS
 
@@ -32,11 +40,7 @@ object TierLimits {
         else -> AVATAR_COUNT
     }
 
-    fun canUseAllTemplates(tier: PremiumTier) = tier != PremiumTier.FREE
-
     fun canRepeatEvent(tier: PremiumTier) = tier != PremiumTier.FREE
 
     fun canExportSummary(tier: PremiumTier) = tier != PremiumTier.FREE
-
-    fun canUseWidget(tier: PremiumTier) = tier != PremiumTier.FREE
 }

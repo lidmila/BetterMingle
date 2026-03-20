@@ -1,6 +1,8 @@
 package com.bettermingle.app.ui.screen.event
 
 import com.bettermingle.app.R
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +41,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -73,10 +77,17 @@ import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.collectAsState
 import com.bettermingle.app.data.ads.AdManager
+import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.ui.component.NativeAdCard
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -95,13 +106,22 @@ fun ParticipantsScreen(
     val settings by settingsManager.settingsFlow.collectAsState(initial = null)
     val showAds = settings?.let { AdManager.hasAds(it.premiumTier) } ?: false
 
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
+    var isOrganizer by remember { mutableStateOf(false) }
+    val premiumTier = settings?.premiumTier ?: PremiumTier.FREE
+
     // Bottom sheet state for participant profile
     var selectedProfile by remember { mutableStateOf<UserProfile?>(null) }
     var selectedCustomRole by remember { mutableStateOf("") }
     var isLoadingProfile by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }
+
+    // Role management dialog
+    var roleDialogParticipant by remember { mutableStateOf<Participant?>(null) }
+    var showTierLimitDialog by remember { mutableStateOf(false) }
 
     fun loadParticipants() {
         scope.launch {
@@ -110,7 +130,11 @@ fun ParticipantsScreen(
                     .collection("events").document(eventId).get().await()
                 inviteCode = eventDoc.getString("inviteCode") ?: ""
                 eventName = eventDoc.getString("name") ?: ""
-            } catch (_: Exception) { }
+                val createdBy = eventDoc.getString("createdBy") ?: ""
+                isOrganizer = createdBy == currentUserId
+            } catch (e: Exception) {
+                Log.e("ParticipantsScreen", "Failed to load event", e)
+            }
             try {
                 val snapshot = FirebaseFirestore.getInstance()
                     .collection("events").document(eventId)
@@ -149,15 +173,77 @@ fun ParticipantsScreen(
                         rsvp = rsvp,
                         joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: 0
                     )
-                }.sortedBy { if (it.role == ParticipantRole.ORGANIZER) 0 else 1 }
+                }.sortedBy { when (it.role) {
+                    ParticipantRole.ORGANIZER -> 0
+                    ParticipantRole.CO_ORGANIZER -> 1
+                    ParticipantRole.PARTICIPANT -> 2
+                } }
 
                 participants.clear()
                 participants.addAll(loaded)
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+            }
         }
     }
 
     LaunchedEffect(eventId) { loadParticipants() }
+
+    // Tier limit dialog for co-organizer feature
+    if (showTierLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showTierLimitDialog = false },
+            title = { Text(stringResource(R.string.participants_coorg_limit_title)) },
+            text = { Text(stringResource(R.string.participants_coorg_limit_message)) },
+            confirmButton = {
+                TextButton(onClick = { showTierLimitDialog = false }) {
+                    Text(stringResource(R.string.common_close))
+                }
+            }
+        )
+    }
+
+    // Role management dialog
+    roleDialogParticipant?.let { participant ->
+        val isCoOrganizer = participant.role == ParticipantRole.CO_ORGANIZER
+        AlertDialog(
+            onDismissRequest = { roleDialogParticipant = null },
+            title = { Text(participant.displayName) },
+            text = {
+                Text(
+                    if (isCoOrganizer) stringResource(R.string.participants_demote_message)
+                    else stringResource(R.string.participants_promote_message)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val targetParticipant = participant
+                    roleDialogParticipant = null
+                    scope.launch {
+                        try {
+                            val newRole = if (isCoOrganizer) ParticipantRole.PARTICIPANT else ParticipantRole.CO_ORGANIZER
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("participants").document(targetParticipant.id)
+                                .update("role", newRole.name).await()
+                            loadParticipants()
+                            Toast.makeText(context, context.getString(R.string.participants_role_updated), Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Log.e("ParticipantsScreen", "Failed to update role", e)
+                            Toast.makeText(context, context.getString(R.string.participants_role_update_error), Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }) {
+                    Text(stringResource(R.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { roleDialogParticipant = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
 
     // Profile bottom sheet
     if (selectedProfile != null) {
@@ -173,6 +259,7 @@ fun ParticipantsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.participants_title), style = MaterialTheme.typography.titleMedium) },
@@ -250,6 +337,14 @@ fun ParticipantsScreen(
                 items(participants, key = { it.id }) { participant ->
                     ParticipantItem(
                         participant = participant,
+                        showRoleAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER,
+                        onRoleClick = {
+                            if (!TierLimits.canAddCoOrganizers(premiumTier)) {
+                                showTierLimitDialog = true
+                            } else {
+                                roleDialogParticipant = participant
+                            }
+                        },
                         onClick = {
                             if (participant.userId.isNotEmpty()) {
                                 isLoadingProfile = true
@@ -268,7 +363,8 @@ fun ParticipantsScreen(
                                                 phone = doc.getString("phone") ?: "",
                                                 contactEmail = doc.getString("contactEmail") ?: "",
                                                 department = doc.getString("department") ?: "",
-                                                bio = doc.getString("bio") ?: ""
+                                                bio = doc.getString("bio") ?: "",
+                                                dietaryPreferences = (doc.get("dietaryPreferences") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                                             )
                                         }
                                     } catch (_: Exception) { }
@@ -295,6 +391,8 @@ fun ParticipantsScreen(
 @Composable
 private fun ParticipantItem(
     participant: Participant,
+    showRoleAction: Boolean = false,
+    onRoleClick: () -> Unit = {},
     onClick: () -> Unit
 ) {
     BetterMingleCard(onClick = onClick) {
@@ -324,7 +422,7 @@ private fun ParticipantItem(
                             ParticipantRole.PARTICIPANT -> stringResource(R.string.participants_role_participant)
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (participant.role == ParticipantRole.CO_ORGANIZER) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (participant.customRole.isNotEmpty()) {
                         Text(
@@ -335,6 +433,19 @@ private fun ParticipantItem(
                         )
                     }
                 }
+            }
+
+            if (showRoleAction) {
+                IconButton(onClick = onRoleClick, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = if (participant.role == ParticipantRole.CO_ORGANIZER)
+                            Icons.Default.Person else Icons.Default.PersonAdd,
+                        contentDescription = stringResource(R.string.participants_manage_role),
+                        tint = AccentGold,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(Spacing.xs))
             }
 
             RsvpBadge(status = participant.rsvp)
@@ -383,6 +494,31 @@ private fun ParticipantProfileSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        @OptIn(ExperimentalLayoutApi::class)
+        if (profile.dietaryPreferences.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                profile.dietaryPreferences.forEach { pref ->
+                    Box(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .background(Success.copy(alpha = 0.12f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = pref,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Success
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(Spacing.md))

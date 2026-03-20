@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +56,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.R
+import com.bettermingle.app.data.preferences.PremiumTier
+import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.ui.component.AVATAR_COUNT
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleTextField
@@ -62,6 +65,7 @@ import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.component.builtInAvatarUrl
 import com.bettermingle.app.ui.component.getAvatarResourceId
 import com.bettermingle.app.ui.component.parseAvatarIndex
+import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleMotion
 import com.bettermingle.app.ui.theme.PrimaryBlue
@@ -90,8 +94,9 @@ fun ProfileSetupScreen(
     var avatarUrl by remember { mutableStateOf("") }
     var isUploadingAvatar by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
+    var premiumTier by remember { mutableStateOf(PremiumTier.FREE) }
 
-    // Check if profile setup is already completed
+    // Check if profile setup is already completed + load premium tier
     LaunchedEffect(Unit) {
         val uid = user?.uid
         if (uid == null) {
@@ -105,6 +110,11 @@ fun ProfileSetupScreen(
                 onComplete()
                 return@LaunchedEffect
             }
+            // Load premium tier for avatar gating
+            val tier = try {
+                doc.getString("premiumTier")?.let { PremiumTier.valueOf(it) }
+            } catch (_: Exception) { null }
+            if (tier != null) premiumTier = tier
         } catch (_: Exception) {
             // Continue to show setup form
         }
@@ -134,6 +144,7 @@ fun ProfileSetupScreen(
     if (showAvatarPicker) {
         SetupAvatarPickerDialog(
             currentAvatarUrl = avatarUrl,
+            premiumTier = premiumTier,
             onSelectAvatar = { index ->
                 avatarUrl = builtInAvatarUrl(index)
                 showAvatarPicker = false
@@ -376,12 +387,14 @@ fun ProfileSetupScreen(
 @Composable
 private fun SetupAvatarPickerDialog(
     currentAvatarUrl: String,
+    premiumTier: PremiumTier = PremiumTier.FREE,
     onSelectAvatar: (Int) -> Unit,
     onUploadPhoto: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val currentIndex = remember(currentAvatarUrl) { parseAvatarIndex(currentAvatarUrl) }
     val avatarIndices = remember { (1..AVATAR_COUNT).toList() }
+    val maxAvatars = remember(premiumTier) { TierLimits.maxAvatars(premiumTier) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -398,6 +411,7 @@ private fun SetupAvatarPickerDialog(
                     items(avatarIndices, key = { it }) { index ->
                         val resId = getAvatarResourceId(index)
                         val isSelected = currentIndex == index
+                        val isLocked = index > maxAvatars
                         Box(
                             modifier = Modifier
                                 .size(64.dp)
@@ -406,7 +420,9 @@ private fun SetupAvatarPickerDialog(
                                     if (isSelected) Modifier.border(3.dp, PrimaryBlue, CircleShape)
                                     else Modifier
                                 )
-                                .clickable { onSelectAvatar(index) },
+                                .clickable {
+                                    if (!isLocked) onSelectAvatar(index)
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             if (resId != null) {
@@ -415,8 +431,20 @@ private fun SetupAvatarPickerDialog(
                                     contentDescription = stringResource(R.string.edit_profile_avatar_description, index),
                                     modifier = Modifier
                                         .size(64.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
+                                        .clip(CircleShape)
+                                        .then(if (isLocked) Modifier.background(
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+                                        ) else Modifier),
+                                    contentScale = ContentScale.Crop,
+                                    alpha = if (isLocked) 0.4f else 1f
+                                )
+                            }
+                            if (isLocked) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = AccentGold,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }

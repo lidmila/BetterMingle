@@ -26,8 +26,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Fastfood
 import androidx.compose.material.icons.rounded.LocalCafe
@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -98,6 +99,9 @@ import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
+import com.bettermingle.app.ui.theme.AccentPurple
+import com.bettermingle.app.ui.theme.BalancePositive
+import com.bettermingle.app.ui.theme.BalanceNegative
 import com.bettermingle.app.ui.theme.BackgroundSecondary
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
@@ -105,12 +109,12 @@ import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 
 import com.bettermingle.app.data.preferences.SettingsManager
-import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.utils.CurrencyUtils
 import com.bettermingle.app.utils.Debt
 import com.bettermingle.app.utils.DebtCalculator
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -133,10 +137,10 @@ private fun categoryIcon(category: String): ImageVector = when (category.lowerca
 
 @Composable
 private fun categoryColor(category: String): Color = when (category.lowercase()) {
-    "jídlo", "jidlo", "food" -> Color(0xFFFF6B35)
+    "jídlo", "jidlo", "food" -> AccentOrange
     "doprava", "transport" -> PrimaryBlue
     "ubytování", "ubytovani", "accommodation" -> AccentPink
-    "nápoje", "napoje", "drinks" -> Color(0xFF8B5CF6)
+    "nápoje", "napoje", "drinks" -> AccentPurple
     else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
@@ -158,13 +162,11 @@ private fun formatRelativeDate(timestamp: Long, todayStr: String, yesterdayStr: 
 @Composable
 fun ExpensesScreen(
     eventId: String,
-    onNavigateBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit = {}
+    onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val settingsManager = remember { SettingsManager(context) }
     val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
-    var showExportLimitDialog by remember { mutableStateOf(false) }
     val expenses = remember { mutableStateListOf<Expense>() }
     val debts = remember { mutableStateListOf<Debt>() }
     val payerNames = remember { mutableMapOf<String, String>() }
@@ -181,6 +183,14 @@ fun ExpensesScreen(
     val firestore = FirebaseFirestore.getInstance()
     val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isOrganizer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(eventId) {
+        try {
+            val eventDoc = firestore.collection("events").document(eventId).get().await()
+            isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+    }
 
     val categoryOptions = listOf(
         stringResource(R.string.expenses_category_food),
@@ -321,23 +331,6 @@ fun ExpensesScreen(
     val expenseAddedMsg = stringResource(R.string.expenses_added)
     val expenseDeletedMsg = stringResource(R.string.expenses_deleted)
 
-    if (showExportLimitDialog) {
-        AlertDialog(
-            onDismissRequest = { showExportLimitDialog = false },
-            title = { Text(stringResource(R.string.tier_export_expenses_title)) },
-            text = { Text(stringResource(R.string.tier_export_expenses_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showExportLimitDialog = false
-                    onNavigateToUpgrade()
-                }) { Text(stringResource(R.string.tier_upgrade_button)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExportLimitDialog = false }) { Text(stringResource(R.string.common_cancel)) }
-            }
-        )
-    }
-
     if (showCreateDialog) {
         AddExpenseDialog(
             eventId = eventId,
@@ -363,15 +356,23 @@ fun ExpensesScreen(
                     }
                 },
                 actions = {
-                    if (expenses.isNotEmpty()) {
-                        IconButton(onClick = {
-                            if (TierLimits.canExportExpenses(settings.premiumTier)) {
-                                // TODO: implement actual CSV export
-                            } else {
-                                showExportLimitDialog = true
-                            }
-                        }) {
-                            Icon(Icons.Default.Receipt, contentDescription = stringResource(R.string.expenses_export))
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "EXPENSES")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
                         }
                     }
                 },
@@ -537,7 +538,7 @@ private fun SummaryCard(
                                 text = "+${CurrencyUtils.formatCzk(myBalance)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF86EFAC) // light green on dark bg
+                                color = BalancePositive // light green on dark bg
                             )
                             Spacer(modifier = Modifier.width(Spacing.xs))
                             Text(
@@ -551,7 +552,7 @@ private fun SummaryCard(
                                 text = CurrencyUtils.formatCzk(-myBalance),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFED7AA) // light orange on dark bg
+                                color = BalanceNegative // light orange on dark bg
                             )
                             Spacer(modifier = Modifier.width(Spacing.xs))
                             Text(
@@ -565,7 +566,7 @@ private fun SummaryCard(
                                 text = stringResource(R.string.expenses_settled),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF86EFAC)
+                                color = BalancePositive
                             )
                         }
                     }
@@ -598,6 +599,7 @@ private fun ExpensesList(
         )
     } else {
         LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(Spacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
@@ -782,6 +784,7 @@ private fun DebtsList(
         )
     } else {
         LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(Spacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {

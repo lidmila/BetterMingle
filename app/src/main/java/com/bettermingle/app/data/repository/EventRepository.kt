@@ -110,7 +110,9 @@ class EventRepository(context: Context) {
             try {
                 firestore.collection("events").document(eventId)
                     .update("invitedEmails", invitedEmails)
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.w("EventRepository", "Failed to store invited emails for $eventId", e)
+            }
         }
 
         return eventId
@@ -125,8 +127,25 @@ class EventRepository(context: Context) {
     suspend fun deleteEvent(eventId: String) {
         eventDao.deleteEventById(eventId)
         try {
-            firestore.collection("events").document(eventId).delete().await()
-        } catch (_: Exception) { }
+            val eventRef = firestore.collection("events").document(eventId)
+            val subcollections = listOf(
+                "participants", "polls", "expenses", "messages", "carpoolRides",
+                "rooms", "schedule", "tasks", "packingItems", "wishlistItems", "lastSeen"
+            )
+            for (sub in subcollections) {
+                try {
+                    val docs = eventRef.collection(sub).get().await()
+                    for (doc in docs.documents) {
+                        doc.reference.delete().await()
+                    }
+                } catch (e: Exception) {
+                    Log.w("EventRepository", "Failed to delete subcollection $sub for $eventId", e)
+                }
+            }
+            eventRef.delete().await()
+        } catch (e: Exception) {
+            Log.e("EventRepository", "Failed to delete event $eventId from cloud", e)
+        }
     }
 
     suspend fun syncEventToCloud(event: Event) {
@@ -156,6 +175,7 @@ class EventRepository(context: Context) {
                 "autoDeleteDays" to event.autoDeleteDays,
                 "requireApproval" to event.requireApproval,
                 "introText" to event.introText,
+                "moduleColors" to event.moduleColors,
                 "createdAt" to event.createdAt,
                 "updatedAt" to event.updatedAt
             )
@@ -163,7 +183,9 @@ class EventRepository(context: Context) {
                 .document(event.id)
                 .set(eventData, SetOptions.merge())
                 .await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("EventRepository", "Failed to sync event ${event.id} to cloud", e)
+        }
     }
 
     private suspend fun syncParticipantToCloud(eventId: String, participant: Participant) {
@@ -182,7 +204,9 @@ class EventRepository(context: Context) {
                 .document(participant.id)
                 .set(data, SetOptions.merge())
                 .await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("EventRepository", "Failed to sync participant ${participant.id} to cloud", e)
+        }
     }
 
     suspend fun syncFromCloud() {
@@ -272,7 +296,9 @@ class EventRepository(context: Context) {
                 )
                 participantDao.insertParticipant(participant)
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("EventRepository", "Failed to sync participants from cloud for event $eventId", e)
+        }
     }
 
     private fun documentToEvent(id: String, data: Map<String, Any?>): Event {
@@ -311,9 +337,27 @@ class EventRepository(context: Context) {
             autoDeleteDays = (data["autoDeleteDays"] as? Number)?.toInt() ?: 0,
             requireApproval = data["requireApproval"] as? Boolean ?: false,
             introText = data["introText"] as? String ?: "",
+            moduleColors = (data["moduleColors"] as? Map<*, *>)
+                ?.entries
+                ?.mapNotNull { (k, v) -> if (k is String && v is String) k to v else null }
+                ?.toMap() ?: emptyMap(),
             createdAt = (data["createdAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
             updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
         )
+    }
+
+    suspend fun updateModuleColor(eventId: String, moduleName: String, colorHex: String) {
+        try {
+            firestore.collection("events").document(eventId)
+                .update("moduleColors.$moduleName", colorHex).await()
+            val event = eventDao.getEventByIdOnce(eventId) ?: return
+            eventDao.updateEvent(event.copy(
+                moduleColors = event.moduleColors + (moduleName to colorHex),
+                updatedAt = System.currentTimeMillis()
+            ))
+        } catch (e: Exception) {
+            Log.e("EventRepository", "Failed to update module color for $eventId/$moduleName", e)
+        }
     }
 
     private fun generateInviteCode(): String {

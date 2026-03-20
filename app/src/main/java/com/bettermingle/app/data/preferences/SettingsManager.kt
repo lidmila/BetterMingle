@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
@@ -44,9 +45,14 @@ class SettingsManager(private val context: Context) {
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val USER_PHONE = stringPreferencesKey("user_phone")
+        val USER_DEPARTMENT = stringPreferencesKey("user_department")
+        val USER_BIO = stringPreferencesKey("user_bio")
+        val PROFILE_SETUP_COMPLETED = booleanPreferencesKey("profile_setup_completed")
         val YEAR_IN_REVIEW_DISMISSED_YEAR = intPreferencesKey("year_in_review_dismissed_year")
         val ACTIVITIES_JSON = stringPreferencesKey("user_activities_json")
         val UNREAD_ACTIVITY_COUNT = intPreferencesKey("unread_activity_count")
+        val COACH_MARKS_SEEN = stringPreferencesKey("coach_marks_seen")
     }
 
     data class LocalActivityEntry(
@@ -62,7 +68,11 @@ class SettingsManager(private val context: Context) {
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
         AppSettings(
-            isPremium = prefs[Keys.IS_PREMIUM] ?: false,
+            isPremium = run {
+                val tier = try { PremiumTier.valueOf(prefs[Keys.PREMIUM_TIER] ?: "FREE") } catch (_: Exception) { PremiumTier.FREE }
+                val until = prefs[Keys.PREMIUM_UNTIL]
+                tier != PremiumTier.FREE && (until == null || until > System.currentTimeMillis())
+            },
             premiumTier = try { PremiumTier.valueOf(prefs[Keys.PREMIUM_TIER] ?: "FREE") } catch (_: Exception) { PremiumTier.FREE },
             premiumUntil = prefs[Keys.PREMIUM_UNTIL],
             userName = prefs[Keys.USER_NAME] ?: "",
@@ -94,6 +104,26 @@ class SettingsManager(private val context: Context) {
             prefs[Keys.USER_NAME] = name
             prefs[Keys.USER_EMAIL] = email
             prefs[Keys.USER_AVATAR_URL] = avatarUrl
+        }
+    }
+
+    suspend fun updateFullProfile(
+        name: String,
+        email: String,
+        avatarUrl: String = "",
+        phone: String = "",
+        department: String = "",
+        bio: String = "",
+        profileSetupCompleted: Boolean = false
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.USER_NAME] = name
+            prefs[Keys.USER_EMAIL] = email
+            prefs[Keys.USER_AVATAR_URL] = avatarUrl
+            prefs[Keys.USER_PHONE] = phone
+            prefs[Keys.USER_DEPARTMENT] = department
+            prefs[Keys.USER_BIO] = bio
+            prefs[Keys.PROFILE_SETUP_COMPLETED] = profileSetupCompleted
         }
     }
 
@@ -139,7 +169,35 @@ class SettingsManager(private val context: Context) {
     }
 
     suspend fun clearAll() {
-        context.dataStore.edit { it.clear() }
+        context.dataStore.edit { prefs ->
+            val keepOnboarding = prefs[Keys.ONBOARDING_COMPLETED] ?: false
+            prefs.clear()
+            if (keepOnboarding) {
+                prefs[Keys.ONBOARDING_COMPLETED] = true
+            }
+        }
+    }
+
+    // --- Coach marks ---
+
+    suspend fun markCoachMarkSeen(id: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[Keys.COACH_MARKS_SEEN] ?: ""
+            val set = current.split(",").filter { it.isNotBlank() }.toMutableSet()
+            set.add(id)
+            prefs[Keys.COACH_MARKS_SEEN] = set.joinToString(",")
+        }
+    }
+
+    fun isCoachMarkSeen(id: String): Flow<Boolean> = context.dataStore.data.map { prefs ->
+        val current = prefs[Keys.COACH_MARKS_SEEN] ?: ""
+        id in current.split(",")
+    }
+
+    suspend fun resetCoachMarks() {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.COACH_MARKS_SEEN] = ""
+        }
     }
 
     // --- Local activity storage (ShelfSelf pattern) ---

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -44,15 +44,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import com.bettermingle.app.R
-import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
-import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.CornerRadius
-import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
-import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
+import com.bettermingle.app.ui.theme.pastelForColor
 
 import com.bettermingle.app.utils.debouncedClick
 import kotlinx.coroutines.launch
@@ -68,24 +65,20 @@ fun FeatureModuleCard(
     iconTint: Color,
     subtitle: String = "",
     badgeCount: Int = 0,
+    onClick: () -> Unit,
     showMenu: Boolean = false,
     onDeleteClick: (() -> Unit)? = null,
-    onClick: () -> Unit,
+    onColorClick: (() -> Unit)? = null,
+    enablePressAnimation: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val scale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    var menuExpanded by remember { mutableStateOf(false) }
 
     // Map iconTint to pastel background color
     val ext = BetterMingleThemeColors.extended
-    val pastelBg = when (iconTint) {
-        PrimaryBlue -> ext.pastelBlue
-        AccentPink -> ext.pastelPink
-        AccentOrange -> ext.pastelOrange
-        Success -> ext.pastelGreen
-        AccentGold -> ext.pastelGold
-        else -> ext.pastelGray
-    }
+    val pastelBg = pastelForColor(iconTint, ext)
 
     Box(modifier = modifier) {
         Column(
@@ -93,20 +86,26 @@ fun FeatureModuleCard(
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 120.dp)
                 .scale(scale.value)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            scope.launch {
-                                scale.animateTo(0.92f, spring(stiffness = Spring.StiffnessMediumLow))
-                            }
-                            tryAwaitRelease()
-                            scope.launch {
-                                scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
-                            }
-                        },
-                        onTap = { debouncedClick(action = onClick) }
-                    )
-                }
+                .then(
+                    if (enablePressAnimation) {
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onPress = {
+                                    scope.launch {
+                                        scale.animateTo(0.92f, spring(stiffness = Spring.StiffnessMediumLow))
+                                    }
+                                    tryAwaitRelease()
+                                    scope.launch {
+                                        scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+                                    }
+                                },
+                                onTap = { debouncedClick(action = onClick) }
+                            )
+                        }
+                    } else {
+                        Modifier.clickable { debouncedClick(action = onClick) }
+                    }
+                )
                 .shadow(
                     elevation = 8.dp,
                     shape = CardShape,
@@ -156,6 +155,46 @@ fun FeatureModuleCard(
             }
         }
 
+        // Three dots menu for module actions
+        if (showMenu && (onDeleteClick != null || onColorClick != null)) {
+            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    if (onColorClick != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_change_color)) },
+                            onClick = {
+                                menuExpanded = false
+                                onColorClick()
+                            }
+                        )
+                    }
+                    if (onDeleteClick != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                            onClick = {
+                                menuExpanded = false
+                                onDeleteClick()
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
         // Badge with gradient
         if (badgeCount > 0) {
             Box(
@@ -174,40 +213,5 @@ fun FeatureModuleCard(
             }
         }
 
-        // Three-dot menu for module removal
-        if (showMenu && onDeleteClick != null) {
-            var expanded by remember { mutableStateOf(false) }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(2.dp)
-            ) {
-                IconButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.size(20.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.dashboard_remove_module)) },
-                        onClick = {
-                            expanded = false
-                            onDeleteClick()
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Delete, contentDescription = null)
-                        }
-                    )
-                }
-            }
-        }
     }
 }

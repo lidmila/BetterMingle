@@ -57,6 +57,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bettermingle.app.data.preferences.SettingsManager
@@ -78,9 +79,13 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.TextOnColor
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import com.bettermingle.app.viewmodel.ProfileViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
     onNavigateBack: () -> Unit,
@@ -97,6 +102,8 @@ fun EditProfileScreen(
     var phone by remember { mutableStateOf("") }
     var department by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
+    var dietaryPreferences by remember { mutableStateOf<List<String>>(emptyList()) }
+    var customDietaryInput by remember { mutableStateOf("") }
 
     // Initialize fields once when profile data first loads
     if (!isInitialized && state.userName.isNotEmpty()) {
@@ -105,6 +112,7 @@ fun EditProfileScreen(
         phone = state.phone
         department = state.department
         bio = state.bio
+        dietaryPreferences = state.dietaryPreferences
         isInitialized = true
     }
     var showAvatarPicker by remember { mutableStateOf(false) }
@@ -256,6 +264,77 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(Spacing.lg))
 
+            // Dietary preferences
+            Text(
+                text = stringResource(R.string.dietary_preferences_label),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            val predefinedPreferences = listOf(
+                stringResource(R.string.dietary_vegetarian),
+                stringResource(R.string.dietary_vegan),
+                stringResource(R.string.dietary_gluten_free),
+                stringResource(R.string.dietary_lactose_free),
+                stringResource(R.string.dietary_halal),
+                stringResource(R.string.dietary_kosher)
+            )
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                val allPreferences = (predefinedPreferences + dietaryPreferences.filter { it !in predefinedPreferences }).distinct()
+                allPreferences.forEach { pref ->
+                    val isSelected = dietaryPreferences.contains(pref)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            dietaryPreferences = if (isSelected) {
+                                dietaryPreferences - pref
+                            } else {
+                                dietaryPreferences + pref
+                            }
+                        },
+                        label = { Text(pref) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryBlue.copy(alpha = 0.12f),
+                            selectedLabelColor = PrimaryBlue
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                BetterMingleTextField(
+                    value = customDietaryInput,
+                    onValueChange = { customDietaryInput = it },
+                    label = stringResource(R.string.dietary_add_custom),
+                    modifier = Modifier.weight(1f)
+                )
+                Button(
+                    onClick = {
+                        if (customDietaryInput.isNotBlank()) {
+                            dietaryPreferences = dietaryPreferences + customDietaryInput.trim()
+                            customDietaryInput = ""
+                        }
+                    },
+                    enabled = customDietaryInput.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    modifier = Modifier.height(48.dp)
+                ) {
+                    Text(stringResource(R.string.common_add), color = TextOnColor)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.lg))
+
             Button(
                 onClick = {
                     profileViewModel.updateProfile(
@@ -263,7 +342,8 @@ fun EditProfileScreen(
                         contactEmail = contactEmail,
                         phone = phone,
                         department = department,
-                        bio = bio
+                        bio = bio,
+                        dietaryPreferences = dietaryPreferences
                     )
                     onNavigateBack()
                 },

@@ -9,6 +9,7 @@ import com.bettermingle.app.data.model.PollVote
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -76,7 +77,9 @@ class PollRepository(context: Context) {
                 .collection("votes").document(voteId)
                 .set(mapOf("userId" to userId, "value" to value), SetOptions.merge())
                 .await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("PollRepository", "Failed to sync vote to cloud", e)
+        }
     }
 
     suspend fun closePoll(eventId: String, poll: Poll) {
@@ -87,7 +90,9 @@ class PollRepository(context: Context) {
                 .collection("polls").document(poll.id)
                 .update("isClosed", true)
                 .await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("PollRepository", "Failed to close poll ${poll.id} in cloud", e)
+        }
     }
 
     private suspend fun syncPollToCloud(eventId: String, poll: Poll, options: List<PollOption>) {
@@ -115,7 +120,9 @@ class PollRepository(context: Context) {
                 pollRef.collection("options").document(option.id)
                     .set(optData, SetOptions.merge()).await()
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("PollRepository", "Failed to sync poll ${poll.id} to cloud", e)
+        }
     }
 
     suspend fun syncFromCloud(eventId: String) {
@@ -158,6 +165,8 @@ class PollRepository(context: Context) {
                     pollDao.insertOption(option)
                 }
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("PollRepository", "Failed to sync polls from cloud for $eventId", e)
+        }
     }
 }

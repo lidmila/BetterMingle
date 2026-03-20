@@ -1,6 +1,8 @@
 package com.bettermingle.app.ui.screen.home
 
 import com.bettermingle.app.R
+import com.bettermingle.app.ui.component.CoachMarkBanner
+import com.bettermingle.app.ui.component.CoachMarkIds
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -145,6 +147,11 @@ fun EventListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+        CoachMarkBanner(
+            id = CoachMarkIds.EVENT_LIST_CREATE,
+            message = stringResource(R.string.coach_mark_event_list),
+            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.xs)
+        )
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = { viewModel.refresh() },

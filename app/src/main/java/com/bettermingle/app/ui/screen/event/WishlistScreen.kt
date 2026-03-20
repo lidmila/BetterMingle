@@ -22,6 +22,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
@@ -37,6 +40,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -68,6 +73,7 @@ import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -82,6 +88,7 @@ fun WishlistScreen(
     val context = LocalContext.current
     val items = remember { mutableStateListOf<WishlistItem>() }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showCreateDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     var isOrganizer by remember { mutableStateOf(false) }
@@ -130,7 +137,9 @@ fun WishlistScreen(
 
                 items.clear()
                 items.addAll(loaded)
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+            }
         }
     }
 
@@ -148,12 +157,34 @@ fun WishlistScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.wishlist_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "WISHLIST")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -251,7 +282,9 @@ fun WishlistScreen(
                                             if (newStatus == WishlistItemStatus.RESERVED || newStatus == WishlistItemStatus.BOUGHT) {
                                                 ActivityLogger.log(eventId, "wishlist", context.getString(R.string.activity_claimed_wishlist, item.name))
                                             }
-                                        } catch (_: Exception) { }
+                                        } catch (_: Exception) {
+                                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed)) }
+                                        }
                                     }
                                 }
                             },
@@ -264,7 +297,9 @@ fun WishlistScreen(
                                             .delete().await()
                                         items.removeAll { it.id == item.id }
                                         ActivityLogger.log(eventId, "wishlist", context.getString(R.string.activity_removed_from_wishlist, item.name))
-                                    } catch (_: Exception) { }
+                                    } catch (_: Exception) {
+                                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed)) }
+                                    }
                                 }
                             }
                         )

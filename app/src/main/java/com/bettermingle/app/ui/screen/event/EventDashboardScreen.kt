@@ -35,6 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.twotone.Assessment
 import androidx.compose.material.icons.twotone.Backpack
@@ -50,6 +51,8 @@ import androidx.compose.material.icons.twotone.Payments
 import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.StarRate
 import androidx.compose.material.icons.twotone.Timeline
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -93,7 +96,13 @@ import coil.compose.AsyncImage
 import com.bettermingle.app.R
 import com.bettermingle.app.data.ads.AdManager
 import com.bettermingle.app.data.model.EventModule
+import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
+import com.bettermingle.app.data.preferences.TierLimits
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.twotone.Restaurant
+import com.bettermingle.app.ui.component.CoachMarkBanner
+import com.bettermingle.app.ui.component.CoachMarkIds
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.component.BetterMingleOutlinedButton
 import com.bettermingle.app.ui.component.CountdownTimer
@@ -109,8 +118,14 @@ import com.bettermingle.app.ui.theme.BetterMingleThemeColors
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
+import com.bettermingle.app.ui.theme.hexToColor
+import com.bettermingle.app.ui.component.ModuleColorPickerDialog
+import com.bettermingle.app.data.repository.EventRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Collections
 
@@ -132,7 +147,9 @@ private val MODULE_KEY_TO_ENUM = mapOf(
     "schedule" to EventModule.SCHEDULE,
     "tasks" to EventModule.TASKS,
     "packing" to EventModule.PACKING_LIST,
-    "wishlist" to EventModule.WISHLIST
+    "wishlist" to EventModule.WISHLIST,
+    "catering" to EventModule.CATERING,
+    "budget" to EventModule.BUDGET
 )
 
 private val SYSTEM_MODULE_KEYS = setOf("participants", "activity", "rating", "summary", "settings")
@@ -147,12 +164,16 @@ private sealed interface GridItem {
 fun EventDashboardScreen(
     eventId: String,
     onNavigateBack: () -> Unit,
-    onModuleClick: (String) -> Unit
+    onModuleClick: (String) -> Unit,
+    onDeleteEvent: (() -> Unit)? = null,
+    onDuplicateEvent: ((name: String, description: String, location: String, introText: String, theme: String, modules: List<String>) -> Unit)? = null,
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
     var eventName by remember { mutableStateOf("") }
     var eventDescription by remember { mutableStateOf("") }
     var eventIntroText by remember { mutableStateOf("") }
     var eventLocation by remember { mutableStateOf("") }
+    var eventTheme by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
     var coverImageUrl by remember { mutableStateOf("") }
@@ -175,7 +196,10 @@ fun EventDashboardScreen(
 
     var enabledModules by remember { mutableStateOf<List<EventModule>>(emptyList()) }
     var isOrganizer by remember { mutableStateOf(false) }
+    var isCreator by remember { mutableStateOf(false) }
     var showAddModuleSheet by remember { mutableStateOf(false) }
+    var moduleColors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var colorPickerModule by remember { mutableStateOf<EventModule?>(null) }
 
     // Drag-and-drop state
     var draggedKey by remember { mutableStateOf<String?>(null) }
@@ -184,6 +208,8 @@ fun EventDashboardScreen(
 
     val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
     var showShareSheet by remember { mutableStateOf(false) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
+    var showDeleteEventDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val settingsManager = remember { SettingsManager(context) }
     val settings by settingsManager.settingsFlow.collectAsState(initial = null)
@@ -213,6 +239,8 @@ fun EventDashboardScreen(
     val ratingStr = stringResource(R.string.dashboard_rating)
     val summaryStr = stringResource(R.string.dashboard_summary)
     val settingsStr = stringResource(R.string.dashboard_settings)
+    val cateringStr = stringResource(R.string.dashboard_catering)
+    val budgetStr = stringResource(R.string.dashboard_budget)
     val addModuleStr = stringResource(R.string.dashboard_add_module)
 
     LaunchedEffect(eventId, isLoading) {
@@ -226,11 +254,14 @@ fun EventDashboardScreen(
             eventDescription = eventDoc.getString("description") ?: ""
             eventIntroText = eventDoc.getString("introText") ?: ""
             eventLocation = eventDoc.getString("locationName") ?: ""
+            eventTheme = eventDoc.getString("theme") ?: ""
             startDate = (eventDoc.get("startDate") as? Number)?.toLong()
             endDate = (eventDoc.get("endDate") as? Number)?.toLong()
             coverImageUrl = eventDoc.getString("coverImageUrl") ?: ""
             eventStatus = eventDoc.getString("status") ?: "PLANNING"
             inviteCode = eventDoc.getString("inviteCode") ?: ""
+            @Suppress("UNCHECKED_CAST")
+            moduleColors = (eventDoc.get("moduleColors") as? Map<String, String>) ?: emptyMap()
 
             // Read enabledModules
             val rawModules = eventDoc.get("enabledModules")
@@ -244,38 +275,99 @@ fun EventDashboardScreen(
                 }
             }
 
-            // Check if current user is organizer
-            isOrganizer = (eventDoc.getString("createdBy") ?: "") == currentUserId
+            // Check if current user is organizer or co-organizer
+            isCreator = (eventDoc.getString("createdBy") ?: "") == currentUserId
+            isOrganizer = isCreator
 
             isLoading = false
         } catch (_: Exception) {
-            loadError = true
-            isLoading = false
+            // Firestore failed (e.g. PERMISSION_DENIED) — try loading from local Room DB
+            try {
+                val localDb = com.bettermingle.app.data.database.AppDatabase.getDatabase(context)
+                val localEvent = localDb.eventDao().getEventByIdOnce(eventId)
+                if (localEvent != null) {
+                    eventName = localEvent.name
+                    eventDescription = localEvent.description
+                    eventIntroText = localEvent.introText
+                    eventLocation = localEvent.locationName
+                    eventTheme = localEvent.theme
+                    startDate = localEvent.startDate
+                    endDate = localEvent.endDate
+                    coverImageUrl = localEvent.coverImageUrl
+                    eventStatus = localEvent.status.name
+                    inviteCode = localEvent.inviteCode
+                    enabledModules = localEvent.enabledModules.ifEmpty { EventModule.entries.toList() }
+                    moduleColors = localEvent.moduleColors
+                    isCreator = localEvent.createdBy == currentUserId
+                    isOrganizer = isCreator
+                    isLoading = false
+                } else {
+                    loadError = true
+                    isLoading = false
+                }
+            } catch (_: Exception) {
+                loadError = true
+                isLoading = false
+            }
         }
 
-        try {
-            val parts = eventRef.collection("participants").get().await()
-            participantCount = parts.size()
-        } catch (_: Exception) { }
+        coroutineScope {
+            val participantsDeferred = async {
+                try { eventRef.collection("participants").get().await() } catch (_: Exception) { null }
+            }
+            val pollsDeferred = async {
+                try { eventRef.collection("polls").get().await() } catch (_: Exception) { null }
+            }
+            val expensesDeferred = async {
+                try { eventRef.collection("expenses").get().await() } catch (_: Exception) { null }
+            }
+            val ridesDeferred = async {
+                try { eventRef.collection("carpoolRides").get().await() } catch (_: Exception) { null }
+            }
+            val roomsDeferred = async {
+                try { eventRef.collection("rooms").get().await() } catch (_: Exception) { null }
+            }
+            val scheduleDeferred = async {
+                try { eventRef.collection("schedule").get().await() } catch (_: Exception) { null }
+            }
+            val messagesDeferred = async {
+                try { eventRef.collection("messages").get().await() } catch (_: Exception) { null }
+            }
+            val tasksDeferred = async {
+                try { eventRef.collection("tasks").get().await() } catch (_: Exception) { null }
+            }
+            val packingDeferred = async {
+                try { eventRef.collection("packingItems").get().await() } catch (_: Exception) { null }
+            }
+            val wishlistDeferred = async {
+                try { eventRef.collection("wishlistItems").get().await() } catch (_: Exception) { null }
+            }
 
-        try {
-            val polls = eventRef.collection("polls").get().await()
-            pollCount = polls.documents.count { !(it.getBoolean("isClosed") ?: false) }
-        } catch (_: Exception) { }
-
-        try {
-            val expenses = eventRef.collection("expenses").get().await()
-            val total = expenses.documents.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
-            expenseTotal = if (total > 0) "${String.format("%,.0f", total)} $currencyCzk" else ""
-        } catch (_: Exception) { }
-
-        try { rideCount = eventRef.collection("carpoolRides").get().await().size() } catch (_: Exception) { }
-        try { roomCount = eventRef.collection("rooms").get().await().size() } catch (_: Exception) { }
-        try { scheduleCount = eventRef.collection("schedule").get().await().size() } catch (_: Exception) { }
-        try { messageCount = eventRef.collection("messages").get().await().size() } catch (_: Exception) { }
-        try { taskCount = eventRef.collection("tasks").get().await().size() } catch (_: Exception) { }
-        try { packingCount = eventRef.collection("packingItems").get().await().size() } catch (_: Exception) { }
-        try { wishlistCount = eventRef.collection("wishlistItems").get().await().size() } catch (_: Exception) { }
+            participantsDeferred.await()?.let { parts ->
+                participantCount = parts.size()
+                if (!isOrganizer && currentUserId.isNotEmpty()) {
+                    val userParticipant = parts.documents.firstOrNull { it.getString("userId") == currentUserId }
+                    val role = userParticipant?.getString("role") ?: ""
+                    if (role.equals("CO_ORGANIZER", ignoreCase = true)) {
+                        isOrganizer = true
+                    }
+                }
+            }
+            pollsDeferred.await()?.let { polls ->
+                pollCount = polls.documents.count { !(it.getBoolean("isClosed") ?: false) }
+            }
+            expensesDeferred.await()?.let { expenses ->
+                val total = expenses.documents.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
+                expenseTotal = if (total > 0) "${String.format("%,.0f", total)} $currencyCzk" else ""
+            }
+            ridesDeferred.await()?.let { rideCount = it.size() }
+            roomsDeferred.await()?.let { roomCount = it.size() }
+            scheduleDeferred.await()?.let { scheduleCount = it.size() }
+            messagesDeferred.await()?.let { messageCount = it.size() }
+            tasksDeferred.await()?.let { taskCount = it.size() }
+            packingDeferred.await()?.let { packingCount = it.size() }
+            wishlistDeferred.await()?.let { wishlistCount = it.size() }
+        }
 
         // Load badge counts based on lastSeen
         if (currentUserId.isNotEmpty()) {
@@ -345,22 +437,27 @@ fun EventDashboardScreen(
     }
 
     // Build module info for a given EventModule
-    fun buildUserModuleInfo(module: EventModule): ModuleInfo = when (module) {
-        EventModule.VOTING -> ModuleInfo("voting", votingStr, if (pollCount > 0) "$pollCount $activeCountStr" else "", Icons.TwoTone.Ballot, PrimaryBlue, badgeCounts["voting"] ?: 0)
-        EventModule.EXPENSES -> ModuleInfo("expenses", expensesStr, expenseTotal, Icons.TwoTone.Payments, AccentOrange, badgeCounts["expenses"] ?: 0)
-        EventModule.CARPOOL -> ModuleInfo("carpool", carpoolStr, if (rideCount > 0) "$rideCount $ridesCountStr" else "", Icons.TwoTone.DirectionsCar, Success, badgeCounts["carpool"] ?: 0)
-        EventModule.ROOMS -> ModuleInfo("rooms", roomsStr, if (roomCount > 0) "$roomCount $roomsCountStr" else "", Icons.TwoTone.Hotel, AccentGold, badgeCounts["rooms"] ?: 0)
-        EventModule.CHAT -> ModuleInfo("chat", chatStr, if (messageCount > 0) "$messageCount $messagesCountStr" else "", Icons.TwoTone.ChatBubble, AccentOrange, badgeCounts["chat"] ?: 0)
-        EventModule.SCHEDULE -> ModuleInfo("schedule", scheduleStr, if (scheduleCount > 0) "$scheduleCount $itemsCountStr" else "", Icons.TwoTone.CalendarMonth, PrimaryBlue, badgeCounts["schedule"] ?: 0)
-        EventModule.TASKS -> ModuleInfo("tasks", tasksStr, if (taskCount > 0) "$taskCount $tasksCountStr" else "", Icons.TwoTone.Checklist, AccentPink, badgeCounts["tasks"] ?: 0)
-        EventModule.PACKING_LIST -> ModuleInfo("packing", packingStr, if (packingCount > 0) "$packingCount $thingsCountStr" else "", Icons.TwoTone.Backpack, Success)
-        EventModule.WISHLIST -> ModuleInfo("wishlist", wishlistStr, if (wishlistCount > 0) "$wishlistCount $giftsCountStr" else "", Icons.TwoTone.CardGiftcard, AccentPink, badgeCounts["wishlist"] ?: 0)
+    fun buildUserModuleInfo(module: EventModule): ModuleInfo {
+        val customColor = moduleColors[module.name]?.let { hexToColor(it) }
+        return when (module) {
+            EventModule.VOTING -> ModuleInfo("voting", votingStr, if (pollCount > 0) "$pollCount $activeCountStr" else "", Icons.TwoTone.Ballot, customColor ?: PrimaryBlue, badgeCounts["voting"] ?: 0)
+            EventModule.EXPENSES -> ModuleInfo("expenses", expensesStr, expenseTotal, Icons.TwoTone.Payments, customColor ?: AccentOrange, badgeCounts["expenses"] ?: 0)
+            EventModule.CARPOOL -> ModuleInfo("carpool", carpoolStr, if (rideCount > 0) "$rideCount $ridesCountStr" else "", Icons.TwoTone.DirectionsCar, customColor ?: Success, badgeCounts["carpool"] ?: 0)
+            EventModule.ROOMS -> ModuleInfo("rooms", roomsStr, if (roomCount > 0) "$roomCount $roomsCountStr" else "", Icons.TwoTone.Hotel, customColor ?: AccentGold, badgeCounts["rooms"] ?: 0)
+            EventModule.CHAT -> ModuleInfo("chat", chatStr, if (messageCount > 0) "$messageCount $messagesCountStr" else "", Icons.TwoTone.ChatBubble, customColor ?: AccentOrange, badgeCounts["chat"] ?: 0)
+            EventModule.SCHEDULE -> ModuleInfo("schedule", scheduleStr, if (scheduleCount > 0) "$scheduleCount $itemsCountStr" else "", Icons.TwoTone.CalendarMonth, customColor ?: PrimaryBlue, badgeCounts["schedule"] ?: 0)
+            EventModule.TASKS -> ModuleInfo("tasks", tasksStr, if (taskCount > 0) "$taskCount $tasksCountStr" else "", Icons.TwoTone.Checklist, customColor ?: AccentPink, badgeCounts["tasks"] ?: 0)
+            EventModule.PACKING_LIST -> ModuleInfo("packing", packingStr, if (packingCount > 0) "$packingCount $thingsCountStr" else "", Icons.TwoTone.Backpack, customColor ?: Success)
+            EventModule.WISHLIST -> ModuleInfo("wishlist", wishlistStr, if (wishlistCount > 0) "$wishlistCount $giftsCountStr" else "", Icons.TwoTone.CardGiftcard, customColor ?: AccentPink, badgeCounts["wishlist"] ?: 0)
+            EventModule.CATERING -> ModuleInfo("catering", cateringStr, "", Icons.TwoTone.Restaurant, customColor ?: Success)
+            EventModule.BUDGET -> ModuleInfo("budget", budgetStr, "", Icons.TwoTone.Payments, customColor ?: AccentGold)
+        }
     }
 
     val settingsColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     // Build user modules from enabledModules order
-    val userModules = remember(enabledModules, pollCount, expenseTotal, rideCount, roomCount, scheduleCount, messageCount, taskCount, packingCount, wishlistCount, badgeCounts.toMap()) {
+    val userModules = remember(enabledModules, pollCount, expenseTotal, rideCount, roomCount, scheduleCount, messageCount, taskCount, packingCount, wishlistCount, badgeCounts.toMap(), moduleColors) {
         enabledModules.map { buildUserModuleInfo(it) }
     }
 
@@ -383,8 +480,25 @@ fun EventDashboardScreen(
     // Build grid items
     val gridItems = buildList<GridItem> {
         userModules.forEach { add(GridItem.ModuleItem(it, isSystem = false)) }
-        if (isOrganizer && availableToAdd.isNotEmpty()) add(GridItem.AddItem)
         systemModules.forEach { add(GridItem.ModuleItem(it, isSystem = true)) }
+        if (isOrganizer && availableToAdd.isNotEmpty()) add(GridItem.AddItem)
+    }
+
+    // Color picker dialog
+    colorPickerModule?.let { module ->
+        val currentColor = moduleColors[module.name]?.let { hexToColor(it) }
+            ?: buildUserModuleInfo(module).iconTint
+        ModuleColorPickerDialog(
+            currentColor = currentColor,
+            onColorSelected = { option ->
+                moduleColors = moduleColors + (module.name to option.hex)
+                colorPickerModule = null
+                scope.launch {
+                    EventRepository(context).updateModuleColor(eventId, module.name, option.hex)
+                }
+            },
+            onDismiss = { colorPickerModule = null }
+        )
     }
 
     // Add module bottom sheet
@@ -404,27 +518,42 @@ fun EventDashboardScreen(
                 )
                 Spacer(modifier = Modifier.height(Spacing.md))
 
+                val premiumTier = settings?.premiumTier ?: PremiumTier.FREE
+                val premiumLockedStr = stringResource(R.string.module_premium_locked)
+                val businessLockedStr = stringResource(R.string.module_business_locked)
                 availableToAdd.forEach { module ->
                     val info = buildUserModuleInfo(module)
+                    val isLocked = !TierLimits.canUseModule(premiumTier, module)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .clickable { handleAddModule(module) }
+                            .clickable {
+                                if (isLocked) onNavigateToUpgrade() else handleAddModule(module)
+                            }
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         Icon(
-                            imageVector = info.icon,
+                            imageVector = if (isLocked) Icons.Default.Lock else info.icon,
                             contentDescription = null,
-                            tint = info.iconTint,
+                            tint = if (isLocked) AccentGold else info.iconTint,
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
                             text = info.title,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
                         )
+                        if (isLocked) {
+                            val isBusiness = module in TierLimits.BUSINESS_MODULES
+                            Text(
+                                text = if (isBusiness) businessLockedStr else premiumLockedStr,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = AccentGold
+                            )
+                        }
                     }
                 }
 
@@ -494,6 +623,46 @@ fun EventDashboardScreen(
         }
     }
 
+    // Delete event confirmation dialog
+    if (showDeleteEventDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteEventDialog = false },
+            title = { Text(stringResource(R.string.event_settings_delete_title)) },
+            text = { Text(stringResource(R.string.event_settings_delete_confirm, eventName)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    scope.launch {
+                        try {
+                            val firestore = FirebaseFirestore.getInstance()
+                            val eventRef = firestore.collection("events").document(eventId)
+                            val subcollections = listOf("participants", "polls", "expenses", "carpoolRides", "rooms", "schedule", "messages")
+                            for (sub in subcollections) {
+                                val docs = eventRef.collection(sub).get().await()
+                                for (doc in docs.documents) {
+                                    doc.reference.delete().await()
+                                }
+                            }
+                            eventRef.delete().await()
+                            showDeleteEventDialog = false
+                            if (onDeleteEvent != null) {
+                                onDeleteEvent()
+                            } else {
+                                onNavigateBack()
+                            }
+                        } catch (_: Exception) { }
+                    }
+                }) {
+                    Text(stringResource(R.string.common_delete), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showDeleteEventDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -527,6 +696,52 @@ fun EventDashboardScreen(
                             context.startActivity(intent)
                         }) {
                             Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.dashboard_add_to_calendar))
+                        }
+                    }
+                    if (isOrganizer) {
+                        Box {
+                            IconButton(onClick = { showOverflowMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = null)
+                            }
+                            DropdownMenu(
+                                expanded = showOverflowMenu,
+                                onDismissRequest = { showOverflowMenu = false }
+                            ) {
+                                if (inviteCode.isNotEmpty()) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.common_share)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            showShareSheet = true
+                                        }
+                                    )
+                                }
+                                if (onDuplicateEvent != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.event_settings_repeat)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            onDuplicateEvent(
+                                                eventName,
+                                                eventDescription,
+                                                eventLocation,
+                                                eventIntroText,
+                                                eventTheme,
+                                                enabledModules.map { it.name }
+                                            )
+                                        }
+                                    )
+                                }
+                                if (isCreator) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.event_settings_delete_action), color = AccentOrange) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            showDeleteEventDialog = true
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 },
@@ -682,6 +897,12 @@ fun EventDashboardScreen(
                 modifier = Modifier.padding(start = Spacing.xs)
             )
 
+            CoachMarkBanner(
+                id = CoachMarkIds.DASHBOARD_MODULES,
+                message = stringResource(R.string.coach_mark_dashboard),
+                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs)
+            )
+
             Spacer(modifier = Modifier.height(Spacing.sm))
 
             // Non-lazy grid with drag-and-drop support
@@ -770,9 +991,6 @@ fun EventDashboardScreen(
                                                     Modifier.graphicsLayer {
                                                         translationX = dragOffset.x
                                                         translationY = dragOffset.y
-                                                        scaleX = 1.05f
-                                                        scaleY = 1.05f
-                                                        shadowElevation = 8f
                                                     }
                                                 } else Modifier
                                             )
@@ -794,11 +1012,13 @@ fun EventDashboardScreen(
                                                 iconTint = module.iconTint,
                                                 subtitle = module.subtitle,
                                                 badgeCount = module.badgeCount,
+                                                onClick = { handleModuleClick(module.key) },
                                                 showMenu = isOrganizer && isUserModule,
-                                                onDeleteClick = if (isOrganizer && isUserModule) {
-                                                    { handleDeleteModule(module.key) }
+                                                onDeleteClick = { handleDeleteModule(module.key) },
+                                                onColorClick = if (isOrganizer && isUserModule) {
+                                                    { colorPickerModule = MODULE_KEY_TO_ENUM[module.key] }
                                                 } else null,
-                                                onClick = { handleModuleClick(module.key) }
+                                                enablePressAnimation = !canDrag
                                             )
                                         }
                                     }

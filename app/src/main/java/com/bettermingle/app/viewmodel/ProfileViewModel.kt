@@ -32,6 +32,7 @@ data class ProfileUiState(
     val bio: String = "",
     val isPremium: Boolean = false,
     val settings: AppSettings = AppSettings(),
+    val dietaryPreferences: List<String> = emptyList(),
     val isSaving: Boolean = false,
     val isUploadingAvatar: Boolean = false
 )
@@ -75,7 +76,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         phone = doc.getString("phone") ?: "",
                         contactEmail = doc.getString("contactEmail") ?: "",
                         department = doc.getString("department") ?: "",
-                        bio = doc.getString("bio") ?: ""
+                        bio = doc.getString("bio") ?: "",
+                        dietaryPreferences = (doc.get("dietaryPreferences") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                     )
                 }
             } catch (e: Exception) {
@@ -123,7 +125,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         contactEmail: String,
         phone: String,
         department: String,
-        bio: String
+        bio: String,
+        dietaryPreferences: List<String> = emptyList()
     ) {
         val user = FirebaseAuth.getInstance().currentUser ?: return
         viewModelScope.launch {
@@ -134,7 +137,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     "contactEmail" to contactEmail,
                     "phone" to phone,
                     "department" to department,
-                    "bio" to bio
+                    "bio" to bio,
+                    "dietaryPreferences" to dietaryPreferences
                 )
                 FirebaseFirestore.getInstance()
                     .collection("users").document(user.uid)
@@ -159,6 +163,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     phone = phone,
                     department = department,
                     bio = bio,
+                    dietaryPreferences = dietaryPreferences,
                     isSaving = false
                 )
             } catch (e: Exception) {
@@ -336,7 +341,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             com.bettermingle.app.data.database.AppDatabase
                 .getDatabase(getApplication())
                 .clearAllTables()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("ProfileViewModel", "Failed to clear local data on logout", e)
+        }
         authRepository.logout()
     }
 }

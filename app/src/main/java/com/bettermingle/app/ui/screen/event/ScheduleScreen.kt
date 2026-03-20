@@ -21,8 +21,11 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +46,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -74,9 +79,11 @@ import com.bettermingle.app.ui.theme.TextOnColor
 
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
 import android.content.Intent
 import android.provider.CalendarContract
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -94,6 +101,17 @@ fun ScheduleScreen(
     var itemToDelete by remember { mutableStateOf<ScheduleItem?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    var isOrganizer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(eventId) {
+        try {
+            val eventDoc = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId).get().await()
+            isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+    }
 
     fun loadSchedule() {
         scope.launch {
@@ -117,7 +135,9 @@ fun ScheduleScreen(
 
             items.clear()
             items.addAll(loaded)
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+        }
         }
     }
 
@@ -151,7 +171,9 @@ fun ScheduleScreen(
                                 .delete().await()
                             items.removeAll { it.id == item.id }
                             ActivityLogger.log(eventId, "schedule", context.getString(R.string.activity_removed_from_schedule, item.title))
-                        } catch (_: Exception) { }
+                        } catch (_: Exception) {
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed)) }
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.common_delete), color = AccentOrange)
@@ -164,12 +186,34 @@ fun ScheduleScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.schedule_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "SCHEDULE")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

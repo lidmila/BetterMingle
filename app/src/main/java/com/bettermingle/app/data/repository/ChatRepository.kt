@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
@@ -85,7 +86,9 @@ class ChatRepository(context: Context) {
             firestore.collection("events").document(eventId)
                 .collection("messages").document(messageId)
                 .set(messageData).await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("ChatRepository", "Failed to sync message to cloud", e)
+        }
 
         return messageId
     }
@@ -117,7 +120,9 @@ class ChatRepository(context: Context) {
 
                 transaction.update(messageRef, "reactions", reactions)
             }.await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("ChatRepository", "Failed to toggle reaction", e)
+        }
     }
 
     suspend fun deleteMessage(eventId: String, messageId: String) {
@@ -126,6 +131,8 @@ class ChatRepository(context: Context) {
             firestore.collection("events").document(eventId)
                 .collection("messages").document(messageId)
                 .delete().await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("ChatRepository", "Failed to delete message $messageId from cloud", e)
+        }
     }
 }

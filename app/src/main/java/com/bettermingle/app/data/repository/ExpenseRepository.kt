@@ -9,6 +9,7 @@ import com.bettermingle.app.utils.Debt
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -73,7 +74,9 @@ class ExpenseRepository(context: Context) {
             firestore.collection("events").document(eventId)
                 .collection("expenses").document(expenseId)
                 .delete().await()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("ExpenseRepository", "Failed to delete expense $expenseId from cloud", e)
+        }
     }
 
     suspend fun calculateDebts(eventId: String): List<Debt> {
@@ -106,7 +109,8 @@ class ExpenseRepository(context: Context) {
             }
 
             return DebtCalculator.calculateMinimumTransactions(expenses, shares)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w("ExpenseRepository", "Failed to calculate debts for $eventId", e)
             return emptyList()
         }
     }
@@ -135,7 +139,9 @@ class ExpenseRepository(context: Context) {
                 expenseRef.collection("splits").document(split.id)
                     .set(splitData, SetOptions.merge()).await()
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("ExpenseRepository", "Failed to sync expense ${expense.id} to cloud", e)
+        }
     }
 
     suspend fun syncFromCloud(eventId: String) {
@@ -158,6 +164,8 @@ class ExpenseRepository(context: Context) {
                 )
                 expenseDao.insertExpense(expense)
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.w("ExpenseRepository", "Failed to sync expenses from cloud for $eventId", e)
+        }
     }
 }

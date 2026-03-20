@@ -8,7 +8,7 @@ enum class EventStatus {
 }
 
 enum class EventModule {
-    VOTING, EXPENSES, CARPOOL, ROOMS, CHAT, SCHEDULE, TASKS, PACKING_LIST, WISHLIST
+    VOTING, EXPENSES, CARPOOL, ROOMS, CHAT, SCHEDULE, TASKS, PACKING_LIST, WISHLIST, CATERING, BUDGET
 }
 
 val PREDEFINED_THEMES = listOf(
@@ -44,6 +44,7 @@ data class Event(
     val autoDeleteDays: Int = 0, // 0 = disabled, otherwise days after endDate
     val requireApproval: Boolean = false, // organizer must approve new participants
     val introText: String = "",
+    val moduleColors: Map<String, String> = emptyMap(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bettermingle.app.data.repository.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import android.util.Log
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -62,7 +63,9 @@ class YearInReviewViewModel(application: Application) : AndroidViewModel(applica
                     try {
                         val participants = repository.getParticipantsByEvent(event.id).first()
                         participants.forEach { allParticipantIds.add(it.userId) }
-                    } catch (_: Exception) { }
+                    } catch (e: Exception) {
+                        Log.w("YearInReviewViewModel", "Failed to load participants for event ${event.id}", e)
+                    }
                 }
 
                 // Total event days
@@ -119,7 +122,8 @@ class YearInReviewViewModel(application: Application) : AndroidViewModel(applica
                     avgParticipantsPerEvent = avgParticipants,
                     isLoading = false
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("YearInReviewViewModel", "Failed to load year in review stats", e)
                 _stats.value = _stats.value.copy(isLoading = false)
             }
         }

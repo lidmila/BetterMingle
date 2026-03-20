@@ -37,4 +37,18 @@ class Converters {
 
     @TypeConverter
     fun toRsvpStatus(value: String): RsvpStatus = RsvpStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromStringMap(value: Map<String, String>): String {
+        return value.entries.joinToString(";") { "${it.key}=${it.value}" }
+    }
+
+    @TypeConverter
+    fun toStringMap(value: String): Map<String, String> {
+        if (value.isBlank()) return emptyMap()
+        return value.split(";").mapNotNull { entry ->
+            val parts = entry.split("=", limit = 2)
+            if (parts.size == 2) parts[0] to parts[1] else null
+        }.toMap()
+    }
 }

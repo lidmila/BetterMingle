@@ -25,12 +25,15 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.EventSeat
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TimePicker
@@ -46,6 +49,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -91,6 +96,7 @@ import com.bettermingle.app.ui.theme.TextOnColor
 
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -113,7 +119,17 @@ fun CarpoolScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    var isOrganizer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(eventId) {
+        try {
+            val eventDoc = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId).get().await()
+            isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+    }
 
     fun loadRides() {
         scope.launch {
@@ -155,7 +171,9 @@ fun CarpoolScreen(
 
                 rides.clear()
                 rides.addAll(loaded)
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
+            }
         }
     }
 
@@ -194,7 +212,9 @@ fun CarpoolScreen(
                                 .delete().await()
                             rides.removeAll { it.id == ride.id }
                             ActivityLogger.log(eventId, "carpool", context.getString(R.string.activity_deleted_ride, ride.departureLocation))
-                        } catch (_: Exception) { }
+                        } catch (_: Exception) {
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed)) }
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.common_delete), color = AccentOrange)
@@ -207,12 +227,34 @@ fun CarpoolScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.carpool_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "CARPOOL")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -330,7 +372,9 @@ fun CarpoolScreen(
                                                 .add(passengerData).await()
                                             ActivityLogger.log(eventId, "carpool", context.getString(R.string.activity_requested_ride, ride.departureLocation))
                                             loadRides()
-                                        } catch (_: Exception) { }
+                                        } catch (_: Exception) {
+                                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed)) }
+                                        }
                                     }
                                 },
                                 onPassengerUpdated = { loadRides() }

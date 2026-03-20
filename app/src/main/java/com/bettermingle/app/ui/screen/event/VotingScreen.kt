@@ -32,7 +32,11 @@ import androidx.compose.material.icons.filled.HowToVote
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -92,6 +96,7 @@ import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.removeModuleFromEvent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -120,7 +125,17 @@ fun VotingScreen(
     var showPollLimitDialog by remember { mutableStateOf(false) }
     var editingPoll by remember { mutableStateOf<PollWithOptions?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isOrganizer by remember { mutableStateOf(false) }
+    var showClosePollDialog by remember { mutableStateOf<PollWithOptions?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(eventId) {
+        try {
+            val eventDoc = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId).get().await()
+            isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+    }
 
     fun loadPolls() {
         scope.launch {
@@ -233,6 +248,36 @@ fun VotingScreen(
         )
     }
 
+    if (showClosePollDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showClosePollDialog = null },
+            title = { Text(stringResource(R.string.voting_close_poll_confirm_title)) },
+            text = { Text(stringResource(R.string.voting_close_poll_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val pollId = showClosePollDialog!!.poll.id
+                    showClosePollDialog = null
+                    scope.launch {
+                        try {
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("polls").document(pollId)
+                                .update("isClosed", true).await()
+                            loadPolls()
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed))
+                        }
+                    }
+                }) { Text(stringResource(R.string.common_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClosePollDialog = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -241,6 +286,27 @@ fun VotingScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "VOTING")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -310,15 +376,7 @@ fun VotingScreen(
                         onVoted = { loadPolls() },
                         onEdit = { editingPoll = pollData },
                         onClose = {
-                            scope.launch {
-                                try {
-                                    FirebaseFirestore.getInstance()
-                                        .collection("events").document(eventId)
-                                        .collection("polls").document(pollData.poll.id)
-                                        .update("isClosed", true).await()
-                                    loadPolls()
-                                } catch (_: Exception) { }
-                            }
+                            showClosePollDialog = pollData
                         },
                         scope = scope
                     )
@@ -342,6 +400,8 @@ private fun PollCard(
     val hapticView = LocalView.current
     val context = androidx.compose.ui.platform.LocalContext.current
     val isCreator = pollData.poll.createdBy == currentUserId
+    val isExpired = pollData.poll.deadline != null && System.currentTimeMillis() > pollData.poll.deadline
+    val isEffectivelyClosed = pollData.poll.isClosed || isExpired
 
     BetterMingleCard {
         Column {
@@ -358,7 +418,7 @@ private fun PollCard(
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isCreator && !pollData.poll.isClosed) {
+                    if (isCreator && !isEffectivelyClosed) {
                         IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 Icons.Default.Lock,
@@ -384,25 +444,50 @@ private fun PollCard(
 
             // Selection mode indicator
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (pollData.poll.isClosed) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = Success,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.voting_poll_closed),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Success
-                    )
+                if (isEffectivelyClosed) {
+                    if (isExpired && !pollData.poll.isClosed) {
+                        // Expired badge
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.extraSmall)
+                                .background(AccentOrange.copy(alpha = 0.12f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.voting_expired),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = AccentOrange
+                            )
+                        }
+                    } else {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Success,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.voting_poll_closed),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Success
+                        )
+                    }
                 } else {
                     Text(
                         text = if (pollData.poll.allowMultiple) stringResource(R.string.voting_multiple_answers) else stringResource(R.string.voting_single_answer),
                         style = MaterialTheme.typography.bodySmall,
                         color = PrimaryBlue
                     )
+                    // Show remaining time if deadline is set
+                    if (pollData.poll.deadline != null) {
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Text(
+                            text = stringResource(R.string.voting_ends_in, formatRemainingTime(pollData.poll.deadline)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = AccentOrange
+                        )
+                    }
                 }
             }
 
@@ -421,7 +506,7 @@ private fun PollCard(
                     isSelected = isSelected,
                     allowMultiple = pollData.poll.allowMultiple,
                     onVote = {
-                        if (!pollData.poll.isClosed && !isSelected) {
+                        if (!isEffectivelyClosed && !isSelected) {
                             hapticView.performHapticClick()
                             // For single-select: check if user already voted
                             if (!pollData.poll.allowMultiple && hasVoted) {
@@ -567,7 +652,7 @@ fun PollOptionItem(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun CreatePollDialog(
     eventId: String,
@@ -579,6 +664,10 @@ private fun CreatePollDialog(
     var selectedType by remember { mutableStateOf(PollType.CUSTOM) }
     var allowMultiple by remember { mutableStateOf(false) }
     var isAnonymous by remember { mutableStateOf(false) }
+    var deadlineEnabled by remember { mutableStateOf(false) }
+    var deadlineMillis by remember { mutableStateOf<Long?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
     val options = remember { mutableStateListOf("", "") }
     val scope = rememberCoroutineScope()
 
@@ -666,6 +755,120 @@ private fun CreatePollDialog(
                     )
                 }
 
+                // Deadline toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(stringResource(R.string.voting_deadline_toggle), style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = deadlineEnabled,
+                        onCheckedChange = { deadlineEnabled = it },
+                        colors = SwitchDefaults.colors(checkedTrackColor = PrimaryBlue)
+                    )
+                }
+
+                if (deadlineEnabled) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        TextButton(onClick = { showDatePicker = true }) {
+                            Text(
+                                if (deadlineMillis != null) {
+                                    java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault())
+                                        .format(java.util.Date(deadlineMillis!!))
+                                } else {
+                                    stringResource(R.string.voting_deadline_select_date)
+                                }
+                            )
+                        }
+                        TextButton(onClick = { showTimePicker = true }) {
+                            Text(
+                                if (deadlineMillis != null) {
+                                    java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                                        .format(java.util.Date(deadlineMillis!!))
+                                } else {
+                                    stringResource(R.string.voting_deadline_select_time)
+                                }
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.voting_deadline_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                }
+
+                if (showDatePicker) {
+                    val datePickerState = androidx.compose.material3.rememberDatePickerState(
+                        initialSelectedDateMillis = deadlineMillis ?: System.currentTimeMillis()
+                    )
+                    androidx.compose.material3.DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                val selectedDate = datePickerState.selectedDateMillis
+                                if (selectedDate != null) {
+                                    // Preserve time if already set, otherwise default to 23:59
+                                    val cal = java.util.Calendar.getInstance()
+                                    if (deadlineMillis != null) {
+                                        val timeCal = java.util.Calendar.getInstance()
+                                        timeCal.timeInMillis = deadlineMillis!!
+                                        cal.timeInMillis = selectedDate
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY))
+                                        cal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE))
+                                    } else {
+                                        cal.timeInMillis = selectedDate
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                                        cal.set(java.util.Calendar.MINUTE, 59)
+                                    }
+                                    deadlineMillis = cal.timeInMillis
+                                }
+                                showDatePicker = false
+                            }) { Text(stringResource(R.string.common_confirm)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.common_cancel)) }
+                        }
+                    ) {
+                        androidx.compose.material3.DatePicker(state = datePickerState)
+                    }
+                }
+
+                if (showTimePicker) {
+                    val cal = java.util.Calendar.getInstance()
+                    if (deadlineMillis != null) cal.timeInMillis = deadlineMillis!!
+                    val timePickerState = androidx.compose.material3.rememberTimePickerState(
+                        initialHour = cal.get(java.util.Calendar.HOUR_OF_DAY),
+                        initialMinute = cal.get(java.util.Calendar.MINUTE),
+                        is24Hour = true
+                    )
+                    AlertDialog(
+                        onDismissRequest = { showTimePicker = false },
+                        title = { Text(stringResource(R.string.voting_deadline_select_time)) },
+                        text = {
+                            androidx.compose.material3.TimePicker(state = timePickerState)
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                val dateCal = java.util.Calendar.getInstance()
+                                if (deadlineMillis != null) dateCal.timeInMillis = deadlineMillis!!
+                                dateCal.set(java.util.Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                dateCal.set(java.util.Calendar.MINUTE, timePickerState.minute)
+                                dateCal.set(java.util.Calendar.SECOND, 0)
+                                deadlineMillis = dateCal.timeInMillis
+                                showTimePicker = false
+                            }) { Text(stringResource(R.string.common_confirm)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.common_cancel)) }
+                        }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Text(
@@ -712,13 +915,14 @@ private fun CreatePollDialog(
                         try {
                             val currentUser = FirebaseAuth.getInstance().currentUser
                             val firestore = FirebaseFirestore.getInstance()
-                            val pollData = hashMapOf(
+                            val pollData = hashMapOf<String, Any?>(
                                 "createdBy" to (currentUser?.uid ?: ""),
                                 "title" to title,
                                 "pollType" to selectedType.name,
                                 "allowMultiple" to allowMultiple,
                                 "isAnonymous" to isAnonymous,
                                 "isClosed" to false,
+                                "deadline" to if (deadlineEnabled) deadlineMillis else null,
                                 "createdAt" to System.currentTimeMillis()
                             )
                             val pollRef = firestore.collection("events").document(eventId)
@@ -867,4 +1071,17 @@ private fun EditPollDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
+}
+
+private fun formatRemainingTime(deadlineMillis: Long): String {
+    val remaining = deadlineMillis - System.currentTimeMillis()
+    if (remaining <= 0) return ""
+    val days = remaining / (1000 * 60 * 60 * 24)
+    val hours = (remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    val minutes = (remaining % (1000 * 60 * 60)) / (1000 * 60)
+    return buildString {
+        if (days > 0) append("${days}d ")
+        if (hours > 0) append("${hours}h ")
+        if (days == 0L && minutes > 0) append("${minutes}m")
+    }.trim()
 }

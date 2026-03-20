@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.util.Log
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
@@ -126,7 +127,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             com.bettermingle.app.data.database.AppDatabase
                 .getDatabase(getApplication())
                 .clearAllTables()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Log.e("AuthViewModel", "Failed to clear local data on logout", e)
+        }
         repository.logout()
         _uiState.value = AuthUiState()
     }

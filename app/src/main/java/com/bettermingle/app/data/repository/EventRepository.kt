@@ -264,6 +264,19 @@ class EventRepository(context: Context) {
             Log.e("EventRepository", "Sync participant events failed: ${e.message}", e)
         }
 
+        // 3. Remove local events that no longer exist in Firestore
+        try {
+            val localEvents = eventDao.getAllEventsOnce()
+            for (local in localEvents) {
+                if (local.id !in syncedEventIds) {
+                    eventDao.deleteEventById(local.id)
+                    Log.d("EventRepository", "syncFromCloud: removed stale local event ${local.id}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EventRepository", "Cleanup stale events failed: ${e.message}", e)
+        }
+
         Log.d("EventRepository", "Synced ${syncedEventIds.size} events total")
     }
 

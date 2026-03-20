@@ -38,6 +38,9 @@ interface EventDao {
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEventById(eventId: String)
 
+    @Query("SELECT * FROM events")
+    suspend fun getAllEventsOnce(): List<Event>
+
     @Query("SELECT COUNT(*) FROM events WHERE status != 'COMPLETED' AND status != 'CANCELLED'")
     fun getActiveEventCount(): Flow<Int>
 }

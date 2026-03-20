@@ -33,7 +33,7 @@ import androidx.compose.material.icons.rounded.Fastfood
 import androidx.compose.material.icons.rounded.LocalCafe
 import androidx.compose.material.icons.rounded.SportsBar
 import androidx.compose.material.icons.rounded.Bed
-import androidx.compose.material.icons.rounded.ReceiptLong
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -97,6 +97,9 @@ import com.bettermingle.app.ui.component.BetterMingleTextField
 import com.bettermingle.app.ui.component.EmptyState
 import com.bettermingle.app.ui.component.NativeAdCard
 import com.bettermingle.app.ui.component.UserAvatar
+import com.bettermingle.app.ui.component.ModuleColorPickerDialog
+import com.bettermingle.app.data.repository.EventRepository
+import androidx.compose.material.icons.filled.Palette
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.AccentPurple
@@ -131,8 +134,8 @@ private fun categoryIcon(category: String): ImageVector = when (category.lowerca
     "doprava", "transport" -> Icons.Rounded.DirectionsCar
     "ubytování", "ubytovani", "accommodation" -> Icons.Rounded.Bed
     "nápoje", "napoje", "drinks" -> Icons.Rounded.SportsBar
-    "ostatní", "other", "" -> Icons.Rounded.ReceiptLong
-    else -> Icons.Rounded.ReceiptLong
+    "ostatní", "other", "" -> Icons.AutoMirrored.Rounded.ReceiptLong
+    else -> Icons.AutoMirrored.Rounded.ReceiptLong
 }
 
 @Composable
@@ -154,7 +157,7 @@ private fun formatRelativeDate(timestamp: Long, todayStr: String, yesterdayStr: 
                 now.get(Calendar.DAY_OF_YEAR) == date.get(Calendar.DAY_OF_YEAR) -> todayStr
         now.get(Calendar.YEAR) == date.get(Calendar.YEAR) &&
                 now.get(Calendar.DAY_OF_YEAR) - date.get(Calendar.DAY_OF_YEAR) == 1 -> yesterdayStr
-        else -> SimpleDateFormat("d. M.", Locale("cs", "CZ")).format(Date(timestamp))
+        else -> SimpleDateFormat("d. M.", Locale.forLanguageTag("cs-CZ")).format(Date(timestamp))
     }
 }
 
@@ -184,6 +187,7 @@ fun ExpensesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }
     var isOrganizer by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         try {
@@ -345,6 +349,19 @@ fun ExpensesScreen(
         )
     }
 
+    if (showColorPicker) {
+        ModuleColorPickerDialog(
+            currentColor = AccentOrange,
+            onColorSelected = { option ->
+                showColorPicker = false
+                scope.launch {
+                    EventRepository(context).updateModuleColor(eventId, "EXPENSES", option.hex)
+                }
+            },
+            onDismiss = { showColorPicker = false }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -362,6 +379,14 @@ fun ExpensesScreen(
                             Icon(Icons.Default.MoreVert, contentDescription = null)
                         }
                         DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_change_color)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    showColorPicker = true
+                                },
+                                leadingIcon = { Icon(Icons.Default.Palette, contentDescription = null) }
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.dashboard_remove_module)) },
                                 onClick = {

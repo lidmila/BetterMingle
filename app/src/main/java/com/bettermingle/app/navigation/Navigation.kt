@@ -372,8 +372,7 @@ fun BetterMingleNavigation() {
                                 popUpTo(Routes.EVENT_LIST) { inclusive = false }
                             }
                         }
-                        val currentSettings = settings
-                        if (currentSettings != null && AdManager.hasAds(currentSettings.premiumTier)) {
+                        if (AdManager.hasAds(settings.premiumTier)) {
                             val activity = createContext as? android.app.Activity
                             if (activity != null) {
                                 AdManager.showInterstitial(activity) { navigateToDashboard() }
@@ -511,8 +510,7 @@ fun BetterMingleNavigation() {
                 EventDashboardScreen(
                     eventId = eventId,
                     onNavigateBack = {
-                        val currentSettings = settings
-                        if (currentSettings != null && AdManager.hasAds(currentSettings.premiumTier)) {
+                        if (AdManager.hasAds(settings.premiumTier)) {
                             val activity = dashboardContext as? android.app.Activity
                             if (activity != null) {
                                 AdManager.showReturnInterstitial(activity) {

@@ -48,6 +48,10 @@
     <string name="login_google_failed">Přihlášení přes Google se nezdařilo</string>
     <string name="login_no_account">Nemáš účet? Zaregistruj se</string>
     <string name="login_forgot_password">Zapomenuté heslo?</string>
+    <string name="login_email_link">Přihlásit přes e-mailový odkaz</string>
+    <string name="login_email_link_sent">Odkaz odeslán! Zkontroluj e-mail.</string>
+    <string name="login_email_link_failed">Nepodařilo se odeslat odkaz</string>
+    <string name="login_email_link_error">Odkaz je neplatný nebo vypršel</string>
     <string name="login_logo_description">BetterMingle</string>
 
     <!-- Auth - Register -->
@@ -594,6 +598,11 @@
     <string name="summary_share_packing">%1$d věcí k balení</string>
     <string name="summary_share_wishlist">%1$d přání</string>
     <string name="summary_other_modules">Další moduly</string>
+    <string name="summary_share_format_title">Sdílet jako</string>
+    <string name="summary_share_format_text">Text</string>
+    <string name="summary_share_format_pdf">PDF report</string>
+    <string name="summary_pdf_generating">Generuji PDF…</string>
+    <string name="summary_pdf_error">Nepodařilo se vygenerovat PDF</string>
 
     <!-- Profile -->
     <string name="profile_title">Profil</string>
@@ -980,4 +989,87 @@
 
     <!-- Business tier modules -->
     <string name="module_business_locked">Dostupné v Business</string>
+
+    <!-- Template preview chips -->
+    <string name="template_preview_modules">%d modulů</string>
+    <string name="template_preview_budget">%d× rozpočet</string>
+    <string name="template_preview_tasks">%d úkolů</string>
+    <string name="template_preview_schedule">%d× program</string>
+
+    <!-- Template budget items -->
+    <string name="template_budget_venue">Místo konání</string>
+    <string name="template_budget_catering">Catering</string>
+    <string name="template_budget_photographer">Fotograf</string>
+    <string name="template_budget_music">Hudba</string>
+    <string name="template_budget_flowers">Květiny</string>
+    <string name="template_budget_dress">Šaty</string>
+    <string name="template_budget_food">Jídlo</string>
+    <string name="template_budget_drinks">Pití</string>
+    <string name="template_budget_cake">Dort</string>
+    <string name="template_budget_decorations">Dekorace</string>
+    <string name="template_budget_transport">Doprava</string>
+    <string name="template_budget_accommodation">Ubytování</string>
+    <string name="template_budget_activities">Aktivity</string>
+    <string name="template_budget_gifts">Dárky</string>
+    <string name="template_budget_equipment">Vybavení</string>
+    <string name="template_budget_tickets">Lístky</string>
+    <string name="template_budget_costumes">Kostýmy</string>
+
+    <!-- Template tasks -->
+    <string name="template_task_book_venue">Zarezervovat místo</string>
+    <string name="template_task_send_invitations">Poslat pozvánky</string>
+    <string name="template_task_order_flowers">Objednat květiny</string>
+    <string name="template_task_hire_photographer">Najmout fotografa</string>
+    <string name="template_task_buy_cake">Koupit dort</string>
+    <string name="template_task_prepare_playlist">Připravit playlist</string>
+    <string name="template_task_send_invites">Rozeslat pozvánky</string>
+    <string name="template_task_pack_bags">Sbalit tašky</string>
+    <string name="template_task_book_accommodation">Zarezervovat ubytování</string>
+    <string name="template_task_plan_route">Naplánovat trasu</string>
+    <string name="template_task_prepare_agenda">Připravit program</string>
+    <string name="template_task_order_catering">Objednat catering</string>
+    <string name="template_task_buy_decorations">Koupit dekorace</string>
+    <string name="template_task_plan_activities">Naplánovat aktivity</string>
+    <string name="template_task_book_restaurant">Zarezervovat restauraci</string>
+    <string name="template_task_arrange_transport">Zajistit dopravu</string>
+    <string name="template_task_prepare_equipment">Připravit vybavení</string>
+    <string name="template_task_buy_tickets">Koupit lístky</string>
+
+    <!-- Template schedule blocks -->
+    <string name="template_schedule_ceremony">Obřad</string>
+    <string name="template_schedule_reception">Recepce</string>
+    <string name="template_schedule_party">Párty</string>
+    <string name="template_schedule_departure">Odjezd</string>
+    <string name="template_schedule_arrival">Příjezd</string>
+    <string name="template_schedule_first_activity">První aktivita</string>
+    <string name="template_schedule_intro">Úvod</string>
+    <string name="template_schedule_activity_1">Aktivita 1</string>
+    <string name="template_schedule_lunch">Oběd</string>
+    <string name="template_schedule_activity_2">Aktivita 2</string>
+    <string name="template_schedule_dinner">Večeře</string>
+    <string name="template_schedule_games">Hry</string>
+    <string name="template_schedule_opening">Zahájení</string>
+    <string name="template_schedule_presentation">Prezentace</string>
+    <string name="template_schedule_workshop">Workshop</string>
+    <string name="template_schedule_warmup">Rozcvička</string>
+    <string name="template_schedule_match">Zápas</string>
+    <string name="template_schedule_awards">Vyhlášení výsledků</string>
+
+    <!-- PDF Export -->
+    <string name="export_pdf_button">Export PDF</string>
+    <string name="export_pdf_chooser">Sdílet PDF report</string>
+    <string name="export_pdf_generating">Generuji PDF…</string>
+    <string name="export_pdf_error">Nepodařilo se vygenerovat PDF</string>
+    <string name="export_pdf_upgrade_title">Export PDF</string>
+    <string name="export_pdf_upgrade_message">Podrobný export do PDF je dostupný s Mingle Pro.</string>
+    <string name="export_pdf_select_sections">Vyberte sekce</string>
+    <string name="export_pdf_section_participants">Účastníci</string>
+    <string name="export_pdf_section_polls">Hlasování</string>
+    <string name="export_pdf_section_budget">Rozpočet</string>
+    <string name="export_pdf_section_expenses">Výdaje</string>
+    <string name="export_pdf_section_wishlist">Wishlist</string>
+    <string name="export_pdf_section_tasks">Úkoly</string>
+    <string name="export_pdf_section_packing">Balící seznam</string>
+    <string name="export_pdf_section_carpool">Spolujízda</string>
+    <string name="export_pdf_export_button">Exportovat PDF</string>
 </resources>

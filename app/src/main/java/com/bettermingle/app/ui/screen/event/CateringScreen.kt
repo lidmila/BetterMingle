@@ -19,7 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,11 +55,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.EmptyState
+import com.bettermingle.app.ui.component.ModuleColorPickerDialog
+import com.bettermingle.app.data.repository.EventRepository
+import com.bettermingle.app.utils.removeModuleFromEvent
 import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -75,13 +84,27 @@ fun CateringScreen(
     var participants by remember { mutableStateOf<List<ParticipantDietary>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isOrganizer by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
 
     suspend fun loadData() {
         try {
             val firestore = FirebaseFirestore.getInstance()
+
+            // Check organizer
+            val eventDoc = firestore.collection("events").document(eventId).get().await()
+            val createdBy = eventDoc.getString("createdBy") ?: ""
+            isOrganizer = createdBy == currentUserId
+            if (!isOrganizer && currentUserId.isNotEmpty()) {
+                val partDoc = firestore.collection("events").document(eventId)
+                    .collection("participants").document(currentUserId).get().await()
+                val role = partDoc.getString("role") ?: ""
+                if (role.equals("CO_ORGANIZER", ignoreCase = true)) isOrganizer = true
+            }
+
             val partDocs = firestore.collection("events").document(eventId)
                 .collection("participants").get().await()
 
@@ -133,6 +156,21 @@ fun CateringScreen(
             .sortedByDescending { it.second }
     }
 
+    var showColorPicker by remember { mutableStateOf(false) }
+
+    if (showColorPicker) {
+        ModuleColorPickerDialog(
+            currentColor = Success,
+            onColorSelected = { option ->
+                showColorPicker = false
+                scope.launch {
+                    EventRepository(context).updateModuleColor(eventId, "CATERING", option.hex)
+                }
+            },
+            onDismiss = { showColorPicker = false }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -140,6 +178,35 @@ fun CateringScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                    }
+                },
+                actions = {
+                    if (isOrganizer) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_change_color)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    showColorPicker = true
+                                },
+                                leadingIcon = { Icon(Icons.Default.Palette, contentDescription = null) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dashboard_remove_module)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    scope.launch {
+                                        removeModuleFromEvent(eventId, "CATERING")
+                                        onNavigateBack()
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

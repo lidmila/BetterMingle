@@ -235,6 +235,9 @@ fun CreateEventScreen(
     val createScope = rememberCoroutineScope()
     val createContext = androidx.compose.ui.platform.LocalContext.current
 
+    // Store selected template for writing items after creation
+    var selectedTemplate by remember { mutableStateOf<EventTemplate?>(null) }
+
     // Template selection before wizard
     if (showTemplateSelection) {
         TemplateSelectionScreen(
@@ -245,6 +248,7 @@ fun CreateEventScreen(
                     eventDescription = createContext.getString(template.descriptionHintResId)
                     selectedModules.clear()
                     selectedModules.addAll(template.modules.filter { TierLimits.canUseModule(premiumTier, it) })
+                    selectedTemplate = template
                 }
                 showTemplateSelection = false
             },
@@ -414,7 +418,16 @@ fun CreateEventScreen(
                                     screenshotProtection = screenshotProtection,
                                     autoDeleteDays = autoDeleteDays,
                                     requireApproval = requireApproval,
-                                    invitedEmails = invitedEmails.toList()
+                                    invitedEmails = invitedEmails.toList(),
+                                    templateBudgetItems = selectedTemplate?.suggestedBudgetItems?.map {
+                                        CreateEventViewModel.TemplateBudgetData(createContext.getString(it.nameResId), it.estimatedAmount)
+                                    } ?: emptyList(),
+                                    templateTasks = selectedTemplate?.suggestedTasks?.map {
+                                        CreateEventViewModel.TemplateTaskData(createContext.getString(it.titleResId))
+                                    } ?: emptyList(),
+                                    templateScheduleBlocks = selectedTemplate?.suggestedScheduleBlocks?.map {
+                                        CreateEventViewModel.TemplateScheduleData(createContext.getString(it.titleResId), it.timeLabel)
+                                    } ?: emptyList()
                                 )
                             }
                         }
@@ -447,7 +460,7 @@ private fun StepBasicInfo(
     onCoverImageSelected: (Uri?) -> Unit,
     onNext: () -> Unit
 ) {
-    val dateFormat = remember { SimpleDateFormat("d. M. yyyy HH:mm", Locale("cs", "CZ")) }
+    val dateFormat = remember { SimpleDateFormat("d. M. yyyy HH:mm", Locale.forLanguageTag("cs-CZ")) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -1128,41 +1141,188 @@ private fun SecuritySection(
     }
 }
 
+private data class TemplateBudgetItem(val nameResId: Int, val estimatedAmount: Int = 0)
+private data class TemplateTask(val titleResId: Int)
+private data class TemplateScheduleBlock(val titleResId: Int, val timeLabel: String)
+
 private data class EventTemplate(
     val nameResId: Int,
     val emoji: String,
     val theme: String,
     val descriptionHintResId: Int,
     val modules: List<EventModule>,
-    val isPremium: Boolean = false
+    val isPremium: Boolean = false,
+    val suggestedBudgetItems: List<TemplateBudgetItem> = emptyList(),
+    val suggestedTasks: List<TemplateTask> = emptyList(),
+    val suggestedScheduleBlocks: List<TemplateScheduleBlock> = emptyList()
 )
 
 private val eventTemplates = listOf(
     EventTemplate(R.string.create_event_template_wedding, "\uD83D\uDC8D", "Svatba", R.string.create_event_template_wedding_desc,
-        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.SCHEDULE, EventModule.TASKS, EventModule.CARPOOL, EventModule.ROOMS, EventModule.PACKING_LIST)),
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.SCHEDULE, EventModule.TASKS, EventModule.CARPOOL, EventModule.ROOMS, EventModule.PACKING_LIST),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_catering),
+            TemplateBudgetItem(R.string.template_budget_photographer), TemplateBudgetItem(R.string.template_budget_music),
+            TemplateBudgetItem(R.string.template_budget_flowers), TemplateBudgetItem(R.string.template_budget_dress)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_send_invitations),
+            TemplateTask(R.string.template_task_order_flowers), TemplateTask(R.string.template_task_hire_photographer)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_ceremony, "14:00"),
+            TemplateScheduleBlock(R.string.template_schedule_reception, "16:00"),
+            TemplateScheduleBlock(R.string.template_schedule_party, "20:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_birthday, "\uD83C\uDF82", "Narozeniny", R.string.create_event_template_birthday_desc,
-        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST)),
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_food), TemplateBudgetItem(R.string.template_budget_drinks),
+            TemplateBudgetItem(R.string.template_budget_cake), TemplateBudgetItem(R.string.template_budget_decorations)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_buy_cake), TemplateTask(R.string.template_task_prepare_playlist),
+            TemplateTask(R.string.template_task_send_invites)
+        )
+    ),
     EventTemplate(R.string.create_event_template_teambuilding, "\uD83E\uDD1D", "Teambuilding", R.string.create_event_template_teambuilding_desc,
-        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS)),
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_catering),
+            TemplateBudgetItem(R.string.template_budget_activities)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_prepare_agenda),
+            TemplateTask(R.string.template_task_order_catering)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_intro, "9:00"),
+            TemplateScheduleBlock(R.string.template_schedule_activity_1, "10:00"),
+            TemplateScheduleBlock(R.string.template_schedule_lunch, "12:00"),
+            TemplateScheduleBlock(R.string.template_schedule_activity_2, "14:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_trip, "\uD83C\uDFD5\uFE0F", "Výlet", R.string.create_event_template_trip_desc,
-        listOf(EventModule.CARPOOL, EventModule.ROOMS, EventModule.SCHEDULE, EventModule.PACKING_LIST, EventModule.EXPENSES)),
+        listOf(EventModule.CARPOOL, EventModule.ROOMS, EventModule.SCHEDULE, EventModule.PACKING_LIST, EventModule.EXPENSES),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_transport), TemplateBudgetItem(R.string.template_budget_accommodation),
+            TemplateBudgetItem(R.string.template_budget_food), TemplateBudgetItem(R.string.template_budget_activities)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_pack_bags), TemplateTask(R.string.template_task_book_accommodation),
+            TemplateTask(R.string.template_task_plan_route)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_departure, "8:00"),
+            TemplateScheduleBlock(R.string.template_schedule_arrival, "12:00"),
+            TemplateScheduleBlock(R.string.template_schedule_first_activity, "14:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_bachelor, "\uD83D\uDC83", "Rozlučka", R.string.create_event_template_bachelor_desc,
-        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.CARPOOL, EventModule.TASKS)),
+        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.CARPOOL, EventModule.TASKS),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_food),
+            TemplateBudgetItem(R.string.template_budget_drinks), TemplateBudgetItem(R.string.template_budget_activities),
+            TemplateBudgetItem(R.string.template_budget_costumes)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_plan_activities),
+            TemplateTask(R.string.template_task_arrange_transport), TemplateTask(R.string.template_task_buy_decorations)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_departure, "15:00"),
+            TemplateScheduleBlock(R.string.template_schedule_dinner, "18:00"),
+            TemplateScheduleBlock(R.string.template_schedule_party, "21:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_workshop, "\uD83D\uDCCB", "Workshop", R.string.create_event_template_workshop_desc,
-        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.ROOMS)),
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.ROOMS),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_equipment)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_prepare_agenda)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_opening, "9:00"),
+            TemplateScheduleBlock(R.string.template_schedule_workshop, "10:00"),
+            TemplateScheduleBlock(R.string.template_schedule_lunch, "12:00"),
+            TemplateScheduleBlock(R.string.template_schedule_presentation, "13:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_family, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66", "Rodinné setkání", R.string.create_event_template_family_desc,
-        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.PACKING_LIST, EventModule.WISHLIST)),
+        listOf(EventModule.CHAT, EventModule.SCHEDULE, EventModule.EXPENSES, EventModule.PACKING_LIST, EventModule.WISHLIST),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_food), TemplateBudgetItem(R.string.template_budget_drinks),
+            TemplateBudgetItem(R.string.template_budget_gifts), TemplateBudgetItem(R.string.template_budget_decorations)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_send_invites), TemplateTask(R.string.template_task_book_restaurant),
+            TemplateTask(R.string.template_task_buy_decorations)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_arrival, "11:00"),
+            TemplateScheduleBlock(R.string.template_schedule_lunch, "12:00"),
+            TemplateScheduleBlock(R.string.template_schedule_games, "15:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_sports, "\u26BD", "Sport", R.string.create_event_template_sports_desc,
-        listOf(EventModule.SCHEDULE, EventModule.VOTING, EventModule.TASKS, EventModule.ROOMS)),
+        listOf(EventModule.SCHEDULE, EventModule.VOTING, EventModule.TASKS, EventModule.ROOMS),
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_equipment)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_prepare_equipment)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_warmup, "9:00"),
+            TemplateScheduleBlock(R.string.template_schedule_match, "10:00"),
+            TemplateScheduleBlock(R.string.template_schedule_awards, "16:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_festival, "\uD83C\uDFB5", "Festival", R.string.create_event_template_festival_desc,
-        listOf(EventModule.SCHEDULE, EventModule.CARPOOL, EventModule.EXPENSES, EventModule.CHAT), isPremium = true),
+        listOf(EventModule.SCHEDULE, EventModule.CARPOOL, EventModule.EXPENSES, EventModule.CHAT), isPremium = true,
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_tickets), TemplateBudgetItem(R.string.template_budget_transport),
+            TemplateBudgetItem(R.string.template_budget_food), TemplateBudgetItem(R.string.template_budget_accommodation)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_buy_tickets), TemplateTask(R.string.template_task_arrange_transport),
+            TemplateTask(R.string.template_task_book_accommodation)
+        )
+    ),
     EventTemplate(R.string.create_event_template_corporate, "\uD83C\uDFE2", "Firemní akce", R.string.create_event_template_corporate_desc,
-        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS), isPremium = true),
+        listOf(EventModule.SCHEDULE, EventModule.TASKS, EventModule.VOTING, EventModule.EXPENSES, EventModule.ROOMS), isPremium = true,
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_venue), TemplateBudgetItem(R.string.template_budget_catering),
+            TemplateBudgetItem(R.string.template_budget_activities)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_book_venue), TemplateTask(R.string.template_task_prepare_agenda),
+            TemplateTask(R.string.template_task_order_catering)
+        ),
+        suggestedScheduleBlocks = listOf(
+            TemplateScheduleBlock(R.string.template_schedule_opening, "9:00"),
+            TemplateScheduleBlock(R.string.template_schedule_presentation, "10:00"),
+            TemplateScheduleBlock(R.string.template_schedule_lunch, "12:00"),
+            TemplateScheduleBlock(R.string.template_schedule_activity_1, "14:00")
+        )
+    ),
     EventTemplate(R.string.create_event_template_party, "\uD83C\uDF89", "Oslava", R.string.create_event_template_party_desc,
-        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST), isPremium = true)
+        listOf(EventModule.VOTING, EventModule.EXPENSES, EventModule.CHAT, EventModule.PACKING_LIST), isPremium = true,
+        suggestedBudgetItems = listOf(
+            TemplateBudgetItem(R.string.template_budget_food), TemplateBudgetItem(R.string.template_budget_drinks),
+            TemplateBudgetItem(R.string.template_budget_decorations), TemplateBudgetItem(R.string.template_budget_music)
+        ),
+        suggestedTasks = listOf(
+            TemplateTask(R.string.template_task_send_invites), TemplateTask(R.string.template_task_prepare_playlist),
+            TemplateTask(R.string.template_task_buy_decorations)
+        )
+    )
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun TemplateSelectionScreen(
     premiumTier: PremiumTier,
@@ -1242,6 +1402,57 @@ private fun TemplateSelectionScreen(
                                 textAlign = TextAlign.Center,
                                 maxLines = 2
                             )
+                            // Preview chips showing what the template includes
+                            val hasExtras = template.suggestedBudgetItems.isNotEmpty() ||
+                                template.suggestedTasks.isNotEmpty() ||
+                                template.suggestedScheduleBlocks.isNotEmpty()
+                            if (hasExtras) {
+                                Spacer(modifier = Modifier.height(Spacing.xs))
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.template_preview_modules, template.modules.size),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PrimaryBlue,
+                                        modifier = Modifier
+                                            .background(PrimaryBlue.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                    if (template.suggestedBudgetItems.isNotEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.template_preview_budget, template.suggestedBudgetItems.size),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = AccentGold,
+                                            modifier = Modifier
+                                                .background(AccentGold.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                    if (template.suggestedTasks.isNotEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.template_preview_tasks, template.suggestedTasks.size),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = AccentPink,
+                                            modifier = Modifier
+                                                .background(AccentPink.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                    if (template.suggestedScheduleBlocks.isNotEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.template_preview_schedule, template.suggestedScheduleBlocks.size),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Success,
+                                            modifier = Modifier
+                                                .background(Success.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                            }
                             if (isLocked) {
                                 Spacer(modifier = Modifier.height(Spacing.xs))
                                 Icon(

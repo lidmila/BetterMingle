@@ -40,10 +40,22 @@ class FirestoreSyncService(context: Context) {
                 .whereEqualTo("createdBy", userId)
                 .get().await()
 
+            val remoteEventIds = ownedDocs.documents.mapNotNull { it.id }.toSet()
+
             for (doc in ownedDocs.documents) {
                 val event = documentToEvent(doc.id, doc.data ?: continue)
                 eventDao.insertEvent(event)
                 pullParticipants(doc.id)
+            }
+
+            // Delete local events that no longer exist in Firestore
+            val localEvents = eventDao.getAllEventsOnce()
+            for (localEvent in localEvents) {
+                if (localEvent.createdBy == userId && localEvent.id !in remoteEventIds) {
+                    participantDao.deleteAllByEvent(localEvent.id)
+                    eventDao.deleteEventById(localEvent.id)
+                    Log.d(TAG, "Deleted orphaned local event ${localEvent.id}")
+                }
             }
 
             Log.d(TAG, "Pulled ${ownedDocs.size()} owned events")

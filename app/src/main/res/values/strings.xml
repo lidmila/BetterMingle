@@ -48,6 +48,10 @@
     <string name="login_google_failed">Google sign-in failed</string>
     <string name="login_no_account">Don\'t have an account? Sign up</string>
     <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_email_link">Sign in with email link</string>
+    <string name="login_email_link_sent">Sign-in link sent! Check your email.</string>
+    <string name="login_email_link_failed">Failed to send sign-in link</string>
+    <string name="login_email_link_error">Sign-in link expired or invalid</string>
     <string name="login_logo_description">BetterMingle</string>
 
     <!-- Auth - Register -->
@@ -594,6 +598,11 @@
     <string name="summary_share_packing">%1$d packing items</string>
     <string name="summary_share_wishlist">%1$d wishlist items</string>
     <string name="summary_other_modules">Other modules</string>
+    <string name="summary_share_format_title">Share as</string>
+    <string name="summary_share_format_text">Text</string>
+    <string name="summary_share_format_pdf">PDF report</string>
+    <string name="summary_pdf_generating">Generating PDF…</string>
+    <string name="summary_pdf_error">Failed to generate PDF</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -980,4 +989,87 @@
 
     <!-- Business tier modules -->
     <string name="module_business_locked">Available in Business</string>
+
+    <!-- Template preview chips -->
+    <string name="template_preview_modules">%d modules</string>
+    <string name="template_preview_budget">%d× budget</string>
+    <string name="template_preview_tasks">%d tasks</string>
+    <string name="template_preview_schedule">%d× schedule</string>
+
+    <!-- Template budget items -->
+    <string name="template_budget_venue">Venue</string>
+    <string name="template_budget_catering">Catering</string>
+    <string name="template_budget_photographer">Photographer</string>
+    <string name="template_budget_music">Music</string>
+    <string name="template_budget_flowers">Flowers</string>
+    <string name="template_budget_dress">Dress</string>
+    <string name="template_budget_food">Food</string>
+    <string name="template_budget_drinks">Drinks</string>
+    <string name="template_budget_cake">Cake</string>
+    <string name="template_budget_decorations">Decorations</string>
+    <string name="template_budget_transport">Transport</string>
+    <string name="template_budget_accommodation">Accommodation</string>
+    <string name="template_budget_activities">Activities</string>
+    <string name="template_budget_gifts">Gifts</string>
+    <string name="template_budget_equipment">Equipment</string>
+    <string name="template_budget_tickets">Tickets</string>
+    <string name="template_budget_costumes">Costumes</string>
+
+    <!-- Template tasks -->
+    <string name="template_task_book_venue">Book venue</string>
+    <string name="template_task_send_invitations">Send invitations</string>
+    <string name="template_task_order_flowers">Order flowers</string>
+    <string name="template_task_hire_photographer">Hire photographer</string>
+    <string name="template_task_buy_cake">Buy cake</string>
+    <string name="template_task_prepare_playlist">Prepare playlist</string>
+    <string name="template_task_send_invites">Send invites</string>
+    <string name="template_task_pack_bags">Pack bags</string>
+    <string name="template_task_book_accommodation">Book accommodation</string>
+    <string name="template_task_plan_route">Plan route</string>
+    <string name="template_task_prepare_agenda">Prepare agenda</string>
+    <string name="template_task_order_catering">Order catering</string>
+    <string name="template_task_buy_decorations">Buy decorations</string>
+    <string name="template_task_plan_activities">Plan activities</string>
+    <string name="template_task_book_restaurant">Book restaurant</string>
+    <string name="template_task_arrange_transport">Arrange transport</string>
+    <string name="template_task_prepare_equipment">Prepare equipment</string>
+    <string name="template_task_buy_tickets">Buy tickets</string>
+
+    <!-- Template schedule blocks -->
+    <string name="template_schedule_ceremony">Ceremony</string>
+    <string name="template_schedule_reception">Reception</string>
+    <string name="template_schedule_party">Party</string>
+    <string name="template_schedule_departure">Departure</string>
+    <string name="template_schedule_arrival">Arrival</string>
+    <string name="template_schedule_first_activity">First activity</string>
+    <string name="template_schedule_intro">Introduction</string>
+    <string name="template_schedule_activity_1">Activity 1</string>
+    <string name="template_schedule_lunch">Lunch</string>
+    <string name="template_schedule_activity_2">Activity 2</string>
+    <string name="template_schedule_dinner">Dinner</string>
+    <string name="template_schedule_games">Games</string>
+    <string name="template_schedule_opening">Opening</string>
+    <string name="template_schedule_presentation">Presentation</string>
+    <string name="template_schedule_workshop">Workshop</string>
+    <string name="template_schedule_warmup">Warm-up</string>
+    <string name="template_schedule_match">Match</string>
+    <string name="template_schedule_awards">Awards</string>
+
+    <!-- PDF Export -->
+    <string name="export_pdf_button">Export PDF</string>
+    <string name="export_pdf_chooser">Share PDF report</string>
+    <string name="export_pdf_generating">Generating PDF…</string>
+    <string name="export_pdf_error">Failed to generate PDF</string>
+    <string name="export_pdf_upgrade_title">PDF Export</string>
+    <string name="export_pdf_upgrade_message">Detailed PDF export is available with Mingle Pro.</string>
+    <string name="export_pdf_select_sections">Select sections</string>
+    <string name="export_pdf_section_participants">Participants</string>
+    <string name="export_pdf_section_polls">Polls</string>
+    <string name="export_pdf_section_budget">Budget</string>
+    <string name="export_pdf_section_expenses">Expenses</string>
+    <string name="export_pdf_section_wishlist">Wishlist</string>
+    <string name="export_pdf_section_tasks">Tasks</string>
+    <string name="export_pdf_section_packing">Packing List</string>
+    <string name="export_pdf_section_carpool">Carpool</string>
+    <string name="export_pdf_export_button">Export PDF</string>
 </resources>

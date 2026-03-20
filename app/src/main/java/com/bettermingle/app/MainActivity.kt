@@ -1,7 +1,10 @@
 package com.bettermingle.app
 
+import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +21,7 @@ import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.navigation.BetterMingleNavigation
 import com.bettermingle.app.ui.theme.BetterMingleTheme
 import com.bettermingle.app.utils.ActivityLogger
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
@@ -41,6 +45,8 @@ class MainActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
         }
 
+        handleEmailSignInLink(intent)
+
         setContent {
             val settingsMgr = remember { SettingsManager(this) }
             val settings by settingsMgr.settingsFlow.collectAsState(
@@ -56,6 +62,33 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleEmailSignInLink(intent)
+    }
+
+    private fun handleEmailSignInLink(intent: Intent?) {
+        val link = intent?.data?.toString() ?: return
+        val auth = FirebaseAuth.getInstance()
+        if (!auth.isSignInWithEmailLink(link)) return
+
+        val prefs = getSharedPreferences("email_link_auth", Context.MODE_PRIVATE)
+        val email = prefs.getString("pending_email", null)
+        if (email.isNullOrBlank()) {
+            Log.w("MainActivity", "Email link received but no pending email found")
+            return
+        }
+
+        auth.signInWithEmailLink(email, link)
+            .addOnSuccessListener { result ->
+                prefs.edit().remove("pending_email").apply()
+                Log.d("MainActivity", "Email link sign-in successful: ${result.user?.uid}")
+            }
+            .addOnFailureListener { e ->
+                Log.e("MainActivity", "Email link sign-in failed", e)
+            }
     }
 
     private fun applyLocale(lang: String) {

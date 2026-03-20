@@ -72,6 +72,9 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
+import com.bettermingle.app.ui.component.ModuleColorPickerDialog
+import com.bettermingle.app.data.repository.EventRepository
+import androidx.compose.material.icons.filled.Palette
 import com.bettermingle.app.utils.ActivityLogger
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
@@ -92,6 +95,7 @@ fun WishlistScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     var isOrganizer by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
     val currentUser = remember { FirebaseAuth.getInstance().currentUser }
     val currentUserId = currentUser?.uid ?: ""
 
@@ -156,6 +160,19 @@ fun WishlistScreen(
         )
     }
 
+    if (showColorPicker) {
+        ModuleColorPickerDialog(
+            currentColor = AccentPink,
+            onColorSelected = { option ->
+                showColorPicker = false
+                scope.launch {
+                    EventRepository(context).updateModuleColor(eventId, "WISHLIST", option.hex)
+                }
+            },
+            onDismiss = { showColorPicker = false }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -173,6 +190,14 @@ fun WishlistScreen(
                             Icon(Icons.Default.MoreVert, contentDescription = null)
                         }
                         DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_change_color)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    showColorPicker = true
+                                },
+                                leadingIcon = { Icon(Icons.Default.Palette, contentDescription = null) }
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.dashboard_remove_module)) },
                                 onClick = {

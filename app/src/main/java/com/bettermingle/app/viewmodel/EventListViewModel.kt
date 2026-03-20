@@ -146,8 +146,16 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun refresh() {
-        _uiState.value = _uiState.value.copy(isLoading = true)
-        syncFromCloud()
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.syncFromCloud()
+            } catch (e: Exception) {
+                Log.e("EventListViewModel", "Cloud sync failed during refresh", e)
+            } finally {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
+        }
     }
 
     fun deleteEvent(eventId: String) {

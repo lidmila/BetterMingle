@@ -119,8 +119,22 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.hexToColor
-import com.bettermingle.app.ui.component.ModuleColorPickerDialog
 import com.bettermingle.app.data.repository.EventRepository
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TextButton
+import androidx.core.content.FileProvider
+import com.bettermingle.app.data.preferences.AppSettings
+import com.bettermingle.app.utils.EventPdfGenerator
+import com.bettermingle.app.utils.PdfSection
+import com.bettermingle.app.utils.loadDetailedEventReport
+import androidx.compose.material3.Switch
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.async
@@ -199,7 +213,6 @@ fun EventDashboardScreen(
     var isCreator by remember { mutableStateOf(false) }
     var showAddModuleSheet by remember { mutableStateOf(false) }
     var moduleColors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
-    var colorPickerModule by remember { mutableStateOf<EventModule?>(null) }
 
     // Drag-and-drop state
     var draggedKey by remember { mutableStateOf<String?>(null) }
@@ -210,6 +223,11 @@ fun EventDashboardScreen(
     var showShareSheet by remember { mutableStateOf(false) }
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showDeleteEventDialog by remember { mutableStateOf(false) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    var showExportUpgradeDialog by remember { mutableStateOf(false) }
+    var showPdfSectionSheet by remember { mutableStateOf(false) }
+    var selectedPdfSections by remember { mutableStateOf(PdfSection.entries.toSet()) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val settingsManager = remember { SettingsManager(context) }
     val settings by settingsManager.settingsFlow.collectAsState(initial = null)
@@ -484,23 +502,6 @@ fun EventDashboardScreen(
         if (isOrganizer && availableToAdd.isNotEmpty()) add(GridItem.AddItem)
     }
 
-    // Color picker dialog
-    colorPickerModule?.let { module ->
-        val currentColor = moduleColors[module.name]?.let { hexToColor(it) }
-            ?: buildUserModuleInfo(module).iconTint
-        ModuleColorPickerDialog(
-            currentColor = currentColor,
-            onColorSelected = { option ->
-                moduleColors = moduleColors + (module.name to option.hex)
-                colorPickerModule = null
-                scope.launch {
-                    EventRepository(context).updateModuleColor(eventId, module.name, option.hex)
-                }
-            },
-            onDismiss = { colorPickerModule = null }
-        )
-    }
-
     // Add module bottom sheet
     if (showAddModuleSheet) {
         ModalBottomSheet(
@@ -663,7 +664,164 @@ fun EventDashboardScreen(
         )
     }
 
+    if (showExportUpgradeDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportUpgradeDialog = false },
+            title = { Text(stringResource(R.string.export_pdf_upgrade_title)) },
+            text = { Text(stringResource(R.string.export_pdf_upgrade_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExportUpgradeDialog = false
+                    onNavigateToUpgrade()
+                }) { Text(stringResource(R.string.tier_upgrade_button)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportUpgradeDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
+    // PDF section picker bottom sheet
+    if (showPdfSectionSheet) {
+        val availableSections = remember(enabledModules) {
+            val available = mutableSetOf(PdfSection.PARTICIPANTS)
+            for (m in enabledModules) {
+                when (m) {
+                    EventModule.VOTING -> available.add(PdfSection.POLLS)
+                    EventModule.EXPENSES -> available.add(PdfSection.EXPENSES)
+                    EventModule.CARPOOL -> available.add(PdfSection.CARPOOL)
+                    EventModule.TASKS -> available.add(PdfSection.TASKS)
+                    EventModule.PACKING_LIST -> available.add(PdfSection.PACKING)
+                    EventModule.WISHLIST -> available.add(PdfSection.WISHLIST)
+                    EventModule.BUDGET -> available.add(PdfSection.BUDGET)
+                    else -> { }
+                }
+            }
+            available.toList().sortedBy { it.ordinal }
+        }
+
+        fun sectionLabel(section: PdfSection): Int = when (section) {
+            PdfSection.PARTICIPANTS -> R.string.export_pdf_section_participants
+            PdfSection.POLLS -> R.string.export_pdf_section_polls
+            PdfSection.BUDGET -> R.string.export_pdf_section_budget
+            PdfSection.EXPENSES -> R.string.export_pdf_section_expenses
+            PdfSection.WISHLIST -> R.string.export_pdf_section_wishlist
+            PdfSection.TASKS -> R.string.export_pdf_section_tasks
+            PdfSection.PACKING -> R.string.export_pdf_section_packing
+            PdfSection.CARPOOL -> R.string.export_pdf_section_carpool
+        }
+
+        fun sectionIcon(section: PdfSection): ImageVector = when (section) {
+            PdfSection.PARTICIPANTS -> Icons.TwoTone.Groups
+            PdfSection.POLLS -> Icons.TwoTone.Ballot
+            PdfSection.BUDGET -> Icons.TwoTone.Assessment
+            PdfSection.EXPENSES -> Icons.TwoTone.Payments
+            PdfSection.WISHLIST -> Icons.TwoTone.CardGiftcard
+            PdfSection.TASKS -> Icons.TwoTone.Checklist
+            PdfSection.PACKING -> Icons.TwoTone.Backpack
+            PdfSection.CARPOOL -> Icons.TwoTone.DirectionsCar
+        }
+
+        fun sharePdfFile(file: File) {
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            val chooser = Intent.createChooser(shareIntent, context.getString(R.string.export_pdf_chooser)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = { showPdfSectionSheet = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.md)
+            ) {
+                Text(
+                    text = stringResource(R.string.export_pdf_select_sections),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(Spacing.md))
+
+                for (section in availableSections) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = sectionIcon(section),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = PrimaryBlue
+                        )
+                        Spacer(modifier = Modifier.size(Spacing.sm))
+                        Text(
+                            text = stringResource(sectionLabel(section)),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = section in selectedPdfSections,
+                            onCheckedChange = { checked ->
+                                selectedPdfSections = if (checked) {
+                                    selectedPdfSections + section
+                                } else {
+                                    selectedPdfSections - section
+                                }
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                BetterMingleButton(
+                    text = stringResource(R.string.export_pdf_export_button),
+                    onClick = {
+                        showPdfSectionSheet = false
+                        isExportingPdf = true
+                        scope.launch {
+                            try {
+                                val report = withContext(Dispatchers.IO) {
+                                    loadDetailedEventReport(eventId)
+                                }
+                                val file = withContext(Dispatchers.IO) {
+                                    EventPdfGenerator(context).generateDetailed(report, selectedPdfSections)
+                                }
+                                sharePdfFile(file)
+                            } catch (_: Exception) {
+                                snackbarHostState.showSnackbar(context.getString(R.string.export_pdf_error))
+                            } finally {
+                                isExportingPdf = false
+                            }
+                        }
+                    },
+                    enabled = selectedPdfSections.isNotEmpty(),
+                    isCta = true
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.lg))
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -678,6 +836,39 @@ fun EventDashboardScreen(
                     }
                 },
                 actions = {
+                    // Export PDF button (all participants)
+                    IconButton(
+                        onClick = {
+                            val tier = settings?.premiumTier ?: PremiumTier.FREE
+                            if (tier == PremiumTier.FREE) {
+                                showExportUpgradeDialog = true
+                            } else {
+                                // Build available sections based on enabled modules
+                                val available = mutableSetOf(PdfSection.PARTICIPANTS)
+                                for (m in enabledModules) {
+                                    when (m) {
+                                        EventModule.VOTING -> available.add(PdfSection.POLLS)
+                                        EventModule.EXPENSES -> available.add(PdfSection.EXPENSES)
+                                        EventModule.CARPOOL -> available.add(PdfSection.CARPOOL)
+                                        EventModule.TASKS -> available.add(PdfSection.TASKS)
+                                        EventModule.PACKING_LIST -> available.add(PdfSection.PACKING)
+                                        EventModule.WISHLIST -> available.add(PdfSection.WISHLIST)
+                                        EventModule.BUDGET -> available.add(PdfSection.BUDGET)
+                                        else -> { }
+                                    }
+                                }
+                                selectedPdfSections = available
+                                showPdfSectionSheet = true
+                            }
+                        },
+                        enabled = !isExportingPdf
+                    ) {
+                        if (isExportingPdf) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.Description, contentDescription = stringResource(R.string.export_pdf_button))
+                        }
+                    }
                     if (inviteCode.isNotEmpty()) {
                         IconButton(onClick = { showShareSheet = true }) {
                             Icon(Icons.Default.Share, contentDescription = stringResource(R.string.dashboard_share_invite))
@@ -1013,11 +1204,6 @@ fun EventDashboardScreen(
                                                 subtitle = module.subtitle,
                                                 badgeCount = module.badgeCount,
                                                 onClick = { handleModuleClick(module.key) },
-                                                showMenu = isOrganizer && isUserModule,
-                                                onDeleteClick = { handleDeleteModule(module.key) },
-                                                onColorClick = if (isOrganizer && isUserModule) {
-                                                    { colorPickerModule = MODULE_KEY_TO_ENUM[module.key] }
-                                                } else null,
                                                 enablePressAnimation = !canDrag
                                             )
                                         }

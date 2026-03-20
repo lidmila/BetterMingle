@@ -1,6 +1,7 @@
 package com.bettermingle.app.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bettermingle.app.data.preferences.SettingsManager
@@ -17,12 +18,20 @@ data class AuthUiState(
     val isLoggedIn: Boolean = false,
     val user: FirebaseUser? = null,
     val error: String? = null,
-    val passwordResetSent: Boolean = false
+    val passwordResetSent: Boolean = false,
+    val emailLinkSent: Boolean = false
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsManager = SettingsManager(application)
     private val repository = AuthRepository(settingsManager)
+
+    companion object {
+        private const val PREFS_NAME = "email_link_auth"
+        private const val KEY_PENDING_EMAIL = "pending_email"
+    }
+
+    private val emailLinkPrefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _uiState = MutableStateFlow(AuthUiState(
         isLoggedIn = repository.isLoggedIn,
@@ -121,12 +130,58 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun sendEmailLink(email: String) {
+        if (email.isBlank()) {
+            _uiState.value = _uiState.value.copy(error = "Zadej e-mail")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, emailLinkSent = false)
+            val result = repository.sendSignInLink(email)
+            _uiState.value = result.fold(
+                onSuccess = {
+                    emailLinkPrefs.edit().putString(KEY_PENDING_EMAIL, email).apply()
+                    _uiState.value.copy(isLoading = false, emailLinkSent = true)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun signInWithEmailLink(email: String, link: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.signInWithEmailLink(email, link)
+            _uiState.value = result.fold(
+                onSuccess = { user ->
+                    emailLinkPrefs.edit().remove(KEY_PENDING_EMAIL).apply()
+                    _uiState.value.copy(isLoading = false, isLoggedIn = true, user = user)
+                },
+                onFailure = { e ->
+                    _uiState.value.copy(isLoading = false, error = mapAuthError(e))
+                }
+            )
+        }
+    }
+
+    fun getPendingEmail(): String? {
+        return emailLinkPrefs.getString(KEY_PENDING_EMAIL, null)
+    }
+
+    fun isSignInWithEmailLink(link: String): Boolean {
+        return repository.isSignInWithEmailLink(link)
+    }
+
     suspend fun logout() {
         try {
             settingsManager.clearAll()
-            com.bettermingle.app.data.database.AppDatabase
-                .getDatabase(getApplication())
-                .clearAllTables()
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                com.bettermingle.app.data.database.AppDatabase
+                    .getDatabase(getApplication())
+                    .clearAllTables()
+            }
         } catch (e: Exception) {
             Log.e("AuthViewModel", "Failed to clear local data on logout", e)
         }

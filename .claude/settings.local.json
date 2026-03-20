@@ -85,7 +85,13 @@
       "Bash(tee /tmp/build.log)",
       "Bash(git status:*)",
       "Bash(./gradlew.bat :app:compileDebugKotlin)",
-      "Bash(echo \"EXIT_CODE: $?\")"
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Bash(find /c/Users/lidmi/Documents/GitHub/BetterMingle -type f \\\\\\(-name *.ts -o -name *.js \\\\\\) -not -path */node_modules/*)",
+      "Bash(find /c/Users/lidmi/Documents/GitHub/BetterMingle -type f \\\\\\(-name google-services.json -o -name *google* \\\\\\))",
+      "WebFetch(domain:firebase.google.com)",
+      "Read(//tmp/**)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(echo EXIT=$?)"
     ]
   }
 }

@@ -1,6 +1,7 @@
 package com.bettermingle.app.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bettermingle.app.data.model.EventModule
@@ -8,12 +9,14 @@ import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.repository.EventRepository
 import com.bettermingle.app.utils.ActivityLogger
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class CreateEventUiState(
     val isCreating: Boolean = false,
@@ -29,6 +32,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _uiState = MutableStateFlow(CreateEventUiState())
     val uiState: StateFlow<CreateEventUiState> = _uiState.asStateFlow()
+
+    data class TemplateBudgetData(val name: String, val estimatedAmount: Int = 0)
+    data class TemplateTaskData(val title: String)
+    data class TemplateScheduleData(val title: String, val timeLabel: String)
 
     fun createEvent(
         name: String,
@@ -48,7 +55,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
         screenshotProtection: Boolean = false,
         autoDeleteDays: Int = 0,
         requireApproval: Boolean = false,
-        invitedEmails: List<String> = emptyList()
+        invitedEmails: List<String> = emptyList(),
+        templateBudgetItems: List<TemplateBudgetData> = emptyList(),
+        templateTasks: List<TemplateTaskData> = emptyList(),
+        templateScheduleBlocks: List<TemplateScheduleData> = emptyList()
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreating = true, error = null)
@@ -74,6 +84,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
                     invitedEmails = invitedEmails
                 )
                 ActivityLogger.log(eventId, "settings", "vytvořil/a novou akci: $name", eventName = name)
+
+                // Write template items to Firestore subcollections
+                writeTemplateItems(eventId, templateBudgetItems, templateTasks, templateScheduleBlocks)
+
                 _uiState.value = _uiState.value.copy(
                     isCreating = false,
                     createdEventId = eventId
@@ -84,6 +98,57 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
                     error = e.message ?: "Chyba při vytváření akce"
                 )
             }
+        }
+    }
+
+    private suspend fun writeTemplateItems(
+        eventId: String,
+        budgetItems: List<TemplateBudgetData>,
+        tasks: List<TemplateTaskData>,
+        scheduleBlocks: List<TemplateScheduleData>
+    ) {
+        if (budgetItems.isEmpty() && tasks.isEmpty() && scheduleBlocks.isEmpty()) return
+
+        val firestore = FirebaseFirestore.getInstance()
+        val eventRef = firestore.collection("events").document(eventId)
+
+        try {
+            val batch = firestore.batch()
+
+            budgetItems.forEach { item ->
+                val doc = eventRef.collection("budget").document()
+                batch.set(doc, mapOf(
+                    "name" to item.name,
+                    "estimatedAmount" to item.estimatedAmount,
+                    "actualAmount" to 0,
+                    "fromTemplate" to true,
+                    "createdAt" to System.currentTimeMillis()
+                ))
+            }
+
+            tasks.forEach { task ->
+                val doc = eventRef.collection("tasks").document()
+                batch.set(doc, mapOf(
+                    "title" to task.title,
+                    "completed" to false,
+                    "fromTemplate" to true,
+                    "createdAt" to System.currentTimeMillis()
+                ))
+            }
+
+            scheduleBlocks.forEach { block ->
+                val doc = eventRef.collection("schedule").document()
+                batch.set(doc, mapOf(
+                    "title" to block.title,
+                    "time" to block.timeLabel,
+                    "fromTemplate" to true,
+                    "createdAt" to System.currentTimeMillis()
+                ))
+            }
+
+            batch.commit().await()
+        } catch (e: Exception) {
+            Log.e("CreateEventViewModel", "Failed to write template items for $eventId", e)
         }
     }
 }

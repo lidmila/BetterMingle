@@ -60,6 +60,7 @@ fun PlacesAutocompleteField(
     val context = LocalContext.current
     var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
     var showSuggestions by remember { mutableStateOf(false) }
+    var justSelected by remember { mutableStateOf(false) }
     var placesAvailable by remember { mutableStateOf(true) }
 
     val placesClient = remember {
@@ -84,6 +85,10 @@ fun PlacesAutocompleteField(
 
     // Debounced autocomplete search
     LaunchedEffect(value) {
+        if (justSelected) {
+            justSelected = false
+            return@LaunchedEffect
+        }
         if (!placesAvailable || value.length < 3) {
             predictions = emptyList()
             showSuggestions = false
@@ -136,6 +141,7 @@ fun PlacesAutocompleteField(
                                 .fillMaxWidth()
                                 .clickable {
                                     showSuggestions = false
+                                    justSelected = true
                                     val placeId = prediction.placeId
                                     val primaryText = prediction.getPrimaryText(null).toString()
                                     onValueChange(primaryText)

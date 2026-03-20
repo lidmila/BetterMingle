@@ -117,6 +117,11 @@ service cloud.firestore {
       }
     }
 
+    // Collection group query on participants (used by syncFromCloud)
+    match /{path=**}/participants/{participantId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     // Pending join requests for events with approval required
     match /joinRequests/{requestId} {
       allow read: if request.auth != null && (

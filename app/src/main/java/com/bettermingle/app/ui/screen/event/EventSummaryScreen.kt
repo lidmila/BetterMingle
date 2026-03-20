@@ -71,16 +71,21 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.core.content.FileProvider
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.data.preferences.AppSettings
+import com.bettermingle.app.utils.EventPdfGenerator
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private data class SummaryStats(
+internal data class SummaryStats(
     val eventName: String = "",
     val eventDescription: String = "",
     val eventTheme: String = "",
@@ -123,6 +128,8 @@ fun EventSummaryScreen(
     val settingsManager = remember { SettingsManager(context) }
     val settings by settingsManager.settingsFlow.collectAsState(initial = AppSettings())
     var showExportLimitDialog by remember { mutableStateOf(false) }
+    var showShareFormatDialog by remember { mutableStateOf(false) }
+    var isGeneratingPdf by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         val firestore = FirebaseFirestore.getInstance()
@@ -561,6 +568,93 @@ fun EventSummaryScreen(
             }
 
             val shareChooserStr = stringResource(R.string.summary_share_chooser)
+            val pdfGeneratingStr = stringResource(R.string.summary_pdf_generating)
+            val pdfErrorStr = stringResource(R.string.summary_pdf_error)
+
+            if (showShareFormatDialog) {
+                AlertDialog(
+                    onDismissRequest = { showShareFormatDialog = false },
+                    title = { Text(stringResource(R.string.summary_share_format_title)) },
+                    text = {
+                        Column {
+                            TextButton(onClick = {
+                                showShareFormatDialog = false
+                                val shareText = buildString {
+                                    appendLine("\uD83D\uDCCA $shareHeaderStr")
+                                    appendLine("\uD83D\uDC65 $shareParticipantsStr")
+                                    appendLine(shareRsvpStr)
+                                    if (stats.totalExpenses > 0) appendLine("\uD83D\uDCB0 $shareExpensesStr")
+                                    appendLine("\uD83D\uDCAC $shareMessagesStr")
+                                    appendLine("\uD83D\uDDF3\uFE0F $sharePollsStr")
+                                    if (stats.rideCount > 0) appendLine("\uD83D\uDE97 ${stats.rideCount} rides")
+                                    if (stats.taskCount > 0) appendLine("\u2705 $shareTasksStr")
+                                    if (stats.packingItemCount > 0) appendLine("\uD83C\uDF92 $sharePackingStr")
+                                    if (stats.wishlistItemCount > 0) appendLine("\uD83C\uDF81 $shareWishlistStr")
+                                    appendLine("\n$shareFooterStr")
+                                }
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                }
+                                context.startActivity(Intent.createChooser(intent, shareChooserStr))
+                            }) {
+                                Text(stringResource(R.string.summary_share_format_text))
+                            }
+                            TextButton(onClick = {
+                                showShareFormatDialog = false
+                                isGeneratingPdf = true
+                                scope.launch {
+                                    try {
+                                        val file = withContext(Dispatchers.IO) {
+                                            EventPdfGenerator(context).generate(stats)
+                                        }
+                                        val uri = FileProvider.getUriForFile(
+                                            context,
+                                            "${context.packageName}.fileprovider",
+                                            file
+                                        )
+                                        val intent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "application/pdf"
+                                            putExtra(Intent.EXTRA_STREAM, uri)
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        context.startActivity(Intent.createChooser(intent, shareChooserStr))
+                                    } catch (_: Exception) {
+                                        snackbarHostState.showSnackbar(pdfErrorStr)
+                                    } finally {
+                                        isGeneratingPdf = false
+                                    }
+                                }
+                            }) {
+                                Text(stringResource(R.string.summary_share_format_pdf))
+                            }
+                        }
+                    },
+                    confirmButton = {},
+                    dismissButton = {
+                        TextButton(onClick = { showShareFormatDialog = false }) {
+                            Text(stringResource(R.string.common_cancel))
+                        }
+                    }
+                )
+            }
+
+            if (isGeneratingPdf) {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    Text(
+                        text = pdfGeneratingStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(Spacing.sm))
+            }
+
             BetterMingleButton(
                 text = stringResource(R.string.summary_share_button),
                 onClick = {
@@ -568,24 +662,7 @@ fun EventSummaryScreen(
                         showExportLimitDialog = true
                         return@BetterMingleButton
                     }
-                    val shareText = buildString {
-                        appendLine("\uD83D\uDCCA $shareHeaderStr")
-                        appendLine("\uD83D\uDC65 $shareParticipantsStr")
-                        appendLine(shareRsvpStr)
-                        if (stats.totalExpenses > 0) appendLine("\uD83D\uDCB0 $shareExpensesStr")
-                        appendLine("\uD83D\uDCAC $shareMessagesStr")
-                        appendLine("\uD83D\uDDF3\uFE0F $sharePollsStr")
-                        if (stats.rideCount > 0) appendLine("\uD83D\uDE97 ${stats.rideCount} rides")
-                        if (stats.taskCount > 0) appendLine("\u2705 $shareTasksStr")
-                        if (stats.packingItemCount > 0) appendLine("\uD83C\uDF92 $sharePackingStr")
-                        if (stats.wishlistItemCount > 0) appendLine("\uD83C\uDF81 $shareWishlistStr")
-                        appendLine("\n$shareFooterStr")
-                    }
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                    }
-                    context.startActivity(Intent.createChooser(intent, shareChooserStr))
+                    showShareFormatDialog = true
                 },
                 isCta = true
             )

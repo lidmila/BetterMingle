@@ -1,6 +1,7 @@
 package com.bettermingle.app.data.repository
 
 import android.util.Log
+import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -78,6 +79,35 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun sendSignInLink(email: String): Result<Unit> {
+        return try {
+            val actionCodeSettings = ActionCodeSettings.newBuilder()
+                .setUrl("https://bettermingle.app/emailSignIn")
+                .setHandleCodeInApp(true)
+                .setAndroidPackageName("com.bettermingle.app", true, null)
+                .build()
+            auth.sendSignInLinkToEmail(email, actionCodeSettings).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signInWithEmailLink(email: String, link: String): Result<FirebaseUser> {
+        return try {
+            val result = auth.signInWithEmailLink(email, link).await()
+            val user = result.user ?: return Result.failure(Exception("Email link sign-in failed"))
+            syncUserToFirestore(user)
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun isSignInWithEmailLink(link: String): Boolean {
+        return auth.isSignInWithEmailLink(link)
     }
 
     fun logout() {

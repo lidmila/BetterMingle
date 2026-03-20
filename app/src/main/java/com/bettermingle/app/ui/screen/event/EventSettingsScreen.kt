@@ -322,37 +322,45 @@ fun EventSettingsScreen(
     }
 
     if (showDeleteDialog) {
+        var isDeleting by remember { mutableStateOf(false) }
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
             title = { Text(stringResource(R.string.event_settings_delete_title)) },
             text = { Text(stringResource(R.string.event_settings_delete_confirm, eventName)) },
             confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        try {
-                            val firestore = FirebaseFirestore.getInstance()
-                            val eventRef = firestore.collection("events").document(eventId)
-                            // Delete subcollections
-                            val subcollections = listOf("participants", "polls", "expenses", "carpoolRides", "rooms", "schedule", "messages")
-                            for (sub in subcollections) {
-                                val docs = eventRef.collection(sub).get().await()
-                                for (doc in docs.documents) {
-                                    doc.reference.delete().await()
-                                }
+                TextButton(
+                    onClick = {
+                        isDeleting = true
+                        scope.launch {
+                            try {
+                                EventRepository(context).deleteEvent(eventId)
+                                ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_deleted_event, eventName), eventName = eventName)
+                                showDeleteDialog = false
+                                onEventDeleted()
+                            } catch (_: Exception) {
+                                isDeleting = false
+                                snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed))
                             }
-                            eventRef.delete().await()
-                            ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_deleted_event, eventName), eventName = eventName)
-                            onEventDeleted()
-                        } catch (_: Exception) {
-                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed)) }
                         }
+                    },
+                    enabled = !isDeleting
+                ) {
+                    if (isDeleting) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = AccentOrange
+                        )
+                    } else {
+                        Text(stringResource(R.string.common_delete), color = AccentOrange)
                     }
-                }) {
-                    Text(stringResource(R.string.common_delete), color = AccentOrange)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    enabled = !isDeleting
+                ) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }

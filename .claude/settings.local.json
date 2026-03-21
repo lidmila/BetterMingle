@@ -91,7 +91,10 @@
       "WebFetch(domain:firebase.google.com)",
       "Read(//tmp/**)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(echo EXIT=$?)"
+      "Bash(echo EXIT=$?)",
+      "Bash(find C:UserslidmiDocumentsGitHubBetterMingle -type f \\\\\\(-name *.html -o -name *.json -o -name *ad* -o -name *banner* \\\\\\))",
+      "Bash(find C:UserslidmiDocumentsGitHubBetterMingle -type f \\\\\\(-name *.xml -o -name *Color*.kt -o -name *Theme*.kt -o -name *.svg -o -name *.png \\\\\\))",
+      "Bash(find C:UserslidmiDocumentsGitHubBetterMingle -type f \\\\\\(-name *.md -o -name *design* -o -name *brand* \\\\\\))"
     ]
   }
 }

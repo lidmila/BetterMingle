@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="ad.size" content="width=728,height=90">
+<title>BetterMingle - 728x90</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden}
+.banner{width:728px;height:90px;background:#F8F7FC;position:relative;cursor:pointer;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;border:1px solid #e0dfe6;display:flex;align-items:center}
+.bg-accent{position:absolute;top:-60px;right:100px;width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,rgba(91,95,239,0.06),rgba(232,121,184,0.08))}
+.content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 28px;gap:20px}
+.logo-area{display:flex;align-items:center;gap:8px;flex-shrink:0;opacity:0;animation:fadeIn 0.5s ease-out forwards}
+.logo-svg{width:36px;height:32px}
+.logo-text{font-size:15px;font-weight:700;color:#1A1B3D;letter-spacing:-0.3px}
+.center{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.headline{font-size:20px;font-weight:700;color:#1A1B3D;white-space:nowrap;opacity:0;animation:slideRight 0.6s ease-out 0.4s forwards}
+.features{display:flex;gap:6px;opacity:0;animation:fadeIn 0.5s ease-out 1s forwards}
+.feature{background:#F5EDE4;color:#1A1B3D;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.cta{background:#5B5FEF;color:#fff;border:none;padding:10px 26px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;opacity:0;animation:popIn 0.4s ease-out 1.5s forwards;white-space:nowrap;letter-spacing:0.2px}
+.cta:hover{background:#4a4edb;transform:scale(1.04)}
+.divider{width:1px;height:50px;background:#e0dfe6;flex-shrink:0;opacity:0;animation:fadeIn 0.5s ease-out 0.3s forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-15px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="banner" onclick="window.open(clickTag)">
+<div class="bg-accent"></div>
+<div class="content">
+<div class="logo-area">
+<svg class="logo-svg" viewBox="0 0 50 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<text x="0" y="38" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="42" fill="none" stroke="#1A1B3D" stroke-width="3" stroke-linejoin="round">B</text>
+<text x="0" y="38" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="42" fill="#5B5FEF">B</text>
+<text x="24" y="38" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="42" fill="none" stroke="#1A1B3D" stroke-width="3" stroke-linejoin="round">M</text>
+<text x="24" y="38" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="42" fill="#E8795F">M</text>
+</svg>
+<span class="logo-text">BetterMingle</span>
+</div>
+<div class="divider"></div>
+<div class="center">
+<div class="headline">Plan less, mingle better</div>
+<div class="features">
+<span class="feature">Vote</span>
+<span class="feature">Split costs</span>
+<span class="feature">Chat</span>
+<span class="feature">Plan together</span>
+</div>
+</div>
+<button class="cta">Stáhni zdarma</button>
+</div>
+</div>
+<script>
+var clickTag = "https://play.google.com/store/apps/details?id=com.bettermingle.app";
+</script>
+</body>
+</html>

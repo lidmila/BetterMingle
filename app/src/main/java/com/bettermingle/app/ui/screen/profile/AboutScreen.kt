@@ -2,10 +2,6 @@ package com.bettermingle.app.ui.screen.profile
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,12 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,47 +28,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.bettermingle.app.R
 import com.bettermingle.app.ui.component.BetterMingleCard
 import com.bettermingle.app.ui.theme.AccentPink
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 
-
-private data class FaqItem(val questionResId: Int, val answerResId: Int)
-
-private val faqItems = listOf(
-    FaqItem(R.string.help_faq1_q, R.string.help_faq1_a),
-    FaqItem(R.string.help_faq2_q, R.string.help_faq2_a),
-    FaqItem(R.string.help_faq3_q, R.string.help_faq3_a),
-    FaqItem(R.string.help_faq4_q, R.string.help_faq4_a),
-    FaqItem(R.string.help_faq5_q, R.string.help_faq5_a),
-    FaqItem(R.string.help_faq6_q, R.string.help_faq6_a),
-    FaqItem(R.string.help_faq7_q, R.string.help_faq7_a),
-    FaqItem(R.string.help_faq8_q, R.string.help_faq8_a),
-    FaqItem(R.string.help_faq_wishlist_q, R.string.help_faq_wishlist_a),
-    FaqItem(R.string.help_faq_catering_q, R.string.help_faq_catering_a),
-    FaqItem(R.string.help_faq_roles_q, R.string.help_faq_roles_a),
-    FaqItem(R.string.help_faq_schedule_q, R.string.help_faq_schedule_a),
-    FaqItem(R.string.help_faq_tasks_q, R.string.help_faq_tasks_a),
-    FaqItem(R.string.help_faq_year_review_q, R.string.help_faq_year_review_a),
-    FaqItem(R.string.help_faq9_q, R.string.help_faq9_a),
-    FaqItem(R.string.help_faq10_q, R.string.help_faq10_a)
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpScreen(
+fun AboutScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -81,7 +50,7 @@ fun HelpScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.help_title), style = MaterialTheme.typography.titleMedium) },
+                title = { Text(stringResource(R.string.about_title), style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
@@ -100,63 +69,103 @@ fun HelpScreen(
             contentPadding = PaddingValues(Spacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            // Section: FAQ
             item {
-                Text(
-                    text = stringResource(R.string.help_section_faq),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryBlue
-                )
-            }
-
-            itemsIndexed(faqItems) { _, faq ->
-                var expanded by remember { mutableStateOf(false) }
-                BetterMingleCard(onClick = { expanded = !expanded }) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(faq.questionResId),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (expanded) stringResource(R.string.help_faq_collapse) else stringResource(R.string.help_faq_expand),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        AnimatedVisibility(
-                            visible = expanded,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
-                        ) {
-                            Column {
-                                Spacer(modifier = Modifier.height(Spacing.sm))
-                                Text(
-                                    text = stringResource(faq.answerResId),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                BetterMingleCard {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "BetterMingle",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = stringResource(R.string.settings_version, com.bettermingle.app.BuildConfig.VERSION_NAME),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.about_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.settings_copyright),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
 
-            // Section: Kontakt
             item {
-                Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = stringResource(R.string.help_section_contact),
+                    text = stringResource(R.string.about_developer),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
                 )
+            }
+
+            item {
+                BetterMingleCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Code,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.about_developer_name),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            item {
+                BetterMingleCard(onClick = {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.codewhiskers.app"))
+                        context.startActivity(intent)
+                    } catch (_: Exception) { }
+                }) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.about_website),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.about_website_url),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
 
             item {
@@ -181,7 +190,7 @@ fun HelpScreen(
                         Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = stringResource(R.string.help_contact_send_email),
+                                text = stringResource(R.string.about_contact),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -194,7 +203,6 @@ fun HelpScreen(
                     }
                 }
             }
-
         }
     }
 }

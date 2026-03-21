@@ -1,0 +1,1089 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Better Mingle</string>
+
+    <!-- Navigation -->
+    <string name="nav_events">Événements</string>
+    <string name="nav_create">Créer</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_notifications">Notifications</string>
+
+    <!-- Common / Shared -->
+    <string name="common_back">Retour</string>
+    <string name="common_save">Enregistrer</string>
+    <string name="common_cancel">Annuler</string>
+    <string name="common_delete">Supprimer</string>
+    <string name="common_edit">Modifier</string>
+    <string name="common_share">Partager</string>
+    <string name="common_loading">Chargement…</string>
+    <string name="common_retry">Réessayer</string>
+    <string name="common_create">Créer</string>
+    <string name="common_search">Rechercher</string>
+    <string name="common_add">Ajouter</string>
+    <string name="common_remove">Retirer</string>
+    <string name="common_confirm">Confirmer</string>
+    <string name="common_close">Fermer</string>
+    <string name="common_continue">Continuer</string>
+    <string name="common_skip">Passer</string>
+    <string name="common_days">jours</string>
+    <string name="common_hours">heures</string>
+    <string name="common_minutes">minutes</string>
+    <string name="common_seconds">secondes</string>
+    <string name="common_email_label">E-mail</string>
+    <string name="common_password_label">Mot de passe</string>
+    <string name="common_name_label">Nom</string>
+    <string name="common_date_today">aujourd\'hui</string>
+    <string name="common_date_yesterday">hier</string>
+    <string name="common_error_generic">Une erreur est survenue. Veuillez réessayer.</string>
+
+    <!-- Auth - Login -->
+    <string name="login_title">Connexion</string>
+    <string name="login_subtitle">Moins de planification, plus de convivialité</string>
+    <string name="login_email">E-mail</string>
+    <string name="login_password">Mot de passe</string>
+    <string name="login_password_hide">Masquer le mot de passe</string>
+    <string name="login_password_show">Afficher le mot de passe</string>
+    <string name="login_button">Se connecter</string>
+    <string name="login_google">Se connecter avec Google</string>
+    <string name="login_google_failed">Échec de la connexion Google</string>
+    <string name="login_no_account">Pas encore de compte ? Inscrivez-vous</string>
+    <string name="login_forgot_password">Mot de passe oublié ?</string>
+    <string name="login_email_link">Se connecter par lien e-mail</string>
+    <string name="login_email_link_sent">Lien de connexion envoyé ! Vérifiez vos e-mails.</string>
+    <string name="login_email_link_failed">Échec de l\'envoi du lien de connexion</string>
+    <string name="login_email_link_error">Le lien de connexion a expiré ou est invalide</string>
+    <string name="login_logo_description">BetterMingle</string>
+
+    <!-- Auth - Register -->
+    <string name="register_title">Inscription</string>
+    <string name="register_subtitle">Créez un compte et commencez à organiser des événements</string>
+    <string name="register_name">Nom</string>
+    <string name="register_email">E-mail</string>
+    <string name="register_password">Mot de passe</string>
+    <string name="register_confirm_password">Confirmer le mot de passe</string>
+    <string name="register_button">Créer un compte</string>
+    <string name="register_has_account">Vous avez déjà un compte ? Connectez-vous</string>
+    <string name="register_logo_description">BetterMingle</string>
+
+    <!-- Auth - Forgot Password -->
+    <string name="forgot_password_title">Réinitialiser le mot de passe</string>
+    <string name="forgot_password_description">Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.</string>
+    <string name="forgot_password_success">Un lien de réinitialisation a été envoyé à votre e-mail.</string>
+    <string name="forgot_password_button">Envoyer le lien</string>
+    <string name="forgot_password_back">Retour à la connexion</string>
+    <string name="forgot_password_email">E-mail</string>
+
+    <!-- Auth - Onboarding -->
+    <string name="onboarding_page1_title">Organisez vos événements facilement</string>
+    <string name="onboarding_page1_description">Votes, planning, chat et tâches — tout au même endroit pour votre événement.</string>
+    <string name="onboarding_page2_title">Partagez les frais équitablement</string>
+    <string name="onboarding_page2_description">Répartition claire des dépenses. Chacun sait combien payer et qui doit quoi à qui.</string>
+    <string name="onboarding_page3_title">Votez et décidez ensemble</string>
+    <string name="onboarding_page3_description">Sondages pour les dates, les lieux et les activités. La démocratie de groupe simplifiée.</string>
+    <string name="onboarding_page4_title">Commencez gratuitement</string>
+    <string name="onboarding_page4_description">Créez votre premier événement et invitez vos amis. Quelques clics suffisent.</string>
+    <string name="onboarding_skip">Passer</string>
+    <string name="onboarding_start">Commencer</string>
+    <string name="onboarding_continue">Continuer</string>
+
+    <!-- Events List -->
+    <string name="events_title">Vos événements</string>
+    <string name="events_empty_title">Aucun événement</string>
+    <string name="events_empty_description">Créez votre premier événement et invitez vos amis !</string>
+    <string name="events_create">Nouvel événement</string>
+    <string name="events_search_label">Rechercher des événements…</string>
+    <string name="events_search_icon">Rechercher</string>
+    <string name="events_count">%d événements au total</string>
+    <string name="events_section_ongoing">En cours</string>
+    <string name="events_section_upcoming">À venir</string>
+    <string name="events_section_completed">Terminés</string>
+    <string name="events_section_cancelled">Annulés</string>
+    <string name="events_banner_close">Fermer</string>
+    <string name="events_year_review_title">L\'année en événements</string>
+    <string name="events_year_review_description">Consultez vos statistiques de l\'année !</string>
+
+    <!-- Event Status -->
+    <string name="event_status_planning">En préparation</string>
+    <string name="event_status_confirmed">Confirmé</string>
+    <string name="event_status_ongoing">En cours</string>
+    <string name="event_status_completed">Terminé</string>
+    <string name="event_status_cancelled">Annulé</string>
+
+    <!-- Event Dashboard -->
+    <string name="dashboard_countdown">Compte à rebours</string>
+    <string name="dashboard_voting">Votes</string>
+    <string name="dashboard_participants">Participants</string>
+    <string name="dashboard_expenses">Dépenses</string>
+    <string name="dashboard_carpool">Covoiturage</string>
+    <string name="dashboard_rooms">Hébergement</string>
+    <string name="dashboard_schedule">Programme</string>
+    <string name="dashboard_packing">Liste à emporter</string>
+    <string name="dashboard_chat">Chat</string>
+    <string name="dashboard_gallery">Galerie</string>
+    <string name="dashboard_rating">Évaluation</string>
+    <string name="dashboard_settings">Paramètres</string>
+    <string name="dashboard_tasks">Tâches</string>
+    <string name="dashboard_activity">Activité</string>
+    <string name="dashboard_summary">Résumé</string>
+    <string name="dashboard_modules">Modules</string>
+    <string name="dashboard_loading">Chargement…</string>
+    <string name="dashboard_cover_description">Couverture</string>
+    <string name="dashboard_add_to_calendar">Ajouter au calendrier</string>
+    <string name="dashboard_share_invite">Partager l\'invitation</string>
+    <string name="dashboard_share_title">Partager l\'invitation</string>
+    <string name="dashboard_share_text">Salut ! Rejoignez l\'événement \"%1$s\" sur BetterMingle : %2$s</string>
+    <string name="dashboard_share_code">Code : %1$s</string>
+    <string name="dashboard_share_copy_link">Copier le lien</string>
+    <string name="dashboard_share_link_copied">Lien copié</string>
+    <string name="dashboard_share_chooser">Partager l\'invitation</string>
+    <string name="dashboard_currency_czk">CZK</string>
+    <string name="dashboard_active_count">actifs</string>
+    <string name="dashboard_people_count">personnes</string>
+    <string name="dashboard_rides_count">trajets</string>
+    <string name="dashboard_rooms_count">chambres</string>
+    <string name="dashboard_items_count">éléments</string>
+    <string name="dashboard_messages_count">messages</string>
+    <string name="dashboard_tasks_count">tâches</string>
+    <string name="dashboard_things_count">objets</string>
+    <string name="dashboard_wishlist">Cadeaux</string>
+    <string name="dashboard_gifts_count">cadeaux</string>
+    <string name="dashboard_catering">Restauration</string>
+    <string name="dashboard_add_module">Ajouter un module</string>
+    <string name="dashboard_remove_module">Supprimer le module</string>
+    <string name="module_colors_title">Couleurs des modules</string>
+    <string name="color_picker_title">Choisir une couleur</string>
+    <string name="menu_change_color">Changer la couleur</string>
+
+    <!-- Create Event -->
+    <string name="create_event_step_basics">Nouvel événement</string>
+    <string name="create_event_step_invite">Inviter des participants</string>
+    <string name="create_event_step_modules">Choisir les modules</string>
+    <string name="create_event_limit_title">Limite d\'événements</string>
+    <string name="create_event_limit_free">Vous avez atteint la limite de %d événements dans la version gratuite. Passez à Pro ou Business pour plus d\'événements.</string>
+    <string name="create_event_limit_free_button">Passer à Premium</string>
+    <string name="create_event_limit_pro">Vous avez atteint la limite de %d événements dans la version Pro. Passez à Business pour des événements illimités.</string>
+    <string name="create_event_limit_pro_button">Passer à Business</string>
+    <string name="create_event_basics_title">Informations de base</string>
+    <string name="create_event_cover_description">Couverture</string>
+    <string name="create_event_cover_remove">Supprimer</string>
+    <string name="create_event_cover_add">Ajouter une photo de couverture</string>
+    <string name="create_event_name_label">Nom de l\'événement</string>
+    <string name="create_event_description_label">Description</string>
+    <string name="create_event_formatting_hint">Mise en forme : **gras**, *italique*</string>
+    <string name="create_event_intro_label">Texte d\'introduction (optionnel)</string>
+    <string name="create_event_intro_hint">Affiché sur le tableau de bord de l\'événement. Vous pouvez utiliser **gras**, *italique* ou - listes.</string>
+    <string name="create_event_location_label">Lieu</string>
+    <string name="create_event_theme_label">Thème de l\'événement (optionnel)</string>
+    <string name="create_event_section_datetime">Date et heure</string>
+    <string name="create_event_start_label">Début</string>
+    <string name="create_event_end_label">Fin</string>
+    <string name="create_event_date_clear">Effacer</string>
+    <string name="create_event_datepicker_continue">Continuer</string>
+    <string name="create_event_datepicker_cancel">Annuler</string>
+    <string name="create_event_timepicker_title">Sélectionner l\'heure</string>
+    <string name="create_event_timepicker_cancel">Annuler</string>
+    <string name="create_event_timepicker_confirm">Confirmer</string>
+    <string name="create_event_invite_title">Inviter des participants</string>
+    <string name="create_event_invite_subtitle">Vous pourrez aussi envoyer des invitations plus tard.</string>
+    <string name="create_event_invite_email">E-mail du participant</string>
+    <string name="create_event_invite_add">Ajouter</string>
+    <string name="create_event_invite_remove">Retirer</string>
+    <string name="create_event_invite_continue">Continuer</string>
+    <string name="create_event_invite_skip">Passer</string>
+    <string name="create_event_modules_title">Choisir les modules</string>
+    <string name="create_event_modules_subtitle">Choisissez ce dont votre événement a besoin. Vous pouvez modifier à tout moment.</string>
+    <string name="create_event_module_voting">Votes</string>
+    <string name="create_event_module_expenses">Dépenses</string>
+    <string name="create_event_module_carpool">Covoiturage</string>
+    <string name="create_event_module_rooms">Hébergement</string>
+    <string name="create_event_module_chat">Chat</string>
+    <string name="create_event_module_schedule">Programme</string>
+    <string name="create_event_module_tasks">Tâches</string>
+    <string name="create_event_module_wishlist">Cadeaux</string>
+    <string name="create_event_module_catering">Restauration</string>
+    <string name="create_event_module_packing">Liste à emporter</string>
+    <string name="create_event_module_budget">Budget</string>
+    <string name="create_event_create_button">Créer l\'événement</string>
+    <string name="create_event_security_title">Sécurité renforcée</string>
+    <string name="create_event_security_subtitle">Pour les événements d\'entreprise et sensibles</string>
+    <string name="create_event_security_pin_label">PIN d\'accès (4–6 chiffres)</string>
+    <string name="create_event_security_pin_hide">Masquer</string>
+    <string name="create_event_security_pin_show">Afficher</string>
+    <string name="create_event_security_hide_financials">Masquer les finances</string>
+    <string name="create_event_security_hide_financials_desc">Détails financiers visibles uniquement par l\'organisateur</string>
+    <string name="create_event_security_screenshot">Protection contre les captures d\'écran</string>
+    <string name="create_event_security_screenshot_desc">Bloquer les captures d\'écran</string>
+    <string name="create_event_security_approval">Approbation des participants</string>
+    <string name="create_event_security_approval_desc">Les nouveaux participants doivent être approuvés</string>
+    <string name="create_event_security_auto_delete">Suppression automatique des données</string>
+    <string name="create_event_security_auto_delete_off">Désactivé</string>
+    <string name="create_event_security_auto_delete_days">%d jours après la fin de l\'événement</string>
+    <string name="create_event_security_auto_delete_never">Jamais</string>
+    <string name="create_event_security_auto_delete_7">7 jours</string>
+    <string name="create_event_security_auto_delete_30">30 jours</string>
+    <string name="create_event_security_auto_delete_90">90 jours</string>
+    <string name="create_event_template_picker_title">Choisir un modèle</string>
+    <string name="create_event_template_picker_desc">Démarrage rapide avec des modules et paramètres préconfigurés.</string>
+    <string name="create_event_template_custom">Événement personnalisé</string>
+    <string name="create_event_template_premium_badge">Premium</string>
+    <string name="create_event_template_wedding">Mariage</string>
+    <string name="create_event_template_wedding_desc">Notre grand jour !</string>
+    <string name="create_event_template_birthday">Anniversaire</string>
+    <string name="create_event_template_birthday_desc">Fête d\'anniversaire</string>
+    <string name="create_event_template_teambuilding">Teambuilding</string>
+    <string name="create_event_template_teambuilding_desc">Teambuilding d\'entreprise</string>
+    <string name="create_event_template_trip">Voyage</string>
+    <string name="create_event_template_trip_desc">Voyage en groupe</string>
+    <string name="create_event_template_festival">Festival</string>
+    <string name="create_event_template_festival_desc">Festival de musique</string>
+    <string name="create_event_template_corporate">Événement d\'entreprise</string>
+    <string name="create_event_template_corporate_desc">Événement d\'entreprise</string>
+    <string name="create_event_template_party">Soirée</string>
+    <string name="create_event_template_party_desc">Soirée entre amis</string>
+    <string name="create_event_template_bachelor">Enterrement de vie de garçon</string>
+    <string name="create_event_template_bachelor_desc">La dernière fête avant le mariage</string>
+    <string name="create_event_template_workshop">Atelier</string>
+    <string name="create_event_template_workshop_desc">Atelier de travail</string>
+    <string name="create_event_template_family">Réunion de famille</string>
+    <string name="create_event_template_family_desc">Retrouvailles en famille</string>
+    <string name="create_event_template_sports">Tournoi sportif</string>
+    <string name="create_event_template_sports_desc">Compétition sportive</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Tâches</string>
+    <string name="tasks_empty_title">Aucune tâche</string>
+    <string name="tasks_empty_description">Ajoutez des tâches et attribuez-les aux participants.</string>
+    <string name="tasks_empty_icon">Icône des tâches</string>
+    <string name="tasks_new">Nouvelle tâche</string>
+    <string name="tasks_created">Tâche créée</string>
+    <string name="tasks_deleted">Tâche supprimée</string>
+    <string name="tasks_delete_title">Supprimer la tâche</string>
+    <string name="tasks_delete_confirm">Êtes-vous sûr de vouloir supprimer cette tâche ?</string>
+    <string name="tasks_name_label">Nom de la tâche</string>
+    <string name="tasks_color">Couleur</string>
+    <string name="tasks_assign">Attribuer</string>
+    <string name="tasks_deadline">Échéance : %1$s</string>
+    <string name="tasks_deadline_optional">Échéance (optionnelle)</string>
+    <string name="tasks_color_blue">Bleu</string>
+    <string name="tasks_color_pink">Rose</string>
+    <string name="tasks_color_orange">Orange</string>
+    <string name="tasks_color_gold">Or</string>
+    <string name="tasks_color_green">Vert</string>
+
+    <!-- Expenses -->
+    <string name="expenses_title">Dépenses</string>
+    <string name="expenses_empty_title">Aucune dépense</string>
+    <string name="expenses_empty_description">Ajoutez une dépense et répartissez-la entre les participants.</string>
+    <string name="expenses_empty_icon">Aucune dépense</string>
+    <string name="expenses_new">Nouvelle dépense</string>
+    <string name="expenses_added">Dépense ajoutée</string>
+    <string name="expenses_deleted">Dépense supprimée</string>
+    <string name="expenses_delete_title">Supprimer la dépense</string>
+    <string name="expenses_delete_confirm">Êtes-vous sûr de vouloir supprimer cette dépense ?</string>
+    <string name="expenses_description_label">Description de la dépense</string>
+    <string name="expenses_amount_label">Montant (CZK)</string>
+    <string name="expenses_category_label">Catégorie</string>
+    <string name="expenses_paid_by">Payé par : %1$s</string>
+    <string name="expenses_budget">Budget</string>
+    <string name="expenses_over_budget">Dépassement de %1$s</string>
+    <string name="expenses_tab_expenses">Dépenses</string>
+    <string name="expenses_tab_settlement">Règlement</string>
+    <string name="expenses_settled_title">Tout est réglé !</string>
+    <string name="expenses_settled_description">Il n\'y a actuellement aucune dette à régler.</string>
+    <string name="expenses_settle">Régler</string>
+    <string name="expenses_add">Ajouter</string>
+    <string name="expenses_payer">Payé par</string>
+    <string name="expenses_payer_label">Payeur</string>
+    <string name="expenses_payer_me">Moi</string>
+    <string name="expenses_item_default">Dépense</string>
+    <string name="expenses_my_balance">Mon solde :</string>
+    <string name="expenses_to_receive">à recevoir</string>
+    <string name="expenses_i_owe">Je dois</string>
+    <string name="expenses_settled">Réglé</string>
+    <string name="expenses_debt_owes"> doit </string>
+    <string name="expenses_count_one">dépense</string>
+    <string name="expenses_count_few">dépenses</string>
+    <string name="expenses_count_many">dépenses</string>
+    <string name="expenses_category_food">Nourriture</string>
+    <string name="expenses_category_transport">Transport</string>
+    <string name="expenses_category_accommodation">Hébergement</string>
+    <string name="expenses_category_drinks">Boissons</string>
+    <string name="expenses_category_other">Autre</string>
+
+    <!-- Voting -->
+    <string name="voting_title">Votes</string>
+    <string name="voting_empty_title">Aucun sondage</string>
+    <string name="voting_empty_description">Créez un sondage et laissez les autres voter.</string>
+    <string name="voting_empty_icon">Aucun sondage</string>
+    <string name="voting_new">Nouveau sondage</string>
+    <string name="voting_created">Sondage créé</string>
+    <string name="voting_updated">Sondage mis à jour</string>
+    <string name="voting_poll_closed">Sondage clôturé</string>
+    <string name="voting_active">Actif</string>
+    <string name="voting_votes">%1$d votes</string>
+    <string name="voting_poll_name_label">Nom du sondage</string>
+    <string name="voting_poll_type">Type de sondage</string>
+    <string name="voting_multiple_answers">Réponses multiples</string>
+    <string name="voting_single_answer">Réponse unique</string>
+    <string name="voting_multiple_hint">Plusieurs choix possibles</string>
+    <string name="voting_single_hint">Un seul choix</string>
+    <string name="voting_anonymous">Anonyme</string>
+    <string name="voting_options">Options</string>
+    <string name="voting_option_label">Option %1$d</string>
+    <string name="voting_add_option">Ajouter une option</string>
+    <string name="voting_remove_option">Supprimer</string>
+    <string name="voting_close_description">Clôturer le vote</string>
+    <string name="voting_edit_description">Modifier</string>
+    <string name="voting_edit_title">Modifier le sondage</string>
+    <string name="voting_existing_options">Options existantes</string>
+    <string name="voting_new_options">Nouvelles options</string>
+    <string name="voting_new_option_label">Nouvelle option %1$d</string>
+    <string name="voting_type_date">Date</string>
+    <string name="voting_type_location">Lieu</string>
+    <string name="voting_type_activity">Activité</string>
+    <string name="voting_type_price">Prix</string>
+    <string name="voting_type_custom">Personnalisé</string>
+    <string name="voting_limit_title">Limite de sondages</string>
+    <string name="voting_limit_message">Vous avez atteint la limite de sondages dans la version gratuite. Passez à Pro pour des sondages illimités.</string>
+    <string name="voting_limit_upgrade">Passer à Pro</string>
+    <string name="voting_votes_count">votes</string>
+    <string name="voting_deadline_toggle">Définir une échéance</string>
+    <string name="voting_deadline_select_date">Sélectionner la date</string>
+    <string name="voting_deadline_select_time">Sélectionner l\'heure</string>
+    <string name="voting_deadline_hint">Le sondage sera verrouillé automatiquement à l\'échéance</string>
+    <string name="voting_expired">Expiré</string>
+    <string name="voting_ends_in">Se termine dans %1$s</string>
+
+    <!-- Chat -->
+    <string name="chat_input_placeholder">Message…</string>
+    <string name="chat_send">Envoyer</string>
+    <string name="chat_empty_title">Aucun message</string>
+    <string name="chat_empty_description">Envoyez le premier message et lancez la conversation.</string>
+
+    <!-- Carpool -->
+    <string name="carpool_title">Covoiturage</string>
+    <string name="carpool_tab_offers">Offres</string>
+    <string name="carpool_tab_requests">Demandes</string>
+    <string name="carpool_offer_ride">Proposer un trajet</string>
+    <string name="carpool_request_ride">Demander un trajet</string>
+    <string name="carpool_empty_offers_title">Aucune offre</string>
+    <string name="carpool_empty_offers_desc">Proposez un trajet aux autres participants.</string>
+    <string name="carpool_empty_requests_title">Aucune demande</string>
+    <string name="carpool_empty_requests_desc">Demandez un trajet aux autres participants.</string>
+    <string name="carpool_delete_title">Supprimer le trajet</string>
+    <string name="carpool_delete_confirm">Êtes-vous sûr de vouloir supprimer ce trajet ?</string>
+    <string name="carpool_driver">Conducteur</string>
+    <string name="carpool_requester">Demandeur</string>
+    <string name="carpool_closed">Fermé</string>
+    <string name="carpool_seats_count">places</string>
+    <string name="carpool_passengers">Passagers</string>
+    <string name="carpool_approved">Approuvé</string>
+    <string name="carpool_rejected">Refusé</string>
+    <string name="carpool_pending">En attente</string>
+    <string name="carpool_approve">Approuver</string>
+    <string name="carpool_reject">Refuser</string>
+    <string name="carpool_close_button">Fermer</string>
+    <string name="carpool_request_button">Demander un trajet</string>
+    <string name="carpool_select_time">Sélectionner l\'heure</string>
+    <string name="carpool_dialog_offer_title">Proposer un trajet</string>
+    <string name="carpool_dialog_request_title">Demander un trajet</string>
+    <string name="carpool_departure_location">Lieu de départ</string>
+    <string name="carpool_departure_time">Heure de départ</string>
+    <string name="carpool_available_seats">Places disponibles</string>
+    <string name="carpool_notes">Notes</string>
+
+    <!-- Rooms -->
+    <string name="rooms_title">Hébergement</string>
+    <string name="rooms_empty_title">Aucune chambre</string>
+    <string name="rooms_empty_description">Ajoutez des chambres et attribuez-les aux participants.</string>
+    <string name="rooms_add">Ajouter une chambre</string>
+    <string name="rooms_delete_title">Supprimer la chambre</string>
+    <string name="rooms_delete_confirm">Êtes-vous sûr de vouloir supprimer la chambre \"%1$s\" ?</string>
+    <string name="rooms_name_label">Nom de la chambre</string>
+    <string name="rooms_capacity_label">Capacité</string>
+    <string name="rooms_notes_label">Notes (optionnelles)</string>
+    <string name="rooms_assign_title">Attribuer à : %1$s</string>
+    <string name="rooms_assign_occupancy">%1$d/%2$d occupé(s)</string>
+    <string name="rooms_assign_in_other_room"> (dans une autre chambre)</string>
+    <string name="rooms_already_assigned">Vous êtes déjà dans la chambre \"%1$s\". Quittez-la d\'abord pour en rejoindre une autre.</string>
+    <string name="rooms_joined">Vous avez rejoint la chambre \"%1$s\"</string>
+    <string name="rooms_left">Vous avez quitté la chambre \"%1$s\"</string>
+    <string name="rooms_full">Cette chambre est complète.</string>
+    <string name="rooms_join_button">Rejoindre la chambre</string>
+    <string name="rooms_leave_button">Quitter la chambre</string>
+
+    <!-- Schedule -->
+    <string name="schedule_title">Programme</string>
+    <string name="schedule_empty_title">Aucun programme</string>
+    <string name="schedule_empty_description">Ajoutez des éléments au programme et créez le planning de l\'événement.</string>
+    <string name="schedule_add">Ajouter un élément au programme</string>
+    <string name="schedule_delete_title">Supprimer l\'élément du programme</string>
+    <string name="schedule_delete_confirm">Êtes-vous sûr de vouloir supprimer \"%1$s\" ?</string>
+    <string name="schedule_name_label">Nom</string>
+    <string name="schedule_description_label">Description (optionnelle)</string>
+    <string name="schedule_start_label">Début</string>
+    <string name="schedule_end_label">Fin</string>
+    <string name="schedule_location_label">Lieu (optionnel)</string>
+    <string name="schedule_add_to_calendar">Ajouter au calendrier</string>
+    <string name="schedule_select_time">Sélectionner l\'heure</string>
+
+    <!-- Packing List -->
+    <string name="packing_title">Liste à emporter</string>
+    <string name="packing_empty_title">Liste vide</string>
+    <string name="packing_empty_description">Ajoutez les choses à emporter.</string>
+    <string name="packing_add">Ajouter un élément</string>
+    <string name="packing_name_label">Nom de l\'élément</string>
+    <string name="packing_personal">Personnel</string>
+    <string name="packing_shared">Partagé</string>
+
+    <!-- Wishlist -->
+    <string name="wishlist_title">Cadeaux</string>
+    <string name="wishlist_empty_title">Aucun cadeau</string>
+    <string name="wishlist_empty_description">L\'organisateur peut ajouter des cadeaux ou des articles à cette liste.</string>
+    <string name="wishlist_add">Ajouter un cadeau</string>
+    <string name="wishlist_name_label">Nom de l\'article</string>
+    <string name="wishlist_price_label">Prix (optionnel)</string>
+    <string name="wishlist_url_label">URL du produit (optionnelle)</string>
+    <string name="wishlist_description_label">Description (optionnelle)</string>
+    <string name="wishlist_reserve">Réserver</string>
+    <string name="wishlist_buy">Je l\'achète</string>
+    <string name="wishlist_mark_bought">Marquer comme acheté</string>
+    <string name="wishlist_unclaim">Annuler la réservation</string>
+    <string name="wishlist_reserved_by">Réservé par %1$s</string>
+    <string name="wishlist_bought_by">Acheté par %1$s</string>
+    <string name="wishlist_back_to_reserved">Remettre en réservé</string>
+    <string name="wishlist_open_url">Ouvrir le lien</string>
+
+    <!-- Participants -->
+    <string name="participants_title">Participants</string>
+    <string name="participants_empty_title">Aucun participant</string>
+    <string name="participants_empty_description">Invitez des amis en partageant le lien de l\'événement.</string>
+    <string name="participants_add">Ajouter un participant</string>
+    <string name="participants_share_text">Salut ! Rejoignez l\'événement \"%1$s\" sur BetterMingle : %2$s</string>
+    <string name="participants_share_title">Partager l\'invitation</string>
+    <string name="participants_invite_title">Inviter un participant</string>
+    <string name="participants_role_organizer">Organisateur</string>
+    <string name="participants_role_co_organizer">Co-organisateur</string>
+    <string name="participants_role_participant">Participant</string>
+    <string name="participants_email_label">E-mail</string>
+    <string name="participants_contact_email_label">E-mail de contact</string>
+    <string name="participants_phone_label">Téléphone</string>
+    <string name="participants_department_label">Service</string>
+    <string name="participants_rsvp_accepted">Accepté</string>
+    <string name="participants_rsvp_declined">Refusé</string>
+    <string name="participants_rsvp_maybe">Peut-être</string>
+    <string name="participants_rsvp_pending">En attente</string>
+    <string name="participants_manage_role">Gérer le rôle</string>
+    <string name="participants_promote_message">Promouvoir ce participant en co-organisateur ? Il pourra modifier les paramètres de l\'événement.</string>
+    <string name="participants_demote_message">Rétrograder ce co-organisateur en simple participant ?</string>
+    <string name="participants_role_updated">Rôle mis à jour</string>
+    <string name="participants_role_update_error">Échec de la mise à jour du rôle</string>
+    <string name="participants_coorg_limit_title">Fonctionnalité Premium</string>
+    <string name="participants_coorg_limit_message">Les co-organisateurs sont disponibles avec les abonnements Pro et Business.</string>
+
+    <!-- Rating -->
+    <string name="rating_title">Évaluation</string>
+    <string name="rating_your_rating">Votre évaluation</string>
+    <string name="rating_rate_event">Évaluez l\'événement</string>
+    <string name="rating_overall">Impression générale</string>
+    <string name="rating_organization">Organisation</string>
+    <string name="rating_atmosphere">Ambiance</string>
+    <string name="rating_venue">Lieu</string>
+    <string name="rating_comment_label">Commentaire (optionnel)</string>
+    <string name="rating_save_changes">Enregistrer les modifications</string>
+    <string name="rating_submit">Soumettre l\'évaluation</string>
+    <string name="rating_edit">Modifier l\'évaluation</string>
+    <string name="rating_empty_title">Il n\'y a que vous pour l\'instant</string>
+    <string name="rating_empty_description">Attendez que les autres participants évaluent.</string>
+    <string name="rating_star_description">%1$s étoile %2$d</string>
+    <string name="rating_others_title">Autres évaluations (%1$d)</string>
+
+    <!-- Join Event -->
+    <string name="join_title">Invitation</string>
+    <string name="join_error_not_found">Invitation introuvable ou invalide.</string>
+    <string name="join_error_load_failed">Échec du chargement de l\'invitation.</string>
+    <string name="join_error_title">Erreur</string>
+    <string name="join_joining">Inscription en cours…</string>
+    <string name="join_button">Rejoindre</string>
+    <string name="join_participant_limit">L\'événement est limité à %1$d participants (version %2$s).</string>
+    <string name="join_error_failed">Échec de l\'inscription à l\'événement.</string>
+    <string name="join_tier_free">Free</string>
+    <string name="join_tier_pro">Pro</string>
+    <string name="join_tier_business">Business</string>
+
+    <!-- Event Settings -->
+    <string name="event_settings_title">Paramètres de l\'événement</string>
+    <string name="event_settings_invite_section">Invitation</string>
+    <string name="event_settings_copy_link">Copier le lien</string>
+    <string name="event_settings_link_copied">Lien copié</string>
+    <string name="event_settings_share">Partager</string>
+    <string name="event_settings_share_chooser">Partager l\'invitation</string>
+    <string name="event_settings_share_text">Salut ! Rejoignez l\'événement \"%1$s\" sur BetterMingle : %2$s</string>
+    <string name="event_settings_notifications">Notifications</string>
+    <string name="event_settings_notifications_desc">Notifier des mises à jour de l\'événement</string>
+    <string name="event_settings_status">Statut de l\'événement</string>
+    <string name="event_settings_status_error">Erreur lors du changement de statut</string>
+    <string name="event_settings_security">Sécurité renforcée</string>
+    <string name="event_settings_security_active">Activé</string>
+    <string name="event_settings_security_disabled">Désactivé</string>
+    <string name="event_settings_hide_financials">Masquer les finances</string>
+    <string name="event_settings_hide_financials_desc">Détails financiers visibles uniquement par l\'organisateur</string>
+    <string name="event_settings_screenshot">Protection contre les captures d\'écran</string>
+    <string name="event_settings_screenshot_desc">Bloquer les captures d\'écran</string>
+    <string name="event_settings_approval">Approbation des participants</string>
+    <string name="event_settings_approval_desc">Les nouveaux participants doivent être approuvés</string>
+    <string name="event_settings_change_pin">Changer le PIN</string>
+    <string name="event_settings_pin_dialog_title">Changer le PIN</string>
+    <string name="event_settings_pin_dialog_desc">Entrez un nouveau PIN à 4 chiffres pour l\'événement</string>
+    <string name="event_settings_pin_label">Nouveau PIN</string>
+    <string name="event_settings_pin_changed">PIN modifié</string>
+    <string name="event_settings_pin_error">Erreur lors du changement de PIN</string>
+    <string name="event_settings_edit_title">Modifier l\'événement</string>
+    <string name="event_settings_edit_name">Nom de l\'événement</string>
+    <string name="event_settings_edit_description">Description</string>
+    <string name="event_settings_edit_formatting">Mise en forme : **gras**, *italique*</string>
+    <string name="event_settings_edit_theme">Thème de l\'événement (optionnel)</string>
+    <string name="event_settings_edit_success">Événement mis à jour</string>
+    <string name="event_settings_edit_error">Erreur lors de la mise à jour de l\'événement</string>
+    <string name="event_settings_edit_action">Modifier l\'événement</string>
+    <string name="event_settings_edit_action_desc">Changer le nom, la date et la description</string>
+    <string name="event_settings_repeat">Dupliquer l\'événement</string>
+    <string name="event_settings_repeat_desc">Créer une copie avec les mêmes paramètres</string>
+    <string name="event_settings_delete_title">Supprimer l\'événement</string>
+    <string name="event_settings_delete_confirm">Êtes-vous sûr de vouloir supprimer définitivement l\'événement \"%1$s\" et toutes ses données ? Cette action est irréversible.</string>
+    <string name="event_settings_delete_action">Supprimer l\'événement</string>
+    <string name="event_settings_delete_action_desc">Supprimer définitivement l\'événement et toutes les données</string>
+    <string name="event_settings_danger_zone">Zone de danger</string>
+
+    <!-- Activity Feed -->
+    <string name="activity_title">Activité</string>
+    <string name="activity_empty_title">Aucune activité</string>
+    <string name="activity_empty_description">Les activités apparaîtront dès qu\'il se passera quelque chose dans l\'événement.</string>
+
+    <!-- Event Summary -->
+    <string name="summary_title">Aperçu de l\'organisateur</string>
+    <string name="summary_subtitle">Votre aperçu de l\'événement</string>
+    <string name="summary_participants">Participants</string>
+    <string name="summary_total_expenses">Dépenses totales</string>
+    <string name="summary_messages">Messages</string>
+    <string name="summary_polls">Sondages</string>
+    <string name="summary_rides">Trajets</string>
+    <string name="summary_most_active">Le plus actif</string>
+    <string name="summary_top_payer">Plus gros dépensier</string>
+    <string name="summary_share_button">Télécharger l\'aperçu</string>
+    <string name="summary_share_chooser">Partager le résumé</string>
+    <string name="summary_share_header">Résumé de l\'événement : %1$s</string>
+    <string name="summary_share_participants">%1$d participants</string>
+    <string name="summary_share_expenses">%1$s CZK de dépenses</string>
+    <string name="summary_share_messages">%1$d messages</string>
+    <string name="summary_share_polls">%1$d sondages</string>
+    <string name="summary_share_footer">Créé avec BetterMingle</string>
+    <string name="summary_event_info">Infos sur l\'événement</string>
+    <string name="summary_location">Lieu</string>
+    <string name="summary_status">Statut</string>
+    <string name="summary_rsvp_accepted">Accepté</string>
+    <string name="summary_rsvp_declined">Refusé</string>
+    <string name="summary_rsvp_maybe">Peut-être</string>
+    <string name="summary_rsvp_pending">En attente</string>
+    <string name="summary_polls_active">Actifs</string>
+    <string name="summary_polls_closed">Clôturés</string>
+    <string name="summary_tasks">Tâches</string>
+    <string name="summary_packing_items">Articles à emporter</string>
+    <string name="summary_wishlist_items">Articles cadeaux</string>
+    <string name="summary_invite_code">Code d\'invitation</string>
+    <string name="summary_download_overview">Télécharger l\'aperçu</string>
+    <string name="summary_share_rsvp">RSVP : %1$d acceptés, %2$d refusés, %3$d peut-être, %4$d en attente</string>
+    <string name="summary_share_polls_breakdown">%1$d sondages (%2$d actifs, %3$d clôturés)</string>
+    <string name="summary_share_tasks">%1$d tâches</string>
+    <string name="summary_share_packing">%1$d articles à emporter</string>
+    <string name="summary_share_wishlist">%1$d articles cadeaux</string>
+    <string name="summary_other_modules">Autres modules</string>
+    <string name="summary_share_format_title">Partager en tant que</string>
+    <string name="summary_share_format_text">Texte</string>
+    <string name="summary_share_format_pdf">Rapport PDF</string>
+    <string name="summary_pdf_generating">Génération du PDF…</string>
+    <string name="summary_pdf_error">Échec de la génération du PDF</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profil</string>
+    <string name="profile_default_user">Utilisateur</string>
+    <string name="profile_edit">Modifier le profil</string>
+    <string name="profile_contact_email">E-mail de contact</string>
+    <string name="profile_phone">Téléphone</string>
+    <string name="profile_department">Service</string>
+    <string name="profile_settings">Paramètres</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_premium">Mingle Pro</string>
+    <string name="profile_premium_description">Débloquez des événements et fonctionnalités illimités</string>
+    <string name="profile_help">Aide</string>
+    <string name="profile_year_in_events">L\'année en événements</string>
+    <string name="profile_year_in_events_description">Vos statistiques et souvenirs de cette année</string>
+    <string name="profile_logout">Se déconnecter</string>
+    <string name="places_unavailable">Le service de carte n\'est pas disponible</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_section_profile">Profil</string>
+    <string name="settings_edit_name">Modifier le nom</string>
+    <string name="settings_edit_name_label">Nom</string>
+    <string name="settings_name_not_set">Non défini</string>
+    <string name="settings_name_updated">Nom mis à jour</string>
+    <string name="settings_name_update_error">Erreur lors de la mise à jour du nom</string>
+    <string name="settings_email">E-mail</string>
+    <string name="settings_email_not_found">Introuvable</string>
+    <string name="settings_change_password">Changer le mot de passe</string>
+    <string name="settings_password_reset_sent">Lien de réinitialisation envoyé à votre e-mail</string>
+    <string name="settings_password_reset_error">Erreur lors de l\'envoi du lien</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notifications_enable">Activer les notifications</string>
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_theme">Thème de l\'application</string>
+    <string name="settings_theme_system">Système</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
+    <string name="settings_section_about">À propos</string>
+    <string name="settings_about_app">À propos de l\'application</string>
+    <string name="settings_version">Version : %1$s</string>
+    <string name="settings_copyright">Better Mingle © 2026</string>
+    <string name="about_title">À propos de l\'application</string>
+    <string name="about_description">BetterMingle vous aide à organiser des événements de groupe — du vote au partage des frais, en passant par le covoiturage et l\'hébergement. Tout au même endroit, pour tout le monde.</string>
+    <string name="about_developer">Développeur</string>
+    <string name="about_developer_name">CodeWhiskers</string>
+    <string name="about_website">Site web</string>
+    <string name="about_website_url">www.codewhiskers.app</string>
+    <string name="about_contact">Contact</string>
+    <string name="settings_debug_tier_switch">Changement de niveau</string>
+    <string name="settings_debug_tier_current">Actuel : %1$s</string>
+    <!-- Legal -->
+    <string name="settings_section_legal">Mentions légales</string>
+    <string name="settings_privacy_policy">Politique de confidentialité</string>
+    <string name="settings_terms_of_service">Conditions d\'utilisation</string>
+    <string name="settings_delete_account_request">Demander la suppression du compte</string>
+    <string name="settings_delete_account_request_desc">Demander la suppression via le site web</string>
+    <string name="settings_section_danger">Zone de danger</string>
+    <string name="settings_delete_account">Supprimer le compte</string>
+    <string name="settings_delete_account_desc">Supprimer définitivement le compte et toutes les données</string>
+    <string name="settings_delete_account_confirm">Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données ? Cette action est irréversible.</string>
+    <string name="settings_delete_account_error">Erreur lors de la suppression du compte. Reconnectez-vous et réessayez.</string>
+    <string name="settings_password_confirm_title">Confirmer le mot de passe</string>
+    <string name="settings_password_confirm_desc">Entrez votre mot de passe pour confirmer la suppression du compte.</string>
+
+    <!-- Ads -->
+    <string name="ad_label">Publicité</string>
+    <string name="ad_headline">Publicité</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Modifier le profil</string>
+    <string name="edit_profile_change_avatar">Changer l\'avatar</string>
+    <string name="edit_profile_change_avatar_hint">Appuyez pour changer l\'avatar</string>
+    <string name="edit_profile_name">Nom</string>
+    <string name="edit_profile_contact_email">E-mail de contact</string>
+    <string name="edit_profile_phone">Téléphone</string>
+    <string name="edit_profile_department">Service</string>
+    <string name="edit_profile_bio">Bio</string>
+    <string name="edit_profile_save">Enregistrer</string>
+    <string name="edit_profile_avatar_picker_title">Choisir un avatar</string>
+    <string name="edit_profile_avatar_description">Avatar %1$d</string>
+    <string name="edit_profile_avatar_premium">Premium</string>
+    <string name="edit_profile_upload_photo">Importer une photo personnalisée</string>
+    <string name="edit_profile_avatar_picker_close">Fermer</string>
+
+    <!-- Upgrade -->
+    <string name="upgrade_title">Premium</string>
+    <string name="upgrade_headline">Libérez tout le potentiel</string>
+    <string name="upgrade_subheadline">Choisissez le plan qui vous convient</string>
+    <string name="upgrade_plan_pro">Pro</string>
+    <string name="upgrade_plan_business">Business</string>
+    <string name="upgrade_billing_monthly">Mensuel</string>
+    <string name="upgrade_billing_yearly">Annuel (économisez)</string>
+    <string name="upgrade_price_pro_monthly">129 CZK</string>
+    <string name="upgrade_price_pro_yearly">1 299 CZK</string>
+    <string name="upgrade_price_business_monthly">199 CZK</string>
+    <string name="upgrade_price_business_yearly">1 999 CZK</string>
+    <string name="upgrade_period_monthly">/ mois</string>
+    <string name="upgrade_period_yearly">/ an</string>
+    <string name="upgrade_card_title_pro">Mingle Pro</string>
+    <string name="upgrade_card_title_business">Mingle Business</string>
+    <string name="upgrade_feature_pro_events">Jusqu\'à 3 événements (Free : max 1)</string>
+    <string name="upgrade_feature_pro_participants">Jusqu\'à 100 participants (Free : max 20)</string>
+    <string name="upgrade_feature_pro_polls">Jusqu\'à 3 sondages (Free : max 1)</string>
+    <string name="upgrade_feature_organizer_overview">Aperçu de l\'organisateur</string>
+    <string name="upgrade_feature_multi_organizers">Plusieurs organisateurs</string>
+    <string name="upgrade_feature_premium_modules">Modules Premium (Restauration, Hébergement, Covoiturage)</string>
+    <string name="upgrade_feature_no_ads">Sans publicité</string>
+    <string name="upgrade_feature_business_events">Événements illimités</string>
+    <string name="upgrade_feature_business_participants">Participants illimités</string>
+    <string name="upgrade_feature_business_polls">Sondages illimités</string>
+    <string name="upgrade_feature_business_modules">Modules exclusifs (Budget)</string>
+    <string name="upgrade_feature_business_templates">Modèles Premium</string>
+    <string name="upgrade_button_pro">Obtenir Mingle Pro</string>
+    <string name="upgrade_button_business">Obtenir Mingle Business</string>
+    <string name="upgrade_lifetime_title">À vie</string>
+    <string name="upgrade_lifetime_price">2 999 CZK</string>
+    <string name="upgrade_lifetime_desc">paiement unique · fonctionnalités Business pour toujours</string>
+    <string name="upgrade_lifetime_button">Acheter à vie</string>
+    <string name="upgrade_disclaimer">L\'abonnement se renouvelle automatiquement. Vous pouvez annuler à tout moment sur Google Play.</string>
+    <string name="upgrade_has_plan">Vous avez un abonnement actif : %1$s</string>
+    <string name="upgrade_has_lifetime">Vous avez un accès à vie</string>
+    <string name="upgrade_expires">Expire le : %1$s</string>
+    <string name="upgrade_active_badge">Actif</string>
+    <string name="upgrade_downgrade">Rétrograder</string>
+    <string name="upgrade_compare_title">Comparer tous les plans</string>
+    <string name="upgrade_compare_feature">Fonctionnalité</string>
+    <string name="upgrade_compare_free">Free</string>
+    <string name="upgrade_compare_pro">Pro</string>
+    <string name="upgrade_compare_business">Business</string>
+    <string name="upgrade_compare_events">Événements</string>
+    <string name="upgrade_compare_events_free">max 1</string>
+    <string name="upgrade_compare_events_pro">max 3</string>
+    <string name="upgrade_compare_participants">Participants / événement</string>
+    <string name="upgrade_compare_participants_free">max 20</string>
+    <string name="upgrade_compare_participants_pro">max 100</string>
+    <string name="upgrade_compare_polls">Sondages</string>
+    <string name="upgrade_compare_polls_free">max 1</string>
+    <string name="upgrade_compare_polls_pro">max 3</string>
+    <string name="upgrade_compare_avatars">Avatars</string>
+    <string name="upgrade_compare_avatars_free">15</string>
+    <string name="upgrade_compare_avatars_premium">40</string>
+    <string name="upgrade_compare_templates">Modèles Premium</string>
+    <string name="upgrade_compare_ads">Sans publicité</string>
+    <string name="upgrade_compare_export_summary">Aperçu de l\'organisateur</string>
+    <string name="upgrade_compare_co_organizers">Co-organisateurs</string>
+    <string name="upgrade_compare_repeat_event">Dupliquer l\'événement</string>
+    <string name="upgrade_compare_unlimited">Illimité</string>
+    <string name="upgrade_compare_chat">Chat</string>
+    <string name="upgrade_compare_expenses">Dépenses</string>
+    <string name="upgrade_compare_carpool">Covoiturage</string>
+    <string name="upgrade_compare_rooms">Chambres</string>
+    <string name="upgrade_compare_schedule">Programme</string>
+    <string name="upgrade_compare_tasks">Tâches</string>
+    <string name="upgrade_compare_packing">Liste à emporter</string>
+    <string name="upgrade_compare_wishlist">Cadeaux</string>
+    <string name="upgrade_compare_catering">Restauration</string>
+    <string name="upgrade_compare_budget">Budget</string>
+
+    <!-- Coach marks -->
+    <string name="coach_mark_got_it">Compris</string>
+    <string name="coach_mark_event_list">Appuyez sur + pour créer votre premier événement</string>
+    <string name="coach_mark_dashboard">Appuyez sur un module pour y entrer. Les organisateurs peuvent maintenir appuyé pour réorganiser, ajouter ou supprimer des modules.</string>
+    <string name="coach_mark_create_event">Choisissez un modèle pour une configuration rapide</string>
+
+    <!-- Settings: Coach marks -->
+    <string name="settings_coach_marks_reset">Réafficher les astuces</string>
+    <string name="settings_coach_marks_reset_desc">Réinitialiser toutes les astuces et conseils dans l\'application</string>
+    <string name="settings_coach_marks_reset_done">Les astuces ont été réinitialisées</string>
+
+    <!-- Help -->
+    <string name="help_title">Aide</string>
+    <string name="help_section_faq">Questions fréquentes</string>
+    <string name="help_faq_collapse">Réduire</string>
+    <string name="help_faq_expand">Développer</string>
+    <string name="help_section_contact">Contact</string>
+    <string name="help_contact_send_email">Envoyer un e-mail</string>
+    <string name="help_contact_email">hello@codewhiskers.app</string>
+    <string name="help_faq1_q">Comment créer un nouvel événement ?</string>
+    <string name="help_faq1_a">Appuyez sur le bouton + dans la barre du bas, choisissez un modèle ou partez de zéro, puis remplissez le nom, la date et la description. Vous sélectionnez ensuite les modules à activer. Remarque : les modules Covoiturage, Hébergement et Restauration ne sont disponibles qu\'à partir de PRO.</string>
+    <string name="help_faq2_q">Comment inviter des amis ?</string>
+    <string name="help_faq2_a">Sur le tableau de bord de l\'événement, appuyez sur l\'icône de partage ou allez dans Paramètres pour trouver le lien d\'invitation. Vous pouvez le copier ou le partager via n\'importe quelle application. Les invités rejoignent en un seul clic. Si l\'approbation est requise, l\'organisateur doit confirmer chaque nouveau participant.</string>
+    <string name="help_faq3_q">Comment fonctionnent les dépenses ?</string>
+    <string name="help_faq3_a">Dans le module Dépenses, tout le monde peut ajouter une dépense — entrez le montant, choisissez qui a payé et comment la répartir. L\'application calcule les remboursements automatiquement. Seul l\'organisateur peut supprimer les dépenses.</string>
+    <string name="help_faq4_q">Comment fonctionnent les votes ?</string>
+    <string name="help_faq4_a">L\'organisateur crée des sondages avec des options dans le module Votes. Tous les participants peuvent voter et les résultats apparaissent en temps réel. Le plan Free permet 1 sondage, PRO jusqu\'à 3, et Business illimité.</string>
+    <string name="help_faq5_q">Comment modifier les paramètres d\'un événement ?</string>
+    <string name="help_faq5_a">Sur le tableau de bord de l\'événement, appuyez sur Paramètres. Seuls l\'organisateur et les co-organisateurs peuvent modifier le nom, la description, le statut, les paramètres de sécurité et autres options. Les participants ordinaires peuvent consulter mais pas modifier les paramètres.</string>
+    <string name="help_faq6_q">Comment fonctionne le covoiturage ?</string>
+    <string name="help_faq6_a">Dans le module Covoiturage (PRO et plus), vous pouvez proposer des places dans votre voiture ou rejoindre le trajet de quelqu\'un d\'autre. Tout le monde voit qui conduit et les places disponibles. L\'organisateur peut supprimer les trajets.</string>
+    <string name="help_faq7_q">Comment fonctionnent les chambres ?</string>
+    <string name="help_faq7_a">Dans le module Hébergement (PRO et plus), n\'importe qui peut créer des chambres avec une capacité définie. Appuyez sur une chambre pour la rejoindre — vous ne pouvez être que dans une seule chambre à la fois. Appuyez à nouveau pour la quitter. L\'organisateur peut supprimer les chambres.</string>
+    <string name="help_faq8_q">Qu\'est-ce que la liste à emporter ?</string>
+    <string name="help_faq8_a">La liste à emporter est une liste partagée des articles nécessaires pour l\'événement. Tout participant peut ajouter des articles et les marquer comme pris en charge. L\'organisateur peut supprimer les articles.</string>
+    <string name="help_faq_wishlist_q">Qu\'est-ce que la liste de cadeaux ?</string>
+    <string name="help_faq_wishlist_a">La liste de cadeaux permet à l\'organisateur d\'ajouter les cadeaux souhaités. Les participants peuvent réserver des articles ou les marquer comme achetés pour éviter les doublons.</string>
+    <string name="help_faq_catering_q">Qu\'est-ce que le module Restauration ?</string>
+    <string name="help_faq_catering_a">Le module Restauration (PRO et plus) affiche un aperçu des préférences alimentaires de tous les participants. Chaque participant peut définir ses préférences (végétarien, végan, sans gluten, etc.) dans son profil. L\'organisateur voit un résumé du nombre de personnes ayant chaque préférence.</string>
+    <string name="help_faq9_q">Quelle est la différence entre Free, Pro et Business ?</string>
+    <string name="help_faq9_a">Free : 1 événement, 20 participants, 1 sondage, publicités. PRO : 3 événements, 100 participants, 3 sondages, sans publicité, co-organisateurs, modules premium (Restauration, Hébergement, Covoiturage), aperçu de l\'organisateur, export du résumé, duplication d\'événement. Business : événements, participants et sondages illimités, plus des modèles premium et tout ce qui est dans PRO.</string>
+    <string name="help_faq10_q">Comment sécuriser un événement avec un PIN ?</string>
+    <string name="help_faq10_a">Dans les paramètres de l\'événement, l\'organisateur peut activer la protection par PIN et définir un code. Toute personne souhaitant rejoindre doit d\'abord entrer le PIN.</string>
+    <string name="help_faq_roles_q">Que peuvent faire les organisateurs et les participants ?</string>
+    <string name="help_faq_roles_a">L\'organisateur (créateur de l\'événement) peut ajouter/supprimer/réorganiser les modules, modifier les paramètres de l\'événement, gérer les participants, promouvoir des co-organisateurs (PRO+), supprimer l\'événement et exporter le résumé (PRO+). Les co-organisateurs ont les mêmes droits sauf la suppression de l\'événement. Les participants ordinaires peuvent consulter le contenu, voter, ajouter des dépenses, des tâches, des messages et rejoindre le covoiturage/les chambres.</string>
+    <string name="help_faq_schedule_q">Comment fonctionne le module Programme ?</string>
+    <string name="help_faq_schedule_a">Le module Programme permet aux organisateurs de créer un planning pour l\'événement avec des éléments individuels — chacun avec un nom, une heure et une description optionnelle. Les participants peuvent consulter le programme complet par ordre chronologique.</string>
+    <string name="help_faq_tasks_q">Comment fonctionnent les tâches ?</string>
+    <string name="help_faq_tasks_a">Dans le module Tâches, n\'importe qui peut créer des tâches et les attribuer aux participants. Les tâches peuvent être marquées comme terminées. L\'organisateur peut supprimer n\'importe quelle tâche.</string>
+    <string name="help_faq_year_review_q">Qu\'est-ce que l\'année en événements ?</string>
+    <string name="help_faq_year_review_a">L\'année en événements est votre récapitulatif personnel de l\'année en cours — montrant à combien d\'événements vous avez participé, combien de personnes vous avez rencontrées, votre lieu le plus visité, votre mois le plus chargé, et plus encore. Retrouvez-le dans Modifier le profil.</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty_title">Aucune notification</string>
+    <string name="notifications_empty_description">Quand quelque chose se passera dans vos événements, vous le verrez ici.</string>
+    <string name="notifications_time_just_now">à l\'instant</string>
+    <string name="notifications_time_minutes_ago">il y a %d min</string>
+    <string name="notifications_time_hours_ago">il y a %d h</string>
+
+    <!-- Year in Review -->
+    <string name="year_review_intro_label">Votre année en événements</string>
+    <string name="year_review_intro_desc">Regardons ensemble ce que vous avez vécu cette année !</string>
+    <string name="year_review_events_label">événements</string>
+    <string name="year_review_events_desc">Chaque événement est une histoire. Et vous en avez écrit %1$d cette année !</string>
+    <string name="year_review_people_label">personnes</string>
+    <string name="year_review_people_desc">Autant de personnes formidables que vous avez rencontrées. Chacune a ajouté une pièce au puzzle de vos expériences.</string>
+    <string name="year_review_days_label">jours</string>
+    <string name="year_review_days_desc">Au total, %1$d jours passés ensemble. C\'est bien plus qu\'un chiffre — ce sont des souvenirs pour la vie.</string>
+    <string name="year_review_longest_label">jours</string>
+    <string name="year_review_longest_desc">Votre plus long événement \"%1$s\" a duré %2$d jours !</string>
+    <string name="year_review_longest_subtitle">Plus long événement</string>
+    <string name="year_review_location_desc">Votre lieu préféré. Là où les meilleurs moments se sont passés !</string>
+    <string name="year_review_location_subtitle">Lieu le plus visité</string>
+    <string name="year_review_month_desc">Votre mois le plus actif. C\'est là que ça bougeait !</string>
+    <string name="year_review_month_subtitle">Mois le plus actif</string>
+    <string name="year_review_avg_label">personnes par événement</string>
+    <string name="year_review_avg_desc">En moyenne, %1$d personnes se sont réunies à chaque événement. Quelle équipe !</string>
+    <string name="year_review_avg_subtitle">Moyenne par événement</string>
+    <string name="year_review_outro_label">Quelle belle année !</string>
+    <string name="year_review_outro_desc">Merci d\'avoir planifié avec BetterMingle. Que l\'année prochaine soit encore meilleure !</string>
+    <string name="year_review_share">Partager</string>
+    <string name="year_review_share_chooser">Partager l\'année en événements</string>
+    <string name="year_review_tagline">Des événements qui comptent, organisés avec BetterMingle</string>
+
+    <!-- Activity Logger strings -->
+    <string name="activity_sent_message">a envoyé un message : \u00AB%1$s\u00BB</string>
+    <string name="activity_deleted_expense">a supprimé la dépense : %1$s (%2$s CZK)</string>
+    <string name="activity_settled_debt">a réglé sa dette envers %1$s</string>
+    <string name="activity_added_expense">a ajouté une dépense : %1$s (%2$s CZK)</string>
+    <string name="activity_voted_for">a voté pour \u00AB%1$s\u00BB dans le sondage %2$s</string>
+    <string name="activity_created_poll">a créé le sondage : %1$s</string>
+    <string name="activity_deleted_ride">a supprimé le trajet depuis %1$s</string>
+    <string name="activity_requested_ride">a demandé une place dans le trajet depuis %1$s</string>
+    <string name="activity_offered_ride">a proposé un trajet</string>
+    <string name="activity_looking_for_ride">cherche un trajet</string>
+    <string name="activity_deleted_room">a supprimé la chambre : %1$s</string>
+    <string name="activity_created_room">a créé la chambre %1$s (capacité %2$s)</string>
+    <string name="activity_joined_room">a rejoint la chambre : %1$s</string>
+    <string name="activity_removed_from_schedule">a retiré du programme : %1$s</string>
+    <string name="activity_added_to_schedule">a ajouté au programme : %1$s</string>
+    <string name="activity_deleted_task">a supprimé la tâche : %1$s</string>
+    <string name="activity_completed_task">a terminé la tâche : %1$s</string>
+    <string name="activity_created_task">a créé la tâche : %1$s</string>
+    <string name="activity_removed_from_packing">a retiré de la liste à emporter : %1$s</string>
+    <string name="activity_added_to_packing">a ajouté à la liste à emporter : %1$s</string>
+    <string name="activity_added_to_wishlist">a ajouté à la liste de cadeaux : %1$s</string>
+    <string name="activity_removed_from_wishlist">a retiré de la liste de cadeaux : %1$s</string>
+    <string name="activity_claimed_wishlist">va acheter : %1$s</string>
+    <string name="activity_rated_event">a évalué l\'événement (%1$s/5 \u2B50)</string>
+    <string name="activity_edited_event">a modifié le %1$s de l\'événement</string>
+    <string name="activity_deleted_event">a supprimé l\'événement : %1$s</string>
+    <string name="activity_changed_status">a changé le statut de l\'événement en %1$s</string>
+    <string name="activity_joined_event">a rejoint l\'événement</string>
+    <string name="activity_change_name">nom</string>
+    <string name="activity_change_description">description</string>
+    <string name="activity_change_theme">thème</string>
+
+    <!-- PIN Verification -->
+    <string name="pin_dialog_title">Événement protégé</string>
+    <string name="pin_dialog_description">Cet événement nécessite un PIN pour y accéder.</string>
+    <string name="pin_dialog_input_label">Entrer le PIN</string>
+    <string name="pin_dialog_error">PIN incorrect</string>
+
+    <!-- QR Code -->
+    <string name="qr_code_description">Code QR</string>
+
+    <!-- User Avatar -->
+    <string name="user_avatar_description">Avatar</string>
+
+    <!-- Error State -->
+    <string name="error_title">Une erreur est survenue</string>
+    <string name="error_description">Vérifiez votre connexion Internet et réessayez.</string>
+    <string name="error_icon_description">Erreur</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_no_events">Aucun événement</string>
+    <string name="a11y_no_tasks">Icône des tâches</string>
+    <string name="a11y_no_expenses">Aucune dépense</string>
+    <string name="a11y_no_polls">Aucun sondage</string>
+    <string name="a11y_search">Rechercher</string>
+    <string name="a11y_assigned">Attribué</string>
+    <string name="a11y_delete_task">Supprimer la tâche</string>
+    <string name="a11y_delete_expense">Supprimer la dépense</string>
+    <string name="a11y_error">Erreur</string>
+    <string name="a11y_add_to_calendar">Ajouter au calendrier</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Compte à rebours jusqu\'au prochain événement</string>
+
+    <!-- Profile Setup (post-login onboarding) -->
+    <string name="profile_setup_title">Configurez votre profil</string>
+    <string name="profile_setup_subtitle">Dites-en un peu plus sur vous. Seul votre nom est obligatoire.</string>
+    <string name="profile_setup_name">Nom</string>
+    <string name="profile_setup_phone">Téléphone</string>
+    <string name="profile_setup_department">Service / Groupe</string>
+    <string name="profile_setup_bio">À propos de moi</string>
+    <string name="profile_setup_choose_avatar">Appuyez pour choisir un avatar</string>
+    <string name="profile_setup_avatar_picker_title">Choisir un avatar</string>
+    <string name="profile_setup_save">Continuer</string>
+
+    <!-- Language Settings -->
+    <string name="settings_section_language">Langue</string>
+    <string name="settings_language">Langue de l\'application</string>
+    <string name="settings_language_system">Système</string>
+
+    <!-- Tier Enforcement -->
+    <string name="tier_export_summary_title">Aperçu de l\'organisateur</string>
+    <string name="tier_export_summary_message">L\'aperçu de l\'organisateur est disponible à partir du plan Pro.</string>
+    <string name="tier_co_organizers_title">Co-organisateurs</string>
+    <string name="tier_co_organizers_message">L\'ajout de co-organisateurs est disponible à partir du plan Pro.</string>
+    <string name="tier_repeat_event_title">Dupliquer l\'événement</string>
+    <string name="tier_repeat_event_message">La duplication d\'événements est disponible à partir du plan Pro.</string>
+    <string name="tier_upgrade_button">Passer à la version supérieure</string>
+    <string name="summary_export">Partager le résumé</string>
+
+    <!-- Catering module -->
+    <string name="catering_title">Restauration</string>
+    <string name="catering_empty">Aucune préférence alimentaire trouvée parmi les participants</string>
+    <string name="catering_summary_title">Aperçu des régimes alimentaires</string>
+    <string name="catering_participants_count">%1$d participants</string>
+    <string name="catering_participant_count">%1$d participant</string>
+
+    <!-- Dietary preferences -->
+    <string name="dietary_preferences_label">Préférences alimentaires</string>
+    <string name="dietary_vegetarian">Végétarien</string>
+    <string name="dietary_vegan">Végan</string>
+    <string name="dietary_gluten_free">Sans gluten</string>
+    <string name="dietary_lactose_free">Sans lactose</string>
+    <string name="dietary_halal">Halal</string>
+    <string name="dietary_kosher">Casher</string>
+    <string name="dietary_add_custom">Ajouter une préférence personnalisée</string>
+
+    <!-- Premium modules -->
+    <string name="module_premium_locked">Disponible dans PRO</string>
+
+    <!-- Error messages -->
+    <string name="error_load_failed">Échec du chargement des données. Réessayez.</string>
+    <string name="error_save_failed">Échec de l\'enregistrement. Réessayez.</string>
+    <string name="error_delete_failed">Échec de la suppression. Réessayez.</string>
+    <string name="error_network">Erreur de connexion. Vérifiez votre Internet.</string>
+
+    <!-- Accessibility -->
+    <string name="cd_toggle_password">Afficher/masquer le mot de passe</string>
+    <string name="cd_delete_item">Supprimer l\'élément</string>
+    <string name="cd_open_menu">Ouvrir le menu</string>
+    <string name="cd_close">Fermer</string>
+    <string name="cd_add_item">Ajouter un élément</string>
+
+    <!-- Poll close confirmation -->
+    <string name="voting_close_poll_confirm_title">Clôturer le sondage ?</string>
+    <string name="voting_close_poll_confirm_message">Une fois clôturé, plus aucun vote ne pourra être enregistré. Cette action est irréversible.</string>
+
+    <!-- Create event validation -->
+    <string name="create_event_name_required">Le nom de l\'événement est obligatoire</string>
+    <string name="create_event_name_too_long">Le nom de l\'événement doit faire moins de 100 caractères</string>
+    <string name="create_event_desc_too_long">La description doit faire moins de 500 caractères</string>
+
+    <!-- Budget module -->
+    <string name="budget_title">Budget</string>
+    <string name="budget_empty">Aucun budget défini</string>
+    <string name="budget_empty_description">Appuyez sur + pour créer votre première catégorie de budget.</string>
+    <string name="budget_total">Budget total</string>
+    <string name="budget_spent">Dépensé</string>
+    <string name="budget_remaining">Restant</string>
+    <string name="budget_add_category">Ajouter une catégorie</string>
+    <string name="budget_edit_category">Modifier la catégorie</string>
+    <string name="budget_category_name">Nom de la catégorie</string>
+    <string name="budget_category_amount">Montant prévu</string>
+    <string name="budget_add_expense">Ajouter une dépense</string>
+    <string name="budget_expense_amount">Montant de la dépense</string>
+    <string name="budget_expense_note">Note (optionnelle)</string>
+    <string name="budget_delete_title">Supprimer la catégorie</string>
+    <string name="budget_delete_confirm">Supprimer \"%1$s\" et toutes ses dépenses ?</string>
+    <string name="budget_over_budget">Budget dépassé !</string>
+    <string name="budget_expense_history">Dépenses</string>
+    <string name="budget_no_expenses">Aucune dépense</string>
+    <string name="dashboard_budget">Budget</string>
+
+    <!-- Business tier modules -->
+    <string name="module_business_locked">Disponible dans Business</string>
+
+    <!-- Template preview chips -->
+    <string name="template_preview_modules">%d modules</string>
+    <string name="template_preview_budget">%d× budget</string>
+    <string name="template_preview_tasks">%d tâches</string>
+    <string name="template_preview_schedule">%d× programme</string>
+
+    <!-- Template budget items -->
+    <string name="template_budget_venue">Lieu</string>
+    <string name="template_budget_catering">Restauration</string>
+    <string name="template_budget_photographer">Photographe</string>
+    <string name="template_budget_music">Musique</string>
+    <string name="template_budget_flowers">Fleurs</string>
+    <string name="template_budget_dress">Robe</string>
+    <string name="template_budget_food">Nourriture</string>
+    <string name="template_budget_drinks">Boissons</string>
+    <string name="template_budget_cake">Gâteau</string>
+    <string name="template_budget_decorations">Décorations</string>
+    <string name="template_budget_transport">Transport</string>
+    <string name="template_budget_accommodation">Hébergement</string>
+    <string name="template_budget_activities">Activités</string>
+    <string name="template_budget_gifts">Cadeaux</string>
+    <string name="template_budget_equipment">Équipement</string>
+    <string name="template_budget_tickets">Billets</string>
+    <string name="template_budget_costumes">Costumes</string>
+
+    <!-- Template tasks -->
+    <string name="template_task_book_venue">Réserver le lieu</string>
+    <string name="template_task_send_invitations">Envoyer les invitations</string>
+    <string name="template_task_order_flowers">Commander les fleurs</string>
+    <string name="template_task_hire_photographer">Engager un photographe</string>
+    <string name="template_task_buy_cake">Acheter le gâteau</string>
+    <string name="template_task_prepare_playlist">Préparer la playlist</string>
+    <string name="template_task_send_invites">Envoyer les invitations</string>
+    <string name="template_task_pack_bags">Préparer les bagages</string>
+    <string name="template_task_book_accommodation">Réserver l\'hébergement</string>
+    <string name="template_task_plan_route">Planifier l\'itinéraire</string>
+    <string name="template_task_prepare_agenda">Préparer l\'ordre du jour</string>
+    <string name="template_task_order_catering">Commander le traiteur</string>
+    <string name="template_task_buy_decorations">Acheter les décorations</string>
+    <string name="template_task_plan_activities">Planifier les activités</string>
+    <string name="template_task_book_restaurant">Réserver le restaurant</string>
+    <string name="template_task_arrange_transport">Organiser le transport</string>
+    <string name="template_task_prepare_equipment">Préparer l\'équipement</string>
+    <string name="template_task_buy_tickets">Acheter les billets</string>
+
+    <!-- Template schedule blocks -->
+    <string name="template_schedule_ceremony">Cérémonie</string>
+    <string name="template_schedule_reception">Réception</string>
+    <string name="template_schedule_party">Soirée</string>
+    <string name="template_schedule_departure">Départ</string>
+    <string name="template_schedule_arrival">Arrivée</string>
+    <string name="template_schedule_first_activity">Première activité</string>
+    <string name="template_schedule_intro">Introduction</string>
+    <string name="template_schedule_activity_1">Activité 1</string>
+    <string name="template_schedule_lunch">Déjeuner</string>
+    <string name="template_schedule_activity_2">Activité 2</string>
+    <string name="template_schedule_dinner">Dîner</string>
+    <string name="template_schedule_games">Jeux</string>
+    <string name="template_schedule_opening">Ouverture</string>
+    <string name="template_schedule_presentation">Présentation</string>
+    <string name="template_schedule_workshop">Atelier</string>
+    <string name="template_schedule_warmup">Échauffement</string>
+    <string name="template_schedule_match">Match</string>
+    <string name="template_schedule_awards">Remise des prix</string>
+
+    <!-- PDF Export -->
+    <string name="export_pdf_button">Exporter en PDF</string>
+    <string name="export_pdf_chooser">Partager le rapport PDF</string>
+    <string name="export_pdf_generating">Génération du PDF…</string>
+    <string name="export_pdf_error">Échec de la génération du PDF</string>
+    <string name="export_pdf_upgrade_title">Export PDF</string>
+    <string name="export_pdf_upgrade_message">L\'export PDF détaillé est disponible avec Mingle Pro.</string>
+    <string name="export_pdf_select_sections">Sélectionner les sections</string>
+    <string name="export_pdf_section_participants">Participants</string>
+    <string name="export_pdf_section_polls">Sondages</string>
+    <string name="export_pdf_section_budget">Budget</string>
+    <string name="export_pdf_section_expenses">Dépenses</string>
+    <string name="export_pdf_section_wishlist">Cadeaux</string>
+    <string name="export_pdf_section_tasks">Tâches</string>
+    <string name="export_pdf_section_packing">Liste à emporter</string>
+    <string name="export_pdf_section_carpool">Covoiturage</string>
+    <string name="export_pdf_export_button">Exporter en PDF</string>
+</resources>

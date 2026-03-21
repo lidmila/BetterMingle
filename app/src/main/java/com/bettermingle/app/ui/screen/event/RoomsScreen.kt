@@ -96,6 +96,7 @@ fun RoomsScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var roomToDelete by remember { mutableStateOf<EventRoom?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -150,7 +151,8 @@ fun RoomsScreen(
                     userNames[currentUserId] = userDoc.getString("displayName") ?: currentUserId.take(8)
                 }
             } catch (_: Exception) { }
-        } catch (_: Exception) { }
+            isLoading = false
+        } catch (_: Exception) { isLoading = false }
         }
     }
 
@@ -315,15 +317,22 @@ fun RoomsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (rooms.isEmpty() && !isRefreshing) {
-                EmptyState(
-                    icon = Icons.Default.Hotel,
-                    illustration = R.drawable.il_empty_rooms,
-                    title = stringResource(R.string.rooms_empty_title),
-                    description = stringResource(R.string.rooms_empty_description),
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
+            when {
+                isLoading && rooms.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                rooms.isEmpty() && !isRefreshing -> {
+                    EmptyState(
+                        icon = Icons.Default.Hotel,
+                        illustration = R.drawable.il_empty_rooms,
+                        title = stringResource(R.string.rooms_empty_title),
+                        description = stringResource(R.string.rooms_empty_description),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.screenPadding),
@@ -342,6 +351,7 @@ fun RoomsScreen(
                         )
                     }
                 }
+            }
             }
         }
     }

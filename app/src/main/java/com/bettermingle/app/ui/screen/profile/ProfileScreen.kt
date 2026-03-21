@@ -229,6 +229,21 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(BetterMingleMotion.STANDARD, delayMillis = 80)) +
+                        slideInVertically(tween(BetterMingleMotion.STANDARD, delayMillis = 80)) { it / 3 }
+            ) {
+            ProfileMenuItem(
+                icon = Icons.Default.AutoAwesome,
+                title = stringResource(R.string.profile_year_in_events),
+                iconTint = PrimaryBlue,
+                onClick = onYearInReview
+            )
+            }
+
             // Contact info cards (only show if filled)
             val hasContactInfo = profileState.contactEmail.isNotEmpty()
                     || profileState.phone.isNotEmpty()
@@ -353,13 +368,6 @@ fun ProfileScreen(
                 iconTint = AccentPink,
                 onClick = onHelp
             )
-            ProfileMenuItem(
-                icon = Icons.Default.AutoAwesome,
-                title = stringResource(R.string.profile_year_in_events),
-                iconTint = PrimaryBlue,
-                onClick = onYearInReview
-            )
-
             Spacer(modifier = Modifier.height(Spacing.md))
 
             ProfileMenuItem(

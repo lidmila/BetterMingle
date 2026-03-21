@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import com.bettermingle.app.R
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -94,6 +95,7 @@ fun WishlistScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
     val currentUser = remember { FirebaseAuth.getInstance().currentUser }
@@ -141,7 +143,9 @@ fun WishlistScreen(
 
                 items.clear()
                 items.addAll(loaded)
+                isLoading = false
             } catch (_: Exception) {
+                isLoading = false
                 scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
             }
         }
@@ -247,15 +251,22 @@ fun WishlistScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (items.isEmpty() && !isRefreshing) {
-                EmptyState(
-                    icon = Icons.Default.CardGiftcard,
-                    illustration = R.drawable.il_empty_wishlist,
-                    title = stringResource(R.string.wishlist_empty_title),
-                    description = stringResource(R.string.wishlist_empty_description),
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
+            when {
+                isLoading && items.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                items.isEmpty() && !isRefreshing -> {
+                    EmptyState(
+                        icon = Icons.Default.CardGiftcard,
+                        illustration = R.drawable.il_empty_wishlist,
+                        title = stringResource(R.string.wishlist_empty_title),
+                        description = stringResource(R.string.wishlist_empty_description),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.screenPadding),
@@ -329,6 +340,7 @@ fun WishlistScreen(
                             }
                         )
                     }
+                }
                 }
             }
         }

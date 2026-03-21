@@ -1,0 +1,26 @@
+<cs-CZ>
+Nové jazyky: Němčina, polština, francouzština a španělština — BetterMingle je nyní dostupný v 6 jazycích! Jazyk si můžete přepnout v Nastavení.
+
+Nová sekce O aplikaci v nastavení s informacemi o vývojáři a kontaktem.
+
+Vylepšené načítání modulů — prázdné stavy se zobrazují až po dokončení načítání, takže už neuvidíte blikající „žádný obsah".
+
+Rozšířená nápověda — přidány otázky k modulu Program, Úkoly a funkci Rok v událostech.
+
+Optimalizace výkonu při načítání seznamu událostí.
+
+Opravy chyb a vylepšení stability.
+</cs-CZ>
+<en-US>
+New languages: German, Polish, French, and Spanish — BetterMingle is now available in 6 languages! Switch your language in Settings.
+
+New About screen in settings with developer info and contact details.
+
+Improved module loading — empty states now only appear after loading is complete, so you won't see a flash of "no content" anymore.
+
+Expanded Help section — added FAQs for Schedule, Tasks, and Year in Events.
+
+Performance optimization for event list loading.
+
+Bug fixes and stability improvements.
+</en-US>

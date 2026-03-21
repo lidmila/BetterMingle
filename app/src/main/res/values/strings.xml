@@ -642,8 +642,16 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_about_app">About app</string>
     <string name="settings_version">Version: %1$s</string>
     <string name="settings_copyright">Better Mingle © 2026</string>
+    <string name="about_title">About app</string>
+    <string name="about_description">BetterMingle helps you plan group events — from voting and expense splitting to carpool and accommodation. Everything in one place, for everyone.</string>
+    <string name="about_developer">Developer</string>
+    <string name="about_developer_name">CodeWhiskers</string>
+    <string name="about_website">Website</string>
+    <string name="about_website_url">www.codewhiskers.app</string>
+    <string name="about_contact">Contact</string>
     <string name="settings_debug_tier_switch">Tier switching</string>
     <string name="settings_debug_tier_current">Current: %1$s</string>
     <!-- Legal -->
@@ -799,6 +807,12 @@
     <string name="help_faq10_a">In event settings, the organizer can enable PIN protection and set a code. Anyone who wants to join must enter the PIN first.</string>
     <string name="help_faq_roles_q">What can organizers and participants do?</string>
     <string name="help_faq_roles_a">The organizer (event creator) can add/remove/reorder modules, change event settings, manage participants, promote co-organizers (PRO+), delete the event, and export summary (PRO+). Co-organizers have the same permissions except deleting the event. Regular participants can view content, vote, add expenses, tasks, messages, and join carpool/rooms.</string>
+    <string name="help_faq_schedule_q">How does the Schedule module work?</string>
+    <string name="help_faq_schedule_a">The Schedule module lets organizers create a timeline for the event with individual program items — each with a name, time, and optional description. Participants can view the full program in chronological order.</string>
+    <string name="help_faq_tasks_q">How do tasks work?</string>
+    <string name="help_faq_tasks_a">In the Tasks module, anyone can create tasks and assign them to participants. Tasks can be marked as completed. The organizer can delete any task.</string>
+    <string name="help_faq_year_review_q">What is Year in events?</string>
+    <string name="help_faq_year_review_a">Year in events is your personal recap of the current year — showing how many events you attended, how many people you met, your most visited location, busiest month, and more. Find it in Edit profile.</string>
 
     <!-- Notifications -->
     <string name="notifications_title">Notifications</string>

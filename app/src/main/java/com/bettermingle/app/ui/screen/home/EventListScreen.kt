@@ -84,14 +84,15 @@ private data class StatusChipStyle(
     val labelResId: Int
 )
 
-@Composable
-private fun statusChipStyles(): Map<EventStatus, StatusChipStyle> {
-    val ext = BetterMingleThemeColors.extended
+private fun statusChipStyles(
+    ext: com.bettermingle.app.ui.theme.BetterMingleExtendedColors,
+    onSurfaceVariant: Color
+): Map<EventStatus, StatusChipStyle> {
     return mapOf(
         EventStatus.PLANNING to StatusChipStyle(ext.pastelGold, AccentGold, R.string.event_status_planning),
         EventStatus.CONFIRMED to StatusChipStyle(ext.pastelBlue, PrimaryBlue, R.string.event_status_confirmed),
         EventStatus.ONGOING to StatusChipStyle(ext.pastelGreen, Success, R.string.event_status_ongoing),
-        EventStatus.COMPLETED to StatusChipStyle(ext.pastelGray, MaterialTheme.colorScheme.onSurfaceVariant, R.string.event_status_completed),
+        EventStatus.COMPLETED to StatusChipStyle(ext.pastelGray, onSurfaceVariant, R.string.event_status_completed),
         EventStatus.CANCELLED to StatusChipStyle(ext.pastelOrange, AccentOrange, R.string.event_status_cancelled)
     )
 }
@@ -268,7 +269,9 @@ fun EventListScreen(
 
                         // Filter chips with pastel colors
                         item {
-                            val chipStyles = statusChipStyles()
+                            val ext = BetterMingleThemeColors.extended
+                            val surfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+                            val chipStyles = remember(ext, surfaceVariant) { statusChipStyles(ext, surfaceVariant) }
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                             ) {

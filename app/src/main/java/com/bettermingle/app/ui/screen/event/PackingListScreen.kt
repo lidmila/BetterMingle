@@ -2,6 +2,7 @@ package com.bettermingle.app.ui.screen.event
 
 import com.bettermingle.app.R
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -89,6 +90,7 @@ fun PackingListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
@@ -122,7 +124,9 @@ fun PackingListScreen(
 
                 items.clear()
                 items.addAll(loaded)
+                isLoading = false
             } catch (_: Exception) {
+                isLoading = false
                 scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
             }
         }
@@ -226,15 +230,22 @@ fun PackingListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (items.isEmpty() && !isRefreshing) {
-                EmptyState(
-                    icon = Icons.Default.Backpack,
-                    illustration = R.drawable.il_empty_packing,
-                    title = stringResource(R.string.packing_empty_title),
-                    description = stringResource(R.string.packing_empty_description),
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
+            when {
+                isLoading && items.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                items.isEmpty() && !isRefreshing -> {
+                    EmptyState(
+                        icon = Icons.Default.Backpack,
+                        illustration = R.drawable.il_empty_packing,
+                        title = stringResource(R.string.packing_empty_title),
+                        description = stringResource(R.string.packing_empty_description),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.screenPadding),
@@ -275,6 +286,7 @@ fun PackingListScreen(
                             }
                         )
                     }
+                }
                 }
             }
         }

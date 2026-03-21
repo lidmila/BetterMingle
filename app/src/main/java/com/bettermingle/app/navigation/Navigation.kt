@@ -68,6 +68,7 @@ import com.bettermingle.app.ui.screen.event.VotingScreen
 import com.bettermingle.app.ui.screen.home.EventListScreen
 import com.bettermingle.app.ui.screen.home.NotificationsScreen
 import com.bettermingle.app.ui.screen.home.YearInReviewScreen
+import com.bettermingle.app.ui.screen.profile.AboutScreen
 import com.bettermingle.app.ui.screen.profile.EditProfileScreen
 import com.bettermingle.app.ui.screen.profile.HelpScreen
 import com.bettermingle.app.ui.screen.profile.ProfileScreen
@@ -116,6 +117,7 @@ object Routes {
     const val EDIT_PROFILE = "edit_profile"
     const val NOTIFICATIONS = "notifications"
     const val YEAR_IN_REVIEW = "year_in_review"
+    const val ABOUT = "about"
     const val ONBOARDING = "onboarding"
     const val PROFILE_SETUP = "profile_setup"
     const val ACTIVITY_FEED = "activity_feed/{eventId}"
@@ -452,7 +454,8 @@ fun BetterMingleNavigation() {
                     },
                     onNavigateToPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
                     onNavigateToTerms = { navController.navigate(Routes.TERMS_OF_SERVICE) },
-                    onNavigateToDeleteRequest = { navController.navigate(Routes.DELETE_ACCOUNT_REQUEST) }
+                    onNavigateToDeleteRequest = { navController.navigate(Routes.DELETE_ACCOUNT_REQUEST) },
+                    onNavigateToAbout = { navController.navigate(Routes.ABOUT) }
                 )
             }
             composable(Routes.HELP) {
@@ -467,6 +470,11 @@ fun BetterMingleNavigation() {
             }
             composable(Routes.YEAR_IN_REVIEW) {
                 YearInReviewScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.ABOUT) {
+                AboutScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

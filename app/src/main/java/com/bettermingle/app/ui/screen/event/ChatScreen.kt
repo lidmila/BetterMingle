@@ -3,6 +3,7 @@ package com.bettermingle.app.ui.screen.event
 import com.bettermingle.app.R
 import androidx.compose.ui.res.stringResource
 import com.bettermingle.app.utils.ActivityLogger
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -110,6 +111,12 @@ fun ChatScreen(
     val hapticView = LocalView.current
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(eventId) {
+        chatRepository.getMessagesFlow(eventId).first()
+        isLoading = false
+    }
 
     LaunchedEffect(eventId) {
         try {
@@ -215,17 +222,29 @@ fun ChatScreen(
             }
         }
     ) { innerPadding ->
-        if (messages.isEmpty()) {
-            EmptyState(
-                icon = Icons.AutoMirrored.Filled.Chat,
-                illustration = R.drawable.il_empty_chat,
-                title = stringResource(R.string.chat_empty_title),
-                description = stringResource(R.string.chat_empty_description),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        } else {
+        when {
+            isLoading && messages.isEmpty() -> {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            }
+            messages.isEmpty() -> {
+                EmptyState(
+                    icon = Icons.AutoMirrored.Filled.Chat,
+                    illustration = R.drawable.il_empty_chat,
+                    title = stringResource(R.string.chat_empty_title),
+                    description = stringResource(R.string.chat_empty_description),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                )
+            }
+            else -> {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -267,6 +286,7 @@ fun ChatScreen(
                         )
                     }
                 }
+            }
             }
         }
     }

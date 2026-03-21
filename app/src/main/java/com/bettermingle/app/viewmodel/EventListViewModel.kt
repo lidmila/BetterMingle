@@ -13,7 +13,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
@@ -27,19 +29,18 @@ data class EventListUiState(
     val participantCounts: Map<String, Int> = emptyMap(),
     val yearInReviewDismissed: Boolean = false
 ) {
-    val filteredEvents: List<Event>
-        get() {
-            var result = events
-            if (searchQuery.isNotBlank()) {
-                result = result.filter {
-                    it.name.contains(searchQuery, ignoreCase = true)
-                }
+    val filteredEvents: List<Event> = run {
+        var result = events
+        if (searchQuery.isNotBlank()) {
+            result = result.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
             }
-            if (statusFilter != null) {
-                result = result.filter { it.status == statusFilter }
-            }
-            return result
         }
+        if (statusFilter != null) {
+            result = result.filter { it.status == statusFilter }
+        }
+        result
+    }
 
     val groupedEvents: Map<String, List<Event>>
         get() = filteredEvents.groupBy { it.status.name }
@@ -82,17 +83,17 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun loadParticipantCounts(eventIds: List<String>) {
-        eventIds.forEach { eventId ->
-            viewModelScope.launch {
-                try {
-                    repository.getParticipantCount(eventId).collect { count ->
-                        _uiState.value = _uiState.value.copy(
-                            participantCounts = _uiState.value.participantCounts + (eventId to count)
-                        )
-                    }
-                } catch (e: Exception) {
-                    Log.w("EventListViewModel", "Failed to load participant count for $eventId", e)
+        if (eventIds.isEmpty()) return
+        viewModelScope.launch {
+            try {
+                val flows = eventIds.map { eventId ->
+                    repository.getParticipantCount(eventId).map { count -> eventId to count }
                 }
+                combine(flows) { pairs -> pairs.toMap() }.collect { countsMap ->
+                    _uiState.value = _uiState.value.copy(participantCounts = countsMap)
+                }
+            } catch (e: Exception) {
+                Log.w("EventListViewModel", "Failed to load participant counts", e)
             }
         }
     }

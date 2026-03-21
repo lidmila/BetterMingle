@@ -642,8 +642,16 @@
     <string name="settings_theme_light">Světlý</string>
     <string name="settings_theme_dark">Tmavý</string>
     <string name="settings_section_about">O aplikaci</string>
+    <string name="settings_about_app">O aplikaci</string>
     <string name="settings_version">Verze: %1$s</string>
     <string name="settings_copyright">Better Mingle © 2026</string>
+    <string name="about_title">O aplikaci</string>
+    <string name="about_description">BetterMingle ti pomáhá plánovat skupinové akce — od hlasování a dělení výdajů po spolujízdu a ubytování. Vše na jednom místě, pro všechny.</string>
+    <string name="about_developer">Vývojář</string>
+    <string name="about_developer_name">CodeWhiskers</string>
+    <string name="about_website">Web</string>
+    <string name="about_website_url">www.codewhiskers.app</string>
+    <string name="about_contact">Kontakt</string>
     <string name="settings_debug_tier_switch">Přepínání verze</string>
     <string name="settings_debug_tier_current">Aktuální: %1$s</string>
     <!-- Legal -->
@@ -799,6 +807,12 @@
     <string name="help_faq10_a">V nastavení akce může organizátor zapnout ochranu PINem a nastavit kód. Každý, kdo se bude chtít připojit, musí nejdříve zadat PIN.</string>
     <string name="help_faq_roles_q">Co mohou organizátoři a účastníci?</string>
     <string name="help_faq_roles_a">Organizátor (tvůrce akce) může přidávat/odebírat/přesouvat moduly, měnit nastavení akce, spravovat účastníky, povýšit spoluorganizátory (PRO+), smazat akci a exportovat shrnutí (PRO+). Spoluorganizátoři mají stejná oprávnění kromě smazání akce. Běžní účastníci mohou prohlížet obsah, hlasovat, přidávat výdaje, úkoly, zprávy a připojit se ke spolujízdě/pokojům.</string>
+    <string name="help_faq_schedule_q">Jak funguje modul Harmonogram?</string>
+    <string name="help_faq_schedule_a">Modul Harmonogram umožňuje organizátorům vytvořit časový plán akce s jednotlivými programovými body — každý s názvem, časem a volitelným popisem. Účastníci vidí celý program chronologicky.</string>
+    <string name="help_faq_tasks_q">Jak fungují úkoly?</string>
+    <string name="help_faq_tasks_a">V modulu Úkoly může kdokoliv vytvořit úkol a přiřadit ho účastníkovi. Úkoly lze označit jako splněné. Organizátor může jakýkoli úkol smazat.</string>
+    <string name="help_faq_year_review_q">Co je Rok v akcích?</string>
+    <string name="help_faq_year_review_a">Rok v akcích je tvé osobní shrnutí aktuálního roku — kolik akcí jsi navštívil/a, kolik lidí jsi potkal/a, tvé nejnavštěvovanější místo, nejaktivnější měsíc a další. Najdeš to v Upravit profil.</string>
 
     <!-- Notifications -->
     <string name="notifications_title">Upozornění</string>

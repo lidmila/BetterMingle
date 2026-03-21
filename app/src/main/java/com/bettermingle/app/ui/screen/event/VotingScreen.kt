@@ -128,6 +128,7 @@ fun VotingScreen(
     var showPollLimitDialog by remember { mutableStateOf(false) }
     var editingPoll by remember { mutableStateOf<PollWithOptions?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     var isOrganizer by remember { mutableStateOf(false) }
     var showClosePollDialog by remember { mutableStateOf<PollWithOptions?>(null) }
     var showColorPicker by remember { mutableStateOf(false) }
@@ -202,7 +203,8 @@ fun VotingScreen(
 
             pollsWithOptions.clear()
             pollsWithOptions.addAll(loaded.sortedByDescending { it.poll.createdAt })
-        } catch (_: Exception) { }
+            isLoading = false
+        } catch (_: Exception) { isLoading = false }
         }
     }
 
@@ -378,16 +380,23 @@ fun VotingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-        if (pollsWithOptions.isEmpty() && !isRefreshing) {
-            EmptyState(
-                icon = Icons.Default.HowToVote,
-                illustration = R.drawable.il_empty_voting,
-                iconDescription = stringResource(R.string.voting_empty_icon),
-                title = stringResource(R.string.voting_empty_title),
-                description = stringResource(R.string.voting_empty_description),
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
+        when {
+            isLoading && pollsWithOptions.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            }
+            pollsWithOptions.isEmpty() && !isRefreshing -> {
+                EmptyState(
+                    icon = Icons.Default.HowToVote,
+                    illustration = R.drawable.il_empty_voting,
+                    iconDescription = stringResource(R.string.voting_empty_icon),
+                    title = stringResource(R.string.voting_empty_title),
+                    description = stringResource(R.string.voting_empty_description),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            else -> {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
@@ -406,6 +415,7 @@ fun VotingScreen(
                         scope = scope
                     )
                 }
+            }
             }
         }
         }

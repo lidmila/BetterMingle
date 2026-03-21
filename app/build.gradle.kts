@@ -31,10 +31,10 @@ android {
         applicationId = "com.bettermingle.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = 5
+        versionName = "1.2.0"
 
-        androidResources.localeFilters += listOf("en", "cs")
+        androidResources.localeFilters += listOf("en", "cs", "de", "pl", "fr", "es")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

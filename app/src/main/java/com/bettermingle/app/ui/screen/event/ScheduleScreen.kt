@@ -103,6 +103,7 @@ fun ScheduleScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<ScheduleItem?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -139,7 +140,9 @@ fun ScheduleScreen(
 
             items.clear()
             items.addAll(loaded)
+            isLoading = false
         } catch (_: Exception) {
+            isLoading = false
             scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
         }
         }
@@ -274,15 +277,22 @@ fun ScheduleScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (items.isEmpty() && !isRefreshing) {
-                EmptyState(
-                    icon = Icons.Default.CalendarMonth,
-                    illustration = R.drawable.il_empty_schedule,
-                    title = stringResource(R.string.schedule_empty_title),
-                    description = stringResource(R.string.schedule_empty_description),
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
+            when {
+                isLoading && items.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                items.isEmpty() && !isRefreshing -> {
+                    EmptyState(
+                        icon = Icons.Default.CalendarMonth,
+                        illustration = R.drawable.il_empty_schedule,
+                        title = stringResource(R.string.schedule_empty_title),
+                        description = stringResource(R.string.schedule_empty_description),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.screenPadding),
@@ -295,6 +305,7 @@ fun ScheduleScreen(
                         )
                     }
                 }
+            }
             }
         }
     }

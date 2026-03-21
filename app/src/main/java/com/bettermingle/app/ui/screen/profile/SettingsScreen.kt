@@ -55,7 +55,9 @@ import com.bettermingle.app.ui.theme.AccentOrange
 import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lightbulb
@@ -70,7 +72,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.bettermingle.app.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
@@ -78,6 +80,7 @@ fun SettingsScreen(
     onNavigateToPrivacyPolicy: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {},
     onNavigateToDeleteRequest: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
@@ -475,16 +478,21 @@ fun SettingsScreen(
                             )
                         }
                         Spacer(modifier = Modifier.height(Spacing.sm))
-                        Row(
+                        androidx.compose.foundation.layout.FlowRow(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
                             val currentLanguage = profileState.settings.appLanguage
                             val systemLabel = stringResource(R.string.settings_language_system)
                             listOf(
                                 "system" to systemLabel,
                                 "cs" to "Čeština",
-                                "en" to "English"
+                                "en" to "English",
+                                "de" to "Deutsch",
+                                "pl" to "Polski",
+                                "fr" to "Français",
+                                "es" to "Español"
                             ).forEach { (langCode, label) ->
                                 androidx.compose.material3.FilterChip(
                                     selected = currentLanguage == langCode,
@@ -561,18 +569,30 @@ fun SettingsScreen(
             }
 
             item {
-                BetterMingleCard {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_version, com.bettermingle.app.BuildConfig.VERSION_NAME),
-                            style = MaterialTheme.typography.bodyMedium
+                BetterMingleCard(onClick = onNavigateToAbout) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(Spacing.iconMD)
                         )
-                        Spacer(modifier = Modifier.height(Spacing.xs))
-                        Text(
-                            text = stringResource(R.string.settings_copyright),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_about_app),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_version, com.bettermingle.app.BuildConfig.VERSION_NAME),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

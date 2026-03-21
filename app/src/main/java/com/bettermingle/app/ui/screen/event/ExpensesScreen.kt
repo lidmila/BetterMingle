@@ -186,6 +186,7 @@ fun ExpensesScreen(
     val firestore = FirebaseFirestore.getInstance()
     val snackbarHostState = remember { SnackbarHostState() }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
 
@@ -270,7 +271,8 @@ fun ExpensesScreen(
             val calculatedDebts = DebtCalculator.calculateMinimumTransactions(totalPaid, totalOwed)
             debts.clear()
             debts.addAll(calculatedDebts)
-        } catch (_: Exception) { }
+            isLoading = false
+        } catch (_: Exception) { isLoading = false }
         }
     }
 
@@ -478,13 +480,15 @@ fun ExpensesScreen(
                         deleteExpense(expense)
                         scope.launch { snackbarHostState.showSnackbar(expenseDeletedMsg) }
                     },
-                    showAds = AdManager.hasAds(settings.premiumTier)
+                    showAds = AdManager.hasAds(settings.premiumTier),
+                    isLoading = isLoading
                 )
                 1 -> DebtsList(
                     debts = debts,
                     userNames = payerNames,
                     userAvatars = payerAvatars,
-                    onSettle = { debt -> settleDebt(debt) }
+                    onSettle = { debt -> settleDebt(debt) },
+                    isLoading = isLoading
                 )
             }
         }
@@ -611,18 +615,26 @@ private fun ExpensesList(
     payerNames: Map<String, String>,
     currentUserId: String,
     onDelete: (Expense) -> Unit,
-    showAds: Boolean = false
+    showAds: Boolean = false,
+    isLoading: Boolean = false
 ) {
-    if (expenses.isEmpty()) {
-        EmptyState(
-            icon = Icons.Default.Payments,
-            illustration = R.drawable.il_empty_expenses,
-            iconDescription = stringResource(R.string.expenses_empty_icon),
-            title = stringResource(R.string.expenses_empty_title),
-            description = stringResource(R.string.expenses_empty_description),
-            modifier = Modifier.fillMaxSize()
-        )
-    } else {
+    when {
+        isLoading && expenses.isEmpty() -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+        }
+        expenses.isEmpty() -> {
+            EmptyState(
+                icon = Icons.Default.Payments,
+                illustration = R.drawable.il_empty_expenses,
+                iconDescription = stringResource(R.string.expenses_empty_icon),
+                title = stringResource(R.string.expenses_empty_title),
+                description = stringResource(R.string.expenses_empty_description),
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        else -> {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(Spacing.screenPadding),
@@ -683,6 +695,7 @@ private fun ExpensesList(
                     )
                 }
             }
+        }
         }
     }
 }
@@ -797,17 +810,25 @@ private fun DebtsList(
     debts: List<Debt>,
     userNames: Map<String, String>,
     userAvatars: Map<String, String>,
-    onSettle: (Debt) -> Unit
+    onSettle: (Debt) -> Unit,
+    isLoading: Boolean = false
 ) {
-    if (debts.isEmpty()) {
-        EmptyState(
-            icon = Icons.Default.CheckCircle,
-            illustration = R.drawable.il_empty_debts,
-            title = stringResource(R.string.expenses_settled_title),
-            description = stringResource(R.string.expenses_settled_description),
-            modifier = Modifier.fillMaxSize()
-        )
-    } else {
+    when {
+        isLoading && debts.isEmpty() -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+        }
+        debts.isEmpty() -> {
+            EmptyState(
+                icon = Icons.Default.CheckCircle,
+                illustration = R.drawable.il_empty_debts,
+                title = stringResource(R.string.expenses_settled_title),
+                description = stringResource(R.string.expenses_settled_description),
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        else -> {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(Spacing.screenPadding),
@@ -821,6 +842,7 @@ private fun DebtsList(
                     onSettle = onSettle
                 )
             }
+        }
         }
     }
 }

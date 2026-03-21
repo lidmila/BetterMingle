@@ -120,6 +120,7 @@ fun CarpoolScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var rideToDelete by remember { mutableStateOf<CarpoolRide?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -175,7 +176,9 @@ fun CarpoolScreen(
 
                 rides.clear()
                 rides.addAll(loaded)
+                isLoading = false
             } catch (_: Exception) {
+                isLoading = false
                 scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_load_failed)) }
             }
         }
@@ -345,18 +348,25 @@ fun CarpoolScreen(
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (filteredRides.isEmpty() && !isRefreshing) {
-                    EmptyState(
-                        icon = Icons.Default.DirectionsCar,
-                        illustration = R.drawable.il_empty_carpool,
-                        title = if (selectedTab == 0) stringResource(R.string.carpool_empty_offers_title) else stringResource(R.string.carpool_empty_requests_title),
-                        description = if (selectedTab == 0)
-                            stringResource(R.string.carpool_empty_offers_desc)
-                        else
-                            stringResource(R.string.carpool_empty_requests_desc),
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
+                when {
+                    isLoading && filteredRides.isEmpty() -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            androidx.compose.material3.CircularProgressIndicator()
+                        }
+                    }
+                    filteredRides.isEmpty() && !isRefreshing -> {
+                        EmptyState(
+                            icon = Icons.Default.DirectionsCar,
+                            illustration = R.drawable.il_empty_carpool,
+                            title = if (selectedTab == 0) stringResource(R.string.carpool_empty_offers_title) else stringResource(R.string.carpool_empty_requests_title),
+                            description = if (selectedTab == 0)
+                                stringResource(R.string.carpool_empty_offers_desc)
+                            else
+                                stringResource(R.string.carpool_empty_requests_desc),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Spacing.screenPadding),
@@ -406,6 +416,7 @@ fun CarpoolScreen(
                             )
                         }
                     }
+                }
                 }
             }
         }

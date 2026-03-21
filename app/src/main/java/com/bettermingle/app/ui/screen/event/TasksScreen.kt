@@ -130,6 +130,7 @@ fun TasksScreen(
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(eventId) {
         try {
@@ -173,7 +174,8 @@ fun TasksScreen(
 
                 tasks.clear()
                 tasks.addAll(loaded)
-            } catch (_: Exception) { }
+                isLoading = false
+            } catch (_: Exception) { isLoading = false }
         }
     }
 
@@ -311,16 +313,23 @@ fun TasksScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-        if (tasks.isEmpty() && !isRefreshing) {
-            EmptyState(
-                icon = Icons.AutoMirrored.Filled.Assignment,
-                illustration = R.drawable.il_empty_tasks,
-                iconDescription = stringResource(R.string.tasks_empty_icon),
-                title = stringResource(R.string.tasks_empty_title),
-                description = stringResource(R.string.tasks_empty_description),
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
+        when {
+            isLoading && tasks.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            }
+            tasks.isEmpty() && !isRefreshing -> {
+                EmptyState(
+                    icon = Icons.AutoMirrored.Filled.Assignment,
+                    illustration = R.drawable.il_empty_tasks,
+                    iconDescription = stringResource(R.string.tasks_empty_icon),
+                    title = stringResource(R.string.tasks_empty_title),
+                    description = stringResource(R.string.tasks_empty_description),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            else -> {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
@@ -353,6 +362,7 @@ fun TasksScreen(
                         onDelete = { taskToDelete = task }
                     )
                 }
+            }
             }
         }
         }

@@ -12,6 +12,9 @@ import com.google.firebase.auth.FirebaseAuth
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -132,15 +135,24 @@ class EventRepository(context: Context) {
                 "participants", "polls", "expenses", "messages", "carpoolRides",
                 "rooms", "schedule", "tasks", "packingItems", "wishlistItems", "lastSeen"
             )
-            for (sub in subcollections) {
-                try {
-                    val docs = eventRef.collection(sub).get().await()
-                    for (doc in docs.documents) {
-                        doc.reference.delete().await()
+            // Fetch all subcollections in parallel, then batch-delete
+            val results = coroutineScope {
+                subcollections.map { sub ->
+                    async {
+                        try {
+                            eventRef.collection(sub).get().await().documents
+                        } catch (e: Exception) {
+                            Log.w("EventRepository", "Failed to fetch subcollection $sub for $eventId", e)
+                            emptyList<com.google.firebase.firestore.DocumentSnapshot>()
+                        }
                     }
-                } catch (e: Exception) {
-                    Log.w("EventRepository", "Failed to delete subcollection $sub for $eventId", e)
-                }
+                }.awaitAll()
+            }
+            val allDocs = results.flatten()
+            for (chunk in allDocs.chunked(500)) {
+                val batch = firestore.batch()
+                for (doc in chunk) { batch.delete(doc.reference) }
+                batch.commit().await()
             }
             eventRef.delete().await()
         } catch (e: Exception) {

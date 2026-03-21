@@ -1,26 +1,20 @@
 <cs-CZ>
-Nové jazyky: Němčina, polština, francouzština a španělština — BetterMingle je nyní dostupný v 6 jazycích! Jazyk si můžete přepnout v Nastavení.
-
-Nová sekce O aplikaci v nastavení s informacemi o vývojáři a kontaktem.
-
-Vylepšené načítání modulů — prázdné stavy se zobrazují až po dokončení načítání, takže už neuvidíte blikající „žádný obsah".
-
-Rozšířená nápověda — přidány otázky k modulu Program, Úkoly a funkci Rok v událostech.
-
-Optimalizace výkonu při načítání seznamu událostí.
-
-Opravy chyb a vylepšení stability.
+Opraveno mazání akcí – nyní funguje spolehlivě s indikátorem průběhu.
+Nová obrazovka pro přihlášení magickým odkazem bez hesla.
+Výběr jazyka přímo při prvním spuštění (onboarding).
+Vylepšená logika dárků – přehledné přepínání stavů (Volné/Rezervováno/Koupeno).
+Notifikace o změnách stavů dárků v aktivitě.
+Chybové hlášky nyní ve všech 6 jazycích (dříve jen česky).
+Jednotný vzhled notifikací (Snackbar místo Toast).
+Varování při opuštění rozpracované akce.
 </cs-CZ>
 <en-US>
-New languages: German, Polish, French, and Spanish — BetterMingle is now available in 6 languages! Switch your language in Settings.
-
-New About screen in settings with developer info and contact details.
-
-Improved module loading — empty states now only appear after loading is complete, so you won't see a flash of "no content" anymore.
-
-Expanded Help section — added FAQs for Schedule, Tasks, and Year in Events.
-
-Performance optimization for event list loading.
-
-Bug fixes and stability improvements.
+Fixed event deletion – now works reliably with a progress indicator.
+New screen for passwordless magic link sign-in.
+Language selection during onboarding (before login).
+Improved gift list – clear status toggle (Free/Reserved/Bought).
+Activity notifications for gift status changes.
+Error messages now localized in all 6 languages.
+Consistent notification style (Snackbar instead of Toast).
+Unsaved changes warning when leaving event creation.
 </en-US>

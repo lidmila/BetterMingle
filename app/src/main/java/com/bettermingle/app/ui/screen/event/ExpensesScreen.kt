@@ -334,7 +334,7 @@ fun ExpensesScreen(
         } catch (_: Exception) { }
     }
 
-    val expenseAddedMsg = stringResource(R.string.expenses_added)
+    val expenseAddedMsg = stringResource(R.string.success_expense_added)
     val expenseDeletedMsg = stringResource(R.string.expenses_deleted)
 
     if (showCreateDialog) {

@@ -47,6 +47,7 @@ import com.bettermingle.app.ui.screen.auth.OnboardingScreen
 import com.bettermingle.app.ui.screen.auth.ProfileSetupScreen
 import com.bettermingle.app.ui.screen.auth.RegisterScreen
 import com.bettermingle.app.ui.screen.create.CreateEventScreen
+import com.bettermingle.app.ui.screen.auth.EmailLinkScreen
 import com.bettermingle.app.ui.screen.event.CarpoolScreen
 import com.bettermingle.app.ui.screen.event.ChatScreen
 import com.bettermingle.app.ui.screen.event.EventDashboardScreen
@@ -118,6 +119,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val YEAR_IN_REVIEW = "year_in_review"
     const val ABOUT = "about"
+    const val EMAIL_LINK = "email_link"
     const val ONBOARDING = "onboarding"
     const val PROFILE_SETUP = "profile_setup"
     const val ACTIVITY_FEED = "activity_feed/{eventId}"
@@ -304,6 +306,7 @@ fun BetterMingleNavigation() {
                 LoginScreen(
                     onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
                     onNavigateToForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) },
+                    onNavigateToEmailLink = { navController.navigate(Routes.EMAIL_LINK) },
                     onLoginSuccess = {
                         navController.navigate(Routes.PROFILE_SETUP) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
@@ -325,6 +328,12 @@ fun BetterMingleNavigation() {
             }
             composable(Routes.FORGOT_PASSWORD) {
                 ForgotPasswordScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    authViewModel = authViewModel
+                )
+            }
+            composable(Routes.EMAIL_LINK) {
+                EmailLinkScreen(
                     onNavigateBack = { navController.popBackStack() },
                     authViewModel = authViewModel
                 )

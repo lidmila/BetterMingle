@@ -78,7 +78,6 @@ import com.bettermingle.app.ui.theme.Success
 import com.bettermingle.app.ui.theme.TextOnColor
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.collectAsState
@@ -227,10 +226,10 @@ fun ParticipantsScreen(
                                 .collection("participants").document(targetParticipant.id)
                                 .update("role", newRole.name).await()
                             loadParticipants()
-                            Toast.makeText(context, context.getString(R.string.participants_role_updated), Toast.LENGTH_SHORT).show()
+                            snackbarHostState.showSnackbar(context.getString(R.string.participants_role_updated))
                         } catch (e: Exception) {
                             Log.e("ParticipantsScreen", "Failed to update role", e)
-                            Toast.makeText(context, context.getString(R.string.participants_role_update_error), Toast.LENGTH_SHORT).show()
+                            snackbarHostState.showSnackbar(context.getString(R.string.participants_role_update_error))
                         }
                     }
                 }) {

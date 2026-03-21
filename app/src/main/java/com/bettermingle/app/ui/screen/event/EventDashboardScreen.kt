@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -128,6 +127,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextButton
 import androidx.core.content.FileProvider
 import com.bettermingle.app.data.preferences.AppSettings
+import com.bettermingle.app.utils.ActivityLogger
 import com.bettermingle.app.utils.EventPdfGenerator
 import com.bettermingle.app.utils.PdfSection
 import com.bettermingle.app.utils.loadDetailedEventReport
@@ -601,7 +601,7 @@ fun EventDashboardScreen(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("invite_link", inviteLink))
-                        Toast.makeText(context, context.getString(R.string.dashboard_share_link_copied), Toast.LENGTH_SHORT).show()
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.dashboard_share_link_copied)) }
                     }
                 )
 
@@ -626,38 +626,49 @@ fun EventDashboardScreen(
 
     // Delete event confirmation dialog
     if (showDeleteEventDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showDeleteEventDialog = false },
+        var isDeleting by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isDeleting) showDeleteEventDialog = false },
             title = { Text(stringResource(R.string.event_settings_delete_title)) },
             text = { Text(stringResource(R.string.event_settings_delete_confirm, eventName)) },
             confirmButton = {
-                androidx.compose.material3.TextButton(onClick = {
-                    scope.launch {
-                        try {
-                            val firestore = FirebaseFirestore.getInstance()
-                            val eventRef = firestore.collection("events").document(eventId)
-                            val subcollections = listOf("participants", "polls", "expenses", "carpoolRides", "rooms", "schedule", "messages")
-                            for (sub in subcollections) {
-                                val docs = eventRef.collection(sub).get().await()
-                                for (doc in docs.documents) {
-                                    doc.reference.delete().await()
+                TextButton(
+                    onClick = {
+                        isDeleting = true
+                        scope.launch {
+                            try {
+                                EventRepository(context).deleteEvent(eventId)
+                                ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_deleted_event, eventName), eventName = eventName)
+                                showDeleteEventDialog = false
+                                if (onDeleteEvent != null) {
+                                    onDeleteEvent()
+                                } else {
+                                    onNavigateBack()
                                 }
+                            } catch (_: Exception) {
+                                isDeleting = false
+                                snackbarHostState.showSnackbar(context.getString(R.string.error_delete_failed))
                             }
-                            eventRef.delete().await()
-                            showDeleteEventDialog = false
-                            if (onDeleteEvent != null) {
-                                onDeleteEvent()
-                            } else {
-                                onNavigateBack()
-                            }
-                        } catch (_: Exception) { }
+                        }
+                    },
+                    enabled = !isDeleting
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = AccentOrange
+                        )
+                    } else {
+                        Text(stringResource(R.string.common_delete), color = AccentOrange)
                     }
-                }) {
-                    Text(stringResource(R.string.common_delete), color = AccentOrange)
                 }
             },
             dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { showDeleteEventDialog = false }) {
+                TextButton(
+                    onClick = { showDeleteEventDialog = false },
+                    enabled = !isDeleting
+                ) {
                     Text(stringResource(R.string.common_cancel))
                 }
             }

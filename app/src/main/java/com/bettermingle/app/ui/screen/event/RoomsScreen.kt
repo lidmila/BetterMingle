@@ -165,6 +165,9 @@ fun RoomsScreen(
             onCreated = {
                 showCreateDialog = false
                 loadRooms()
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.success_room_added))
+                }
             }
         )
     }

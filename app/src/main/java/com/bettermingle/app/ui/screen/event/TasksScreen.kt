@@ -193,7 +193,7 @@ fun TasksScreen(
             onCreated = {
                 showCreateDialog = false
                 loadTasks()
-                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.tasks_created)) }
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.success_task_added)) }
             }
         )
     }

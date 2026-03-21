@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.auth
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,29 +18,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.HowToVote
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Rocket
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
 import com.bettermingle.app.R
+import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.ui.component.BetterMingleButton
 import com.bettermingle.app.ui.theme.AccentGold
 import com.bettermingle.app.ui.theme.AccentOrange
@@ -81,7 +95,7 @@ private val pages = listOf(
     )
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit
@@ -89,6 +103,22 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == pages.size - 1
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+
+    val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags().ifEmpty { "system" }
+    var selectedLanguage by remember { mutableStateOf(currentLocale) }
+    var showLanguagePicker by remember { mutableStateOf(false) }
+
+    val languages = listOf(
+        "cs" to "Čeština",
+        "en" to "English",
+        "de" to "Deutsch",
+        "pl" to "Polski",
+        "fr" to "Français",
+        "es" to "Español"
+    )
+    val selectedLabel = languages.firstOrNull { it.first == selectedLanguage }?.second ?: "System"
 
     Column(
         modifier = Modifier
@@ -96,14 +126,53 @@ fun OnboardingScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(Spacing.lg)
     ) {
-        // Skip button
+        // Top bar: language picker + skip
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            TextButton(onClick = { showLanguagePicker = !showLanguagePicker }) {
+                Icon(
+                    Icons.Default.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = PrimaryBlue
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(selectedLabel, color = PrimaryBlue)
+            }
             AnimatedVisibility(visible = !isLastPage, enter = fadeIn(), exit = fadeOut()) {
                 TextButton(onClick = onComplete) {
                     Text(stringResource(R.string.onboarding_skip), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+
+        // Language chip row (expandable)
+        AnimatedVisibility(visible = showLanguagePicker) {
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = Spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
+                languages.forEach { (code, label) ->
+                    FilterChip(
+                        selected = selectedLanguage == code,
+                        onClick = {
+                            selectedLanguage = code
+                            showLanguagePicker = false
+                            scope.launch { settingsManager.setAppLanguage(code) }
+                            val localeList = LocaleListCompat.forLanguageTags(code)
+                            AppCompatDelegate.setApplicationLocales(localeList)
+                        },
+                        label = { Text(label) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryBlue.copy(alpha = 0.15f),
+                            selectedLabelColor = PrimaryBlue
+                        )
+                    )
                 }
             }
         }

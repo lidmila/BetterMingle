@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Backpack
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Hotel
@@ -96,7 +96,7 @@ private fun moduleIcon(module: EventModule): ImageVector = when (module) {
     EventModule.EXPENSES -> Icons.Default.AccountBalance
     EventModule.CARPOOL -> Icons.Default.DirectionsCar
     EventModule.ROOMS -> Icons.Default.Hotel
-    EventModule.CHAT -> Icons.Default.Chat
+    EventModule.CHAT -> Icons.AutoMirrored.Filled.Chat
     EventModule.SCHEDULE -> Icons.Default.Schedule
     EventModule.TASKS -> Icons.Default.CheckCircle
     EventModule.PACKING_LIST -> Icons.Default.Backpack
@@ -111,6 +111,7 @@ fun EventCard(
     participantCount: Int = 0,
     isHero: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val pressScale = remember { Animatable(1f) }
@@ -126,7 +127,7 @@ fun EventCard(
                 scaleX = pressScale.value
                 scaleY = pressScale.value
             }
-            .pointerInput(Unit) {
+            .pointerInput(onLongClick) {
                 detectTapGestures(
                     onPress = {
                         scope.launch {
@@ -137,7 +138,8 @@ fun EventCard(
                             pressScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                         }
                     },
-                    onTap = { debouncedClick(action = onClick) }
+                    onTap = { debouncedClick(action = onClick) },
+                    onLongPress = if (onLongClick != null) { { onLongClick() } } else null
                 )
             }
             .shadow(

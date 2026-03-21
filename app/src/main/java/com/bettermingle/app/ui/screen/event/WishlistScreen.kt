@@ -29,6 +29,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.background
@@ -315,9 +317,12 @@ fun WishlistScreen(
                                                 .collection("wishlistItems").document(item.id)
                                                 .update(updates).await()
 
-                                            if (newStatus == WishlistItemStatus.RESERVED || newStatus == WishlistItemStatus.BOUGHT) {
-                                                ActivityLogger.log(eventId, "wishlist", context.getString(R.string.activity_claimed_wishlist, item.name))
+                                            val activityMsg = when (newStatus) {
+                                                WishlistItemStatus.RESERVED -> context.getString(R.string.activity_wishlist_reserved, item.name)
+                                                WishlistItemStatus.BOUGHT -> context.getString(R.string.activity_wishlist_bought, item.name)
+                                                WishlistItemStatus.FREE -> context.getString(R.string.activity_wishlist_released, item.name)
                                             }
+                                            ActivityLogger.log(eventId, "wishlist", activityMsg)
                                         } catch (_: Exception) {
                                             scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed)) }
                                         }
@@ -438,98 +443,61 @@ private fun WishlistItemCard(
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Status area
-            when {
-                isFree -> {
-                    // Anyone can reserve or buy
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                        TextButton(onClick = { onStatusChange(WishlistItemStatus.RESERVED) }) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.wishlist_reserve))
-                        }
-                        TextButton(onClick = { onStatusChange(WishlistItemStatus.BOUGHT) }) {
-                            Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.wishlist_buy))
-                        }
-                    }
+            // Status info badge (when claimed by someone)
+            if (!isFree) {
+                val badgeColor = if (isBought) Success else PrimaryBlue
+                val badgeIcon = if (isBought) Icons.Default.ShoppingCart else Icons.Default.CheckCircle
+                val badgeText = if (isBought) {
+                    stringResource(R.string.wishlist_bought_by, item.claimedByName ?: "")
+                } else {
+                    stringResource(R.string.wishlist_reserved_by, item.claimedByName ?: "")
                 }
-                isReserved -> {
-                    // Show who reserved
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                PrimaryBlue.copy(alpha = 0.1f),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = PrimaryBlue,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.xs))
-                        Text(
-                            text = stringResource(R.string.wishlist_reserved_by, item.claimedByName ?: ""),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PrimaryBlue,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    if (isMine) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                            TextButton(onClick = { onStatusChange(WishlistItemStatus.BOUGHT) }) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.wishlist_mark_bought))
-                            }
-                            TextButton(onClick = { onStatusChange(WishlistItemStatus.FREE) }) {
-                                Text(stringResource(R.string.wishlist_unclaim))
-                            }
-                        }
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(badgeColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(badgeIcon, contentDescription = null, tint = badgeColor, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(Spacing.xs))
+                    Text(text = badgeText, style = MaterialTheme.typography.bodySmall, color = badgeColor)
                 }
-                isBought -> {
-                    // Show who bought
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                Success.copy(alpha = 0.1f),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.ShoppingCart,
-                            contentDescription = null,
-                            tint = Success,
-                            modifier = Modifier.size(16.dp)
+                Spacer(modifier = Modifier.height(Spacing.xs))
+            }
+
+            // Status toggle chips - show when item is free (anyone) or claimed by me
+            if (isFree || isMine) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    FilterChip(
+                        selected = isFree,
+                        onClick = { if (!isFree) onStatusChange(WishlistItemStatus.FREE) },
+                        label = { Text(stringResource(R.string.wishlist_status_free)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.width(Spacing.xs))
-                        Text(
-                            text = stringResource(R.string.wishlist_bought_by, item.claimedByName ?: ""),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Success,
-                            modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = isReserved,
+                        onClick = { if (!isReserved) onStatusChange(WishlistItemStatus.RESERVED) },
+                        label = { Text(stringResource(R.string.wishlist_status_reserved)) },
+                        leadingIcon = if (isReserved) { { Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryBlue.copy(alpha = 0.15f),
+                            selectedLabelColor = PrimaryBlue
                         )
-                    }
-                    if (isMine) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                            TextButton(onClick = { onStatusChange(WishlistItemStatus.RESERVED) }) {
-                                Text(stringResource(R.string.wishlist_back_to_reserved))
-                            }
-                            TextButton(onClick = { onStatusChange(WishlistItemStatus.FREE) }) {
-                                Text(stringResource(R.string.wishlist_unclaim))
-                            }
-                        }
-                    }
+                    )
+                    FilterChip(
+                        selected = isBought,
+                        onClick = { if (!isBought) onStatusChange(WishlistItemStatus.BOUGHT) },
+                        label = { Text(stringResource(R.string.wishlist_status_bought)) },
+                        leadingIcon = if (isBought) { { Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Success.copy(alpha = 0.15f),
+                            selectedLabelColor = Success
+                        )
+                    )
                 }
             }
         }

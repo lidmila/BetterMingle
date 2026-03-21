@@ -6,7 +6,7 @@ Název aplikace:
 Better Mingle – Plánuj akce s přáteli
 
 Krátký popis (max 80 znaků):
-Organizuj akce, sdílej výdaje, hlasuj a plánuj spolujízdu – vše na jednom místě.
+Plánuj akce s přáteli – výdaje, hlasování, spolujízda a více. 6 jazyků!
 
 Dlouhý popis (max 4000 znaků):
 Better Mingle je aplikace pro organizaci společných akcí – ať už jde o výlet s přáteli, firemní teambuilding, narozeninovou oslavu nebo víkend na chalupě.
@@ -23,6 +23,8 @@ Vytvoř akci, pozvi přátele jedním odkazem a společně plánujte vše na jed
 • Balicí seznam – sdílený seznam věcí, které je potřeba vzít. Každý vidí, co už je zajištěné.
 • Úkoly – rozděl práci mezi účastníky. Přiřazuj úkoly a sleduj, co je hotové.
 • Program – naplánuj časový rozvrh akce od rána do večera.
+• Dárky / Wishlist – sdílený seznam přání. Rezervuj dárek, ať se nic neduplikuje.
+• Catering – správa jídla a nápojů, dietní preference účastníků.
 • Chat – komunikuj s účastníky přímo v aplikaci.
 • Aktivita – přehled všeho, co se na akci děje.
 • Zabezpečení PINem – ochraň akci PINem, aby se nepřipojil nikdo nepovolaný.
@@ -33,13 +35,15 @@ Vytvoř akci, pozvi přátele jedním odkazem a společně plánujte vše na jed
 • Organizátoři narozeninových oslav a večírků
 • Firemní týmy na teambuildingu
 • Spolubydlící, kteří sdílí výdaje
-• Kdokoliv, kdo chce mít plánování pod kontrolou
+• Kdokoli, kdo chce mít plánování pod kontrolou
 
 💎 Plány:
 
-Free – až 2 akce, max 8 účastníků, 1 anketa
-Pro – až 5 akcí, 100 účastníků, neomezené ankety, export výdajů, bez reklam
-Business – neomezené akce i účastníci, více organizátorů
-Lifetime – jednorázová platba, funkce Business navždy
+Free – 1 akce, až 20 účastníků, 1 anketa
+Pro – až 3 akce, 100 účastníků, 3 ankety, prémiové moduly, export, bez reklam
+Business – neomezené akce, účastníci i ankety, modul Rozpočet
+Lifetime – jednorázová platba, funkce Pro navždy
+
+🌍 Dostupné v 6 jazycích: čeština, angličtina, němčina, polština, francouzština a španělština.
 
 Stáhni si Better Mingle a začni plánovat společné zážitky ještě dnes!

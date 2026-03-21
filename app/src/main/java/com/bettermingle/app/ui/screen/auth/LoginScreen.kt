@@ -88,6 +88,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
+    onNavigateToEmailLink: () -> Unit,
     onLoginSuccess: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
@@ -284,19 +285,9 @@ fun LoginScreen(
 
                 BetterMingleOutlinedButton(
                     text = stringResource(R.string.login_email_link),
-                    onClick = { authViewModel.sendEmailLink(email) },
-                    enabled = !uiState.isLoading && email.isNotBlank()
+                    onClick = onNavigateToEmailLink,
+                    enabled = !uiState.isLoading
                 )
-
-                if (uiState.emailLinkSent) {
-                    Spacer(modifier = Modifier.height(Spacing.sm))
-                    Text(
-                        text = stringResource(R.string.login_email_link_sent),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(Spacing.md))
 

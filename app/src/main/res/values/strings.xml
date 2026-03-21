@@ -49,6 +49,9 @@
     <string name="login_no_account">Don\'t have an account? Sign up</string>
     <string name="login_forgot_password">Forgot password?</string>
     <string name="login_email_link">Sign in with email link</string>
+    <string name="email_link_title">Magic link</string>
+    <string name="email_link_description">Enter your e-mail and we\'ll send you a magic link. No password needed.</string>
+    <string name="email_link_send_button">Send me a magic link</string>
     <string name="login_email_link_sent">Sign-in link sent! Check your email.</string>
     <string name="login_email_link_failed">Failed to send sign-in link</string>
     <string name="login_email_link_error">Sign-in link expired or invalid</string>
@@ -452,6 +455,12 @@
     <string name="wishlist_reserved_by">Reserved by %1$s</string>
     <string name="wishlist_bought_by">Bought by %1$s</string>
     <string name="wishlist_back_to_reserved">Back to reserved</string>
+    <string name="wishlist_status_free">Free</string>
+    <string name="wishlist_status_reserved">Reserved</string>
+    <string name="wishlist_status_bought">Bought</string>
+    <string name="activity_wishlist_reserved">reserved gift: %1$s</string>
+    <string name="activity_wishlist_bought">bought gift: %1$s</string>
+    <string name="activity_wishlist_released">released gift back: %1$s</string>
     <string name="wishlist_open_url">Open link</string>
 
     <!-- Participants -->
@@ -1086,4 +1095,33 @@
     <string name="export_pdf_section_packing">Packing List</string>
     <string name="export_pdf_section_carpool">Carpool</string>
     <string name="export_pdf_export_button">Export PDF</string>
+
+    <!-- Auth validation -->
+    <string name="auth_error_fill_email_password">Fill in e-mail and password</string>
+    <string name="auth_error_fill_all_fields">Fill in all fields</string>
+    <string name="auth_error_passwords_mismatch">Passwords don\'t match</string>
+    <string name="auth_error_password_too_short">Password must be at least 6 characters</string>
+    <string name="auth_error_enter_email">Enter your e-mail</string>
+    <string name="auth_error_invalid_credentials">Incorrect e-mail or password</string>
+    <string name="auth_error_email_exists">An account with this e-mail already exists</string>
+    <string name="auth_error_weak_password">Password is too weak</string>
+    <string name="auth_error_invalid_email">Invalid e-mail format</string>
+    <string name="auth_error_user_not_found">Account not found</string>
+    <string name="auth_error_too_many_attempts">Too many attempts. Try again later.</string>
+    <string name="auth_error_network">Connection error. Check your internet.</string>
+    <string name="auth_error_generic">Something went wrong: %1$s</string>
+    <string name="create_event_error">Failed to create event</string>
+    <string name="activity_created_event">created a new event: %1$s</string>
+    <string name="create_event_discard_title">Discard event?</string>
+    <string name="create_event_discard_message">You have unsaved changes. Are you sure you want to go back?</string>
+    <string name="common_discard">Discard</string>
+
+    <!-- Success feedback -->
+    <string name="success_task_added">Task added</string>
+    <string name="success_expense_added">Expense added</string>
+    <string name="success_room_added">Room added</string>
+    <string name="success_item_added">Item added</string>
+    <string name="success_ride_added">Ride added</string>
+    <string name="success_poll_added">Poll created</string>
+    <string name="success_schedule_added">Schedule item added</string>
 </resources>

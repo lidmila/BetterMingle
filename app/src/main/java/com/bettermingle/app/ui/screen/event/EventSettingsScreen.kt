@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -211,10 +210,10 @@ fun EventSettingsScreen(
                                 FirebaseFirestore.getInstance()
                                     .collection("events").document(eventId)
                                     .update("eventPin", newPin).await()
-                                Toast.makeText(context, context.getString(R.string.event_settings_pin_changed), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_pin_changed)) }
                                 showPinDialog = false
                             } catch (_: Exception) {
-                                Toast.makeText(context, context.getString(R.string.event_settings_pin_error), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_pin_error)) }
                             }
                         }
                     },
@@ -305,10 +304,10 @@ fun EventSettingsScreen(
                                 if (changes.isNotEmpty()) {
                                     ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_edited_event, changes.joinToString(", ")), eventName = editName)
                                 }
-                                Toast.makeText(context, context.getString(R.string.event_settings_edit_success), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_edit_success)) }
                                 showEditDialog = false
                             } catch (_: Exception) {
-                                Toast.makeText(context, context.getString(R.string.event_settings_edit_error), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_edit_error)) }
                             }
                         }
                     },
@@ -409,7 +408,7 @@ fun EventSettingsScreen(
                                 onClick = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboard.setPrimaryClip(ClipData.newPlainText("invite_link", inviteLink))
-                                    Toast.makeText(context, context.getString(R.string.event_settings_link_copied), Toast.LENGTH_SHORT).show()
+                                    scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_link_copied)) }
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -514,7 +513,7 @@ fun EventSettingsScreen(
                                                     ActivityLogger.log(eventId, "settings", context.getString(R.string.activity_changed_status, opt.label), eventName = eventName)
                                                 } catch (_: Exception) {
                                                     eventStatus = oldStatus
-                                                    Toast.makeText(context, context.getString(R.string.event_settings_status_error), Toast.LENGTH_SHORT).show()
+                                                    scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.event_settings_status_error)) }
                                                 }
                                             }
                                         }

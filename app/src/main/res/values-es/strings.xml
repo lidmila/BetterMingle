@@ -49,6 +49,9 @@
     <string name="login_no_account">¿No tienes cuenta? Regístrate</string>
     <string name="login_forgot_password">¿Olvidaste tu contraseña?</string>
     <string name="login_email_link">Iniciar sesión con enlace de e-mail</string>
+    <string name="email_link_title">Enlace mágico</string>
+    <string name="email_link_description">Introduce tu correo y te enviaremos un enlace mágico. Sin contraseña.</string>
+    <string name="email_link_send_button">Envíame un enlace mágico</string>
     <string name="login_email_link_sent">¡Enlace enviado! Revisa tu e-mail.</string>
     <string name="login_email_link_failed">Error al enviar el enlace de inicio de sesión</string>
     <string name="login_email_link_error">El enlace de inicio de sesión ha caducado o no es válido</string>
@@ -452,6 +455,12 @@
     <string name="wishlist_reserved_by">Reservado por %1$s</string>
     <string name="wishlist_bought_by">Comprado por %1$s</string>
     <string name="wishlist_back_to_reserved">Volver a reservado</string>
+    <string name="wishlist_status_free">Libre</string>
+    <string name="wishlist_status_reserved">Reservado</string>
+    <string name="wishlist_status_bought">Comprado</string>
+    <string name="activity_wishlist_reserved">reservó regalo: %1$s</string>
+    <string name="activity_wishlist_bought">compró regalo: %1$s</string>
+    <string name="activity_wishlist_released">liberó regalo: %1$s</string>
     <string name="wishlist_open_url">Abrir enlace</string>
 
     <!-- Participants -->
@@ -1086,4 +1095,33 @@
     <string name="export_pdf_section_packing">Lista de equipaje</string>
     <string name="export_pdf_section_carpool">Compartir coche</string>
     <string name="export_pdf_export_button">Exportar PDF</string>
+
+    <!-- Auth validation -->
+    <string name="auth_error_fill_email_password">Introduce el correo y la contraseña</string>
+    <string name="auth_error_fill_all_fields">Rellena todos los campos</string>
+    <string name="auth_error_passwords_mismatch">Las contraseñas no coinciden</string>
+    <string name="auth_error_password_too_short">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="auth_error_enter_email">Introduce tu correo electrónico</string>
+    <string name="auth_error_invalid_credentials">Correo o contraseña incorrectos</string>
+    <string name="auth_error_email_exists">Ya existe una cuenta con este correo</string>
+    <string name="auth_error_weak_password">La contraseña es demasiado débil</string>
+    <string name="auth_error_invalid_email">Formato de correo no válido</string>
+    <string name="auth_error_user_not_found">Cuenta no encontrada</string>
+    <string name="auth_error_too_many_attempts">Demasiados intentos. Inténtalo más tarde.</string>
+    <string name="auth_error_network">Error de conexión. Verifica tu internet.</string>
+    <string name="auth_error_generic">Algo salió mal: %1$s</string>
+    <string name="create_event_error">Error al crear el evento</string>
+    <string name="activity_created_event">creó un nuevo evento: %1$s</string>
+    <string name="create_event_discard_title">¿Descartar evento?</string>
+    <string name="create_event_discard_message">Tienes cambios sin guardar. ¿Seguro que quieres volver?</string>
+    <string name="common_discard">Descartar</string>
+
+    <!-- Success feedback -->
+    <string name="success_task_added">Tarea añadida</string>
+    <string name="success_expense_added">Gasto añadido</string>
+    <string name="success_room_added">Habitación añadida</string>
+    <string name="success_item_added">Elemento añadido</string>
+    <string name="success_ride_added">Viaje añadido</string>
+    <string name="success_poll_added">Encuesta creada</string>
+    <string name="success_schedule_added">Punto del programa añadido</string>
 </resources>

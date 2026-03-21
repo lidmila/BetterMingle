@@ -49,6 +49,9 @@
     <string name="login_no_account">Nemáš účet? Zaregistruj se</string>
     <string name="login_forgot_password">Zapomenuté heslo?</string>
     <string name="login_email_link">Přihlásit přes e-mailový odkaz</string>
+    <string name="email_link_title">Magický odkaz</string>
+    <string name="email_link_description">Zadej svůj e-mail a pošleme ti magický odkaz. Heslo nepotřebuješ.</string>
+    <string name="email_link_send_button">Pošli mi magický odkaz</string>
     <string name="login_email_link_sent">Odkaz odeslán! Zkontroluj e-mail.</string>
     <string name="login_email_link_failed">Nepodařilo se odeslat odkaz</string>
     <string name="login_email_link_error">Odkaz je neplatný nebo vypršel</string>
@@ -452,6 +455,12 @@
     <string name="wishlist_reserved_by">Rezervoval/a %1$s</string>
     <string name="wishlist_bought_by">Koupil/a %1$s</string>
     <string name="wishlist_back_to_reserved">Zpět na rezervováno</string>
+    <string name="wishlist_status_free">Volné</string>
+    <string name="wishlist_status_reserved">Rezervováno</string>
+    <string name="wishlist_status_bought">Koupeno</string>
+    <string name="activity_wishlist_reserved">rezervoval/a dárek: %1$s</string>
+    <string name="activity_wishlist_bought">koupil/a dárek: %1$s</string>
+    <string name="activity_wishlist_released">vrátil/a dárek zpět: %1$s</string>
     <string name="wishlist_open_url">Otevřít odkaz</string>
 
     <!-- Participants -->
@@ -1086,4 +1095,33 @@
     <string name="export_pdf_section_packing">Balící seznam</string>
     <string name="export_pdf_section_carpool">Spolujízda</string>
     <string name="export_pdf_export_button">Exportovat PDF</string>
+
+    <!-- Auth validation -->
+    <string name="auth_error_fill_email_password">Vyplň e-mail a heslo</string>
+    <string name="auth_error_fill_all_fields">Vyplň všechna pole</string>
+    <string name="auth_error_passwords_mismatch">Hesla se neshodují</string>
+    <string name="auth_error_password_too_short">Heslo musí mít alespoň 6 znaků</string>
+    <string name="auth_error_enter_email">Zadej e-mail</string>
+    <string name="auth_error_invalid_credentials">Nesprávný e-mail nebo heslo</string>
+    <string name="auth_error_email_exists">Účet s tímto e-mailem už existuje</string>
+    <string name="auth_error_weak_password">Heslo je příliš slabé</string>
+    <string name="auth_error_invalid_email">Neplatný formát e-mailu</string>
+    <string name="auth_error_user_not_found">Účet nenalezen</string>
+    <string name="auth_error_too_many_attempts">Příliš mnoho pokusů. Zkus to později.</string>
+    <string name="auth_error_network">Chyba připojení. Zkontroluj internet.</string>
+    <string name="auth_error_generic">Něco se pokazilo: %1$s</string>
+    <string name="create_event_error">Chyba při vytváření akce</string>
+    <string name="activity_created_event">vytvořil/a novou akci: %1$s</string>
+    <string name="create_event_discard_title">Zahodit akci?</string>
+    <string name="create_event_discard_message">Máš neuložené změny. Opravdu chceš odejít?</string>
+    <string name="common_discard">Zahodit</string>
+
+    <!-- Success feedback -->
+    <string name="success_task_added">Úkol přidán</string>
+    <string name="success_expense_added">Výdaj přidán</string>
+    <string name="success_room_added">Pokoj přidán</string>
+    <string name="success_item_added">Položka přidána</string>
+    <string name="success_ride_added">Jízda přidána</string>
+    <string name="success_poll_added">Hlasování vytvořeno</string>
+    <string name="success_schedule_added">Bod programu přidán</string>
 </resources>

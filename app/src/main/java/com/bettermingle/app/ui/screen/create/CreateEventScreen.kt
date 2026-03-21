@@ -1,5 +1,6 @@
 package com.bettermingle.app.ui.screen.create
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -237,6 +238,10 @@ fun CreateEventScreen(
 
     // Store selected template for writing items after creation
     var selectedTemplate by remember { mutableStateOf<EventTemplate?>(null) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    val hasUnsavedData = eventName.isNotBlank() || eventDescription.isNotBlank() ||
+        eventLocation.isNotBlank() || invitedEmails.isNotEmpty()
 
     // Template selection before wizard
     if (showTemplateSelection) {
@@ -258,6 +263,33 @@ fun CreateEventScreen(
         return
     }
 
+    BackHandler {
+        if (currentStep > 0) currentStep--
+        else if (hasUnsavedData) showDiscardDialog = true
+        else onNavigateBack()
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.create_event_discard_title)) },
+            text = { Text(stringResource(R.string.create_event_discard_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDiscardDialog = false
+                    onNavigateBack()
+                }) {
+                    Text(stringResource(R.string.common_discard), color = AccentOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -274,7 +306,9 @@ fun CreateEventScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (currentStep > 0) currentStep-- else onNavigateBack()
+                        if (currentStep > 0) currentStep--
+                        else if (hasUnsavedData) showDiscardDialog = true
+                        else onNavigateBack()
                     }) {
                         Icon(
                             imageVector = if (currentStep > 0) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Close,

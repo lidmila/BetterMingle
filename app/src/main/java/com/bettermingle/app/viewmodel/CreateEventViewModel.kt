@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.bettermingle.app.R
 import com.bettermingle.app.data.model.EventModule
 import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
@@ -83,7 +84,7 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
                     requireApproval = requireApproval,
                     invitedEmails = invitedEmails
                 )
-                ActivityLogger.log(eventId, "settings", "vytvořil/a novou akci: $name", eventName = name)
+                ActivityLogger.log(eventId, "settings", getApplication<Application>().getString(R.string.activity_created_event, name), eventName = name)
 
                 // Write template items to Firestore subcollections
                 writeTemplateItems(eventId, templateBudgetItems, templateTasks, templateScheduleBlocks)
@@ -95,7 +96,7 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isCreating = false,
-                    error = e.message ?: "Chyba při vytváření akce"
+                    error = e.message ?: getApplication<Application>().getString(R.string.create_event_error)
                 )
             }
         }

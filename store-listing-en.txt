@@ -6,7 +6,7 @@ App name:
 Better Mingle – Group Events
 
 Short description (max 80 chars):
-Organize events, split expenses, vote and plan carpools – all in one place.
+Plan group events with friends – expenses, voting, carpools & more. 6 languages!
 
 Long description (max 4000 chars):
 Better Mingle is an app for organizing group events – whether it's a trip with friends, a corporate team-building, a birthday party, or a weekend getaway.
@@ -23,6 +23,8 @@ Create an event, invite friends with a single link, and plan everything together
 • Packing list – a shared list of things to bring. Everyone can see what's already covered.
 • Tasks – divide work among participants. Assign tasks and track what's done.
 • Schedule – plan the event's timeline from morning to evening.
+• Gifts / Wishlist – a shared wish list. Reserve a gift so nothing gets duplicated.
+• Catering – manage food and drinks, track dietary preferences of participants.
 • Chat – communicate with participants directly in the app.
 • Activity feed – an overview of everything happening at the event.
 • PIN protection – secure your event with a PIN to keep uninvited guests out.
@@ -37,9 +39,11 @@ Create an event, invite friends with a single link, and plan everything together
 
 💎 Plans:
 
-Free – up to 2 events, max 8 participants, 1 poll
-Pro – up to 5 events, 100 participants, unlimited polls, expense export, no ads
-Business – unlimited events and participants, multiple organizers
-Lifetime – one-time payment, Business features forever
+Free – 1 event, up to 20 participants, 1 poll
+Pro – up to 3 events, 100 participants, 3 polls, premium modules, export, no ads
+Business – unlimited events, participants and polls, Budget module
+Lifetime – one-time payment, Pro features forever
+
+🌍 Available in 6 languages: English, Czech, German, Polish, French, and Spanish.
 
 Download Better Mingle and start planning shared experiences today!

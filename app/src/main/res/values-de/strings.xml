@@ -49,6 +49,9 @@
     <string name="login_no_account">Noch kein Konto? Registrieren</string>
     <string name="login_forgot_password">Passwort vergessen?</string>
     <string name="login_email_link">Mit E-Mail-Link anmelden</string>
+    <string name="email_link_title">Magic Link</string>
+    <string name="email_link_description">Gib deine E-Mail ein und wir senden dir einen Magic Link. Kein Passwort nötig.</string>
+    <string name="email_link_send_button">Magic Link senden</string>
     <string name="login_email_link_sent">Anmeldelink gesendet! Prüfen Sie Ihre E-Mail.</string>
     <string name="login_email_link_failed">Anmeldelink konnte nicht gesendet werden</string>
     <string name="login_email_link_error">Anmeldelink abgelaufen oder ungültig</string>
@@ -452,6 +455,12 @@
     <string name="wishlist_reserved_by">Reserviert von %1$s</string>
     <string name="wishlist_bought_by">Gekauft von %1$s</string>
     <string name="wishlist_back_to_reserved">Zurück zu reserviert</string>
+    <string name="wishlist_status_free">Frei</string>
+    <string name="wishlist_status_reserved">Reserviert</string>
+    <string name="wishlist_status_bought">Gekauft</string>
+    <string name="activity_wishlist_reserved">hat Geschenk reserviert: %1$s</string>
+    <string name="activity_wishlist_bought">hat Geschenk gekauft: %1$s</string>
+    <string name="activity_wishlist_released">hat Geschenk freigegeben: %1$s</string>
     <string name="wishlist_open_url">Link öffnen</string>
 
     <!-- Participants -->
@@ -1086,4 +1095,33 @@
     <string name="export_pdf_section_packing">Packliste</string>
     <string name="export_pdf_section_carpool">Fahrgemeinschaft</string>
     <string name="export_pdf_export_button">PDF exportieren</string>
+
+    <!-- Auth validation -->
+    <string name="auth_error_fill_email_password">E-Mail und Passwort eingeben</string>
+    <string name="auth_error_fill_all_fields">Alle Felder ausfüllen</string>
+    <string name="auth_error_passwords_mismatch">Passwörter stimmen nicht überein</string>
+    <string name="auth_error_password_too_short">Passwort muss mindestens 6 Zeichen haben</string>
+    <string name="auth_error_enter_email">E-Mail eingeben</string>
+    <string name="auth_error_invalid_credentials">Falsche E-Mail oder Passwort</string>
+    <string name="auth_error_email_exists">Ein Konto mit dieser E-Mail existiert bereits</string>
+    <string name="auth_error_weak_password">Passwort ist zu schwach</string>
+    <string name="auth_error_invalid_email">Ungültiges E-Mail-Format</string>
+    <string name="auth_error_user_not_found">Konto nicht gefunden</string>
+    <string name="auth_error_too_many_attempts">Zu viele Versuche. Versuche es später erneut.</string>
+    <string name="auth_error_network">Verbindungsfehler. Überprüfe deine Internetverbindung.</string>
+    <string name="auth_error_generic">Etwas ist schiefgelaufen: %1$s</string>
+    <string name="create_event_error">Fehler beim Erstellen des Events</string>
+    <string name="activity_created_event">hat ein neues Event erstellt: %1$s</string>
+    <string name="create_event_discard_title">Event verwerfen?</string>
+    <string name="create_event_discard_message">Du hast ungespeicherte Änderungen. Möchtest du wirklich zurück?</string>
+    <string name="common_discard">Verwerfen</string>
+
+    <!-- Success feedback -->
+    <string name="success_task_added">Aufgabe hinzugefügt</string>
+    <string name="success_expense_added">Ausgabe hinzugefügt</string>
+    <string name="success_room_added">Zimmer hinzugefügt</string>
+    <string name="success_item_added">Element hinzugefügt</string>
+    <string name="success_ride_added">Fahrt hinzugefügt</string>
+    <string name="success_poll_added">Umfrage erstellt</string>
+    <string name="success_schedule_added">Programmpunkt hinzugefügt</string>
 </resources>

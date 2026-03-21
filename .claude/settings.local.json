@@ -97,7 +97,8 @@
       "Bash(find C:UserslidmiDocumentsGitHubBetterMingle -type f \\\\\\(-name *.md -o -name *design* -o -name *brand* \\\\\\))",
       "Bash(for file:*)",
       "Bash(echo \"DONE: $?\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:prirucka.ujc.cas.cz)"
     ]
   }
 }

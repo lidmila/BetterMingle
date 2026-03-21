@@ -1,6 +1,5 @@
 package com.bettermingle.app.ui.screen.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -86,6 +87,7 @@ fun SettingsScreen(
     val profileState by profileViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
@@ -109,11 +111,11 @@ fun SettingsScreen(
                         profileViewModel.updateDisplayName(
                             newName = newName,
                             onSuccess = {
-                                Toast.makeText(context, context.getString(R.string.settings_name_updated), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_name_updated)) }
                                 showEditNameDialog = false
                             },
                             onError = {
-                                Toast.makeText(context, context.getString(R.string.settings_name_update_error), Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_name_update_error)) }
                             }
                         )
                     },
@@ -194,7 +196,7 @@ fun SettingsScreen(
                             },
                             onError = { error ->
                                 isDeleting = false
-                                Toast.makeText(context, context.getString(R.string.settings_delete_account_error), Toast.LENGTH_LONG).show()
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_delete_account_error)) }
                             }
                         )
                     },
@@ -213,6 +215,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleMedium) },
@@ -309,10 +312,10 @@ fun SettingsScreen(
                 BetterMingleCard(onClick = {
                     profileViewModel.sendPasswordReset(
                         onSuccess = {
-                            Toast.makeText(context, context.getString(R.string.settings_password_reset_sent), Toast.LENGTH_LONG).show()
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_password_reset_sent)) }
                         },
                         onError = {
-                            Toast.makeText(context, context.getString(R.string.settings_password_reset_error), Toast.LENGTH_SHORT).show()
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_password_reset_error)) }
                         }
                     )
                 }) {
@@ -527,7 +530,7 @@ fun SettingsScreen(
                     scope.launch {
                         val settingsManager = com.bettermingle.app.data.preferences.SettingsManager(context)
                         settingsManager.resetCoachMarks()
-                        Toast.makeText(context, context.getString(R.string.settings_coach_marks_reset_done), Toast.LENGTH_SHORT).show()
+                        snackbarHostState.showSnackbar(context.getString(R.string.settings_coach_marks_reset_done))
                     }
                 }) {
                     Row(

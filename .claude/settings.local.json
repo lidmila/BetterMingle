@@ -103,7 +103,12 @@
       "WebFetch(domain:bettermingle.app)",
       "WebFetch(domain:www.bettermingle.app)",
       "Bash(nslookup:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(reg query:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat assembleDebug)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat assembleRelease)",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(openssl x509:*)"
     ]
   }
 }

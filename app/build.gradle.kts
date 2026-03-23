@@ -31,8 +31,8 @@ android {
         applicationId = "com.bettermingle.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.3.0"
+        versionCode = 7
+        versionName = "1.3.1"
 
         androidResources.localeFilters += listOf("en", "cs", "de", "pl", "fr", "es")
 
@@ -162,7 +162,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:23.6.0")
 
     // Google Places
-    implementation("com.google.android.libraries.places:places:4.1.0")
+    implementation("com.google.android.libraries.places:places:4.4.1")
 
     // QR Code generation
     implementation("com.google.zxing:core:3.5.3")

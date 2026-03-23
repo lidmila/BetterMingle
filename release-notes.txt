@@ -1,20 +1,36 @@
 <cs-CZ>
-Opraveno mazání akcí – nyní funguje spolehlivě s indikátorem průběhu.
-Nová obrazovka pro přihlášení magickým odkazem bez hesla.
-Výběr jazyka přímo při prvním spuštění (onboarding).
-Vylepšená logika dárků – přehledné přepínání stavů (Volné/Rezervováno/Koupeno).
-Notifikace o změnách stavů dárků v aktivitě.
-Chybové hlášky nyní ve všech 6 jazycích (dříve jen česky).
-Jednotný vzhled notifikací (Snackbar místo Toast).
-Varování při opuštění rozpracované akce.
+Exportujte si akci jako PDF souhrn.
+Nový modul Catering pro správu jídla a pití.
+Aplikace nově v němčině, polštině, francouzštině a španělštině.
+Opravy odkazů na pozvánky a sdílení.
 </cs-CZ>
 <en-US>
-Fixed event deletion – now works reliably with a progress indicator.
-New screen for passwordless magic link sign-in.
-Language selection during onboarding (before login).
-Improved gift list – clear status toggle (Free/Reserved/Bought).
-Activity notifications for gift status changes.
-Error messages now localized in all 6 languages.
-Consistent notification style (Snackbar instead of Toast).
-Unsaved changes warning when leaving event creation.
+Export your event as a PDF summary.
+New Catering module for food & drinks.
+Now available in German, Polish, French and Spanish.
+Fixed invitation and sharing links.
 </en-US>
+<de-DE>
+Event als PDF-Zusammenfassung exportieren.
+Neues Catering-Modul für Essen & Getränke.
+Jetzt auf Deutsch, Polnisch, Französisch und Spanisch verfügbar.
+Einladungs- und Teilen-Links repariert.
+</de-DE>
+<fr-FR>
+Exportez votre événement en résumé PDF.
+Nouveau module Traiteur pour repas et boissons.
+Disponible en allemand, polonais, français et espagnol.
+Correction des liens d'invitation et de partage.
+</fr-FR>
+<es-ES>
+Exporta tu evento como resumen en PDF.
+Nuevo módulo de Catering para comida y bebida.
+Ahora disponible en alemán, polaco, francés y español.
+Corrección de enlaces de invitación y compartir.
+</es-ES>
+<pl-PL>
+Eksportuj wydarzenie jako podsumowanie PDF.
+Nowy moduł Catering do jedzenia i napojów.
+Dostępne po niemiecku, polsku, francusku i hiszpańsku.
+Naprawiono linki do zaproszeń i udostępniania.
+</pl-PL>

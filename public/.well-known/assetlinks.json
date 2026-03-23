@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bettermingle.app",
+      "sha256_cert_fingerprints": [
+        "E3:70:F5:15:83:04:4D:FE:23:1D:59:20:77:6A:9E:59:38:9B:DC:B7:AE:EA:0A:24:B5:EC:EA:EE:F7:54"
+      ]
+    }
+  }
+]

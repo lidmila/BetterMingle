@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "bettermingle"
-  }
+  },
+  "targets": {
+    "bettermingle": {
+      "hosting": {
+        "bettermingle": [
+          "bettermingle"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -98,7 +98,12 @@
       "Bash(for file:*)",
       "Bash(echo \"DONE: $?\")",
       "Bash(python3:*)",
-      "WebFetch(domain:prirucka.ujc.cas.cz)"
+      "WebFetch(domain:prirucka.ujc.cas.cz)",
+      "WebFetch(domain:bettermingle.web.app)",
+      "WebFetch(domain:bettermingle.app)",
+      "WebFetch(domain:www.bettermingle.app)",
+      "Bash(nslookup:*)",
+      "Bash(curl:*)"
     ]
   }
 }

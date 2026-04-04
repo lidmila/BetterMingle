@@ -114,6 +114,25 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
         auth.signOut()
     }
 
+    suspend fun syncPremiumFromCloud() {
+        val uid = auth.currentUser?.uid ?: return
+        try {
+            val userDoc = firestore.collection("users")
+                .document(uid)
+                .get()
+                .await()
+            val isPremium = userDoc.getBoolean("isPremium") ?: false
+            val premiumUntil = userDoc.getTimestamp("premiumUntil")?.toDate()?.time
+                ?: userDoc.getLong("premiumUntil")
+            val tier = try {
+                userDoc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it.uppercase()) }
+            } catch (_: Exception) { null }
+            settingsManager?.updatePremiumStatus(isPremium, premiumUntil, tier)
+        } catch (e: Exception) {
+            Log.w("AuthRepository", "Failed to sync premium status from cloud", e)
+        }
+    }
+
     private suspend fun syncUserToFirestore(user: FirebaseUser) {
         try {
             val userData = mapOf(
@@ -136,7 +155,7 @@ class AuthRepository(private val settingsManager: com.bettermingle.app.data.pref
             val premiumUntil = userDoc.getTimestamp("premiumUntil")?.toDate()?.time
                 ?: userDoc.getLong("premiumUntil")
             val tier = try {
-                userDoc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it) }
+                userDoc.getString("premiumTier")?.let { com.bettermingle.app.data.preferences.PremiumTier.valueOf(it.uppercase()) }
             } catch (_: Exception) { null }
             settingsManager?.updatePremiumStatus(isPremium, premiumUntil, tier)
 

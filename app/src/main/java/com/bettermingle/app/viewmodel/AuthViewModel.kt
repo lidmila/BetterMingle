@@ -45,6 +45,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     init {
+        if (repository.isLoggedIn) {
+            viewModelScope.launch { repository.syncPremiumFromCloud() }
+        }
         viewModelScope.launch {
             repository.authStateFlow.collect { user ->
                 _uiState.value = _uiState.value.copy(

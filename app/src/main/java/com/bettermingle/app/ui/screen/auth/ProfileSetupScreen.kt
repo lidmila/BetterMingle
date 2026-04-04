@@ -129,7 +129,7 @@ fun ProfileSetupScreen(
             val uid = user?.uid ?: return@let
             isUploadingAvatar = true
             val storageRef = FirebaseStorage.getInstance()
-                .reference.child("profile_photos/$uid.jpg")
+                .reference.child("users/$uid/avatar/profile.jpg")
             storageRef.putFile(it)
                 .addOnSuccessListener {
                     storageRef.downloadUrl.addOnSuccessListener { downloadUri ->

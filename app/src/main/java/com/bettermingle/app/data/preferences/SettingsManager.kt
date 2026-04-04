@@ -69,11 +69,11 @@ class SettingsManager(private val context: Context) {
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
         AppSettings(
             isPremium = run {
-                val tier = try { PremiumTier.valueOf(prefs[Keys.PREMIUM_TIER] ?: "FREE") } catch (_: Exception) { PremiumTier.FREE }
+                val tier = try { PremiumTier.valueOf((prefs[Keys.PREMIUM_TIER] ?: "FREE").uppercase()) } catch (_: Exception) { PremiumTier.FREE }
                 val until = prefs[Keys.PREMIUM_UNTIL]
                 tier != PremiumTier.FREE && (until == null || until > System.currentTimeMillis())
             },
-            premiumTier = try { PremiumTier.valueOf(prefs[Keys.PREMIUM_TIER] ?: "FREE") } catch (_: Exception) { PremiumTier.FREE },
+            premiumTier = try { PremiumTier.valueOf((prefs[Keys.PREMIUM_TIER] ?: "FREE").uppercase()) } catch (_: Exception) { PremiumTier.FREE },
             premiumUntil = prefs[Keys.PREMIUM_UNTIL],
             userName = prefs[Keys.USER_NAME] ?: "",
             userEmail = prefs[Keys.USER_EMAIL] ?: "",

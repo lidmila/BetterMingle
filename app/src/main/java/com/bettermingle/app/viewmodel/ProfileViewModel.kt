@@ -179,7 +179,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             _uiState.value = _uiState.value.copy(isUploadingAvatar = true)
             try {
                 val storageRef = FirebaseStorage.getInstance()
-                    .reference.child("profile_photos/${user.uid}.jpg")
+                    .reference.child("users/${user.uid}/avatar/profile.jpg")
                 storageRef.putFile(uri).await()
                 val downloadUrl = storageRef.downloadUrl.await().toString()
 

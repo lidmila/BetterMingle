@@ -1,36 +1,6 @@
 <cs-CZ>
-Exportujte si akci jako PDF souhrn.
-Nový modul Catering pro správu jídla a pití.
-Aplikace nově v němčině, polštině, francouzštině a španělštině.
-Opravy odkazů na pozvánky a sdílení.
+Oprava problému, kdy se některým uživatelům s předplaceným tarifem nesprávně zobrazoval základní (bezplatný) účet. Nyní se prémiové funkce načítají spolehlivě.
 </cs-CZ>
 <en-US>
-Export your event as a PDF summary.
-New Catering module for food & drinks.
-Now available in German, Polish, French and Spanish.
-Fixed invitation and sharing links.
+Fixed an issue where some users with a paid subscription were incorrectly shown as having a free account. Premium features now load reliably.
 </en-US>
-<de-DE>
-Event als PDF-Zusammenfassung exportieren.
-Neues Catering-Modul für Essen & Getränke.
-Jetzt auf Deutsch, Polnisch, Französisch und Spanisch verfügbar.
-Einladungs- und Teilen-Links repariert.
-</de-DE>
-<fr-FR>
-Exportez votre événement en résumé PDF.
-Nouveau module Traiteur pour repas et boissons.
-Disponible en allemand, polonais, français et espagnol.
-Correction des liens d'invitation et de partage.
-</fr-FR>
-<es-ES>
-Exporta tu evento como resumen en PDF.
-Nuevo módulo de Catering para comida y bebida.
-Ahora disponible en alemán, polaco, francés y español.
-Corrección de enlaces de invitación y compartir.
-</es-ES>
-<pl-PL>
-Eksportuj wydarzenie jako podsumowanie PDF.
-Nowy moduł Catering do jedzenia i napojów.
-Dostępne po niemiecku, polsku, francusku i hiszpańsku.
-Naprawiono linki do zaproszeń i udostępniania.
-</pl-PL>

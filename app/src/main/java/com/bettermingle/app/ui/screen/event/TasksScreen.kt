@@ -100,6 +100,7 @@ import com.bettermingle.app.ui.theme.TextOnColor
 
 import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -165,10 +166,18 @@ fun TasksScreen(
                 val allUserIds = loaded.flatMap { it.assignedTo }.distinct()
                 for (uid in allUserIds) {
                     if (uid !in userNames) {
-                        try {
-                            val userDoc = firestore.collection("users").document(uid).get().await()
-                            userNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
-                        } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                        if (ParticipantUtils.isManualId(uid)) {
+                            try {
+                                val partDoc = firestore.collection("events").document(eventId)
+                                    .collection("participants").document(uid).get().await()
+                                userNames[uid] = partDoc.getString("displayName") ?: uid.take(8)
+                            } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                        } else {
+                            try {
+                                val userDoc = firestore.collection("users").document(uid).get().await()
+                                userNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
+                            } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                        }
                     }
                 }
 

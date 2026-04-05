@@ -21,5 +21,7 @@ data class Participant(
     val role: ParticipantRole = ParticipantRole.PARTICIPANT,
     val customRole: String = "",
     val rsvp: RsvpStatus = RsvpStatus.PENDING,
-    val joinedAt: Long = System.currentTimeMillis()
+    val joinedAt: Long = System.currentTimeMillis(),
+    val isManual: Boolean = false,
+    val linkedUserId: String? = null
 )

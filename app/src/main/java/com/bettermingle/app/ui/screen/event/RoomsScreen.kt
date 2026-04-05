@@ -74,7 +74,17 @@ import com.bettermingle.app.ui.component.ModuleColorPickerDialog
 import com.bettermingle.app.data.repository.EventRepository
 import androidx.compose.material.icons.filled.Palette
 import com.bettermingle.app.ui.theme.AccentGold
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.TextButton
+import com.bettermingle.app.data.model.Participant
+import com.bettermingle.app.data.model.ParticipantRole
+import com.bettermingle.app.data.model.RsvpStatus
+import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -102,12 +112,32 @@ fun RoomsScreen(
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var showAssignDialog by remember { mutableStateOf<EventRoom?>(null) }
+    val allParticipants = remember { mutableStateListOf<Participant>() }
 
     LaunchedEffect(eventId) {
         try {
             val eventDoc = FirebaseFirestore.getInstance()
                 .collection("events").document(eventId).get().await()
             isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+        // Load participants for assignment dialog
+        try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId)
+                .collection("participants").get().await()
+            allParticipants.clear()
+            allParticipants.addAll(snapshot.documents.map { doc ->
+                val data = doc.data ?: emptyMap()
+                Participant(
+                    id = doc.id,
+                    eventId = eventId,
+                    userId = data["userId"] as? String ?: "",
+                    displayName = data["displayName"] as? String ?: doc.id.take(8),
+                    avatarUrl = data["avatarUrl"] as? String ?: "",
+                    isManual = data["isManual"] as? Boolean ?: false
+                )
+            })
         } catch (_: Exception) { }
     }
 
@@ -135,10 +165,18 @@ fun RoomsScreen(
             // Load user names for assignments
             val allUserIds = loaded.flatMap { it.assignments }.distinct()
             for (uid in allUserIds) {
-                try {
-                    val userDoc = firestore.collection("users").document(uid).get().await()
-                    userNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
-                } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                if (ParticipantUtils.isManualId(uid)) {
+                    try {
+                        val partDoc = firestore.collection("events").document(eventId)
+                            .collection("participants").document(uid).get().await()
+                        userNames[uid] = partDoc.getString("displayName") ?: uid.take(8)
+                    } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                } else {
+                    try {
+                        val userDoc = firestore.collection("users").document(uid).get().await()
+                        userNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
+                    } catch (_: Exception) { userNames[uid] = uid.take(8) }
+                }
             }
 
             rooms.clear()
@@ -204,6 +242,86 @@ fun RoomsScreen(
                 loadRooms()
             } catch (_: Exception) { }
         }
+    }
+
+    fun handleAssignToRoom(room: EventRoom, participantUserId: String) {
+        scope.launch {
+            try {
+                val updated = room.assignments + participantUserId
+                FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("rooms").document(room.id)
+                    .update("assignments", updated)
+                    .await()
+                val name = userNames[participantUserId] ?: allParticipants.find { it.userId == participantUserId }?.displayName ?: ""
+                ActivityLogger.log(eventId, "room", context.getString(R.string.activity_joined_room, room.name))
+                loadRooms()
+            } catch (_: Exception) { }
+        }
+    }
+
+    fun handleUnassignFromRoom(room: EventRoom, participantUserId: String) {
+        scope.launch {
+            try {
+                val updated = room.assignments - participantUserId
+                FirebaseFirestore.getInstance()
+                    .collection("events").document(eventId)
+                    .collection("rooms").document(room.id)
+                    .update("assignments", updated)
+                    .await()
+                loadRooms()
+            } catch (_: Exception) { }
+        }
+    }
+
+    // Assign participant to room dialog
+    showAssignDialog?.let { room ->
+        val assignedIds = room.assignments.toSet()
+        val unassigned = allParticipants.filter { it.userId !in assignedIds }
+        AlertDialog(
+            onDismissRequest = { showAssignDialog = null },
+            title = { Text(stringResource(R.string.rooms_assign_dialog_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.rooms_assign_description),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    if (unassigned.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.rooms_empty_title),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        unassigned.forEach { p ->
+                            ListItem(
+                                headlineContent = { Text(p.displayName) },
+                                leadingContent = {
+                                    UserAvatar(
+                                        avatarUrl = p.avatarUrl,
+                                        displayName = p.displayName,
+                                        size = 32.dp
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+                                    val r = room
+                                    showAssignDialog = null
+                                    handleAssignToRoom(r, p.userId)
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAssignDialog = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
     }
 
     if (roomToDelete != null) {
@@ -348,8 +466,11 @@ fun RoomsScreen(
                             userNames = userNames,
                             currentUserId = currentUserId,
                             isInAnotherRoom = isInAnotherRoom,
+                            isOrganizer = isOrganizer,
                             onJoin = { handleJoinRoom(room) },
                             onLeave = { handleLeaveRoom(room) },
+                            onAssign = { showAssignDialog = room },
+                            onUnassign = { userId -> handleUnassignFromRoom(room, userId) },
                             onDelete = { roomToDelete = room }
                         )
                     }
@@ -367,8 +488,11 @@ private fun RoomCard(
     userNames: Map<String, String>,
     currentUserId: String,
     isInAnotherRoom: Boolean,
+    isOrganizer: Boolean = false,
     onJoin: () -> Unit,
     onLeave: () -> Unit,
+    onAssign: () -> Unit = {},
+    onUnassign: (String) -> Unit = {},
     onDelete: () -> Unit
 ) {
     val isInThisRoom = currentUserId in room.assignments
@@ -447,8 +571,14 @@ private fun RoomCard(
             Spacer(modifier = Modifier.height(Spacing.md))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.End)
             ) {
+                if (isOrganizer && !isFull) {
+                    BetterMingleOutlinedButton(
+                        text = stringResource(R.string.rooms_assign_participant),
+                        onClick = onAssign
+                    )
+                }
                 when {
                     isInThisRoom -> {
                         BetterMingleOutlinedButton(

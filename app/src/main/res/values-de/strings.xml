@@ -489,6 +489,36 @@
     <string name="participants_role_update_error">Rolle konnte nicht aktualisiert werden</string>
     <string name="participants_coorg_limit_title">Premium-Funktion</string>
     <string name="participants_coorg_limit_message">Co-Organisatoren sind in den Plänen Pro und Business verfügbar.</string>
+    <string name="participants_add_manual">Gast hinzufügen</string>
+    <string name="participants_add_manual_title">Gast-Teilnehmer hinzufügen</string>
+    <string name="participants_add_manual_name_label">Name</string>
+    <string name="participants_add_manual_role_label">Rolle (optional)</string>
+    <string name="participants_manual_badge">Gast</string>
+    <string name="participants_manual_no_profile">Dieser Teilnehmer hat kein BetterMingle-Konto.</string>
+    <string name="participants_link_account">Mit Konto verknüpfen</string>
+    <string name="participants_link_title">Mit Konto verknüpfen</string>
+    <string name="participants_link_description">Wählen Sie den Benutzer aus, mit dem dieser Gast verknüpft werden soll:</string>
+    <string name="participants_link_success">Teilnehmer erfolgreich verknüpft</string>
+    <string name="participants_link_error">Verknüpfung fehlgeschlagen</string>
+    <string name="participants_share_invite">Einladungslink teilen</string>
+    <string name="participants_add_options_title">Teilnehmer hinzufügen</string>
+    <string name="participants_delete_manual">Gast entfernen</string>
+    <string name="participants_delete_manual_confirm">Gast-Teilnehmer \"%1$s\" entfernen? Er wird auch aus Ausgaben und Aufgaben entfernt.</string>
+    <string name="participants_change_rsvp">RSVP ändern</string>
+    <string name="participants_change_rsvp_title">RSVP für %1$s</string>
+    <string name="rooms_assign_participant">Teilnehmer zuweisen</string>
+    <string name="rooms_assign_dialog_title">Zimmer zuweisen</string>
+    <string name="rooms_assign_description">Teilnehmer auswählen, der dem Zimmer zugewiesen werden soll:</string>
+    <string name="rooms_unassign_participant">Aus Zimmer entfernen</string>
+    <string name="voting_vote_for_guest">Für Gast abstimmen</string>
+    <string name="voting_vote_for_title">Im Namen abstimmen</string>
+    <string name="voting_select_guest">Gast auswählen, für den Sie abstimmen möchten:</string>
+    <string name="wishlist_claim_for_guest">Für Gast reservieren</string>
+    <string name="wishlist_claim_for_title">Im Namen reservieren</string>
+    <string name="wishlist_select_guest">Gast auswählen, für den Sie reservieren möchten:</string>
+    <string name="carpool_add_passenger">Mitfahrer hinzufügen</string>
+    <string name="carpool_add_passenger_title">Mitfahrer zur Fahrt hinzufügen</string>
+    <string name="carpool_select_passenger">Teilnehmer zum Hinzufügen auswählen:</string>
 
     <!-- Rating -->
     <string name="rating_title">Bewertung</string>
@@ -885,6 +915,8 @@
     <string name="activity_deleted_event">hat Event gelöscht: %1$s</string>
     <string name="activity_changed_status">hat Event-Status geändert auf %1$s</string>
     <string name="activity_joined_event">ist dem Event beigetreten</string>
+    <string name="activity_added_manual_participant">Gast hinzugefügt: %1$s</string>
+    <string name="activity_linked_participant">Gast %1$s mit Konto %2$s verknüpft</string>
     <string name="activity_change_name">Name</string>
     <string name="activity_change_description">Beschreibung</string>
     <string name="activity_change_theme">Thema</string>

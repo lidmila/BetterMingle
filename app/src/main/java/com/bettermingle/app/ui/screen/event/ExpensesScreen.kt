@@ -117,6 +117,7 @@ import com.bettermingle.app.utils.CurrencyUtils
 import com.bettermingle.app.utils.Debt
 import com.bettermingle.app.utils.DebtCalculator
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -214,11 +215,20 @@ fun ExpensesScreen(
             // Load user names and avatars for paidBy
             val userIds = expensesSnapshot.documents.mapNotNull { it.getString("paidBy") }.distinct()
             for (uid in userIds) {
-                try {
-                    val userDoc = firestore.collection("users").document(uid).get().await()
-                    payerNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
-                    payerAvatars[uid] = userDoc.getString("avatarUrl") ?: ""
-                } catch (_: Exception) { payerNames[uid] = uid.take(8) }
+                if (ParticipantUtils.isManualId(uid)) {
+                    try {
+                        val partDoc = firestore.collection("events").document(eventId)
+                            .collection("participants").document(uid).get().await()
+                        payerNames[uid] = partDoc.getString("displayName") ?: uid.take(8)
+                        payerAvatars[uid] = ""
+                    } catch (_: Exception) { payerNames[uid] = uid.take(8) }
+                } else {
+                    try {
+                        val userDoc = firestore.collection("users").document(uid).get().await()
+                        payerNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
+                        payerAvatars[uid] = userDoc.getString("avatarUrl") ?: ""
+                    } catch (_: Exception) { payerNames[uid] = uid.take(8) }
+                }
             }
 
             val loadedExpenses = expensesSnapshot.documents.map { doc ->
@@ -258,11 +268,20 @@ fun ExpensesScreen(
                     if (!isSettled) {
                         totalOwed[userId] = (totalOwed[userId] ?: 0.0) + amount
                         if (userId !in payerNames) {
-                            try {
-                                val userDoc = firestore.collection("users").document(userId).get().await()
-                                payerNames[userId] = userDoc.getString("displayName") ?: userId.take(8)
-                                payerAvatars[userId] = userDoc.getString("avatarUrl") ?: ""
-                            } catch (_: Exception) { payerNames[userId] = userId.take(8) }
+                            if (ParticipantUtils.isManualId(userId)) {
+                                try {
+                                    val partDoc = firestore.collection("events").document(eventId)
+                                        .collection("participants").document(userId).get().await()
+                                    payerNames[userId] = partDoc.getString("displayName") ?: userId.take(8)
+                                    payerAvatars[userId] = ""
+                                } catch (_: Exception) { payerNames[userId] = userId.take(8) }
+                            } else {
+                                try {
+                                    val userDoc = firestore.collection("users").document(userId).get().await()
+                                    payerNames[userId] = userDoc.getString("displayName") ?: userId.take(8)
+                                    payerAvatars[userId] = userDoc.getString("avatarUrl") ?: ""
+                                } catch (_: Exception) { payerNames[userId] = userId.take(8) }
+                            }
                         }
                     }
                 }
@@ -323,10 +342,15 @@ fun ExpensesScreen(
             val loaded = mutableListOf<Pair<String, String>>()
             for (doc in participantsSnapshot.documents) {
                 val uid = doc.getString("userId") ?: continue
-                val name = try {
-                    val userDoc = firestore.collection("users").document(uid).get().await()
-                    userDoc.getString("displayName") ?: uid.take(8)
-                } catch (_: Exception) { uid.take(8) }
+                val isManual = doc.getBoolean("isManual") ?: ParticipantUtils.isManualId(uid)
+                val name = if (isManual) {
+                    doc.getString("displayName") ?: uid.take(8)
+                } else {
+                    try {
+                        val userDoc = firestore.collection("users").document(uid).get().await()
+                        userDoc.getString("displayName") ?: uid.take(8)
+                    } catch (_: Exception) { uid.take(8) }
+                }
                 loaded.add(uid to name)
             }
             participants.clear()

@@ -98,7 +98,14 @@ import com.bettermingle.app.utils.DateFormatUtils
 import com.bettermingle.app.ui.component.ModuleColorPickerDialog
 import com.bettermingle.app.data.repository.EventRepository
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.ListItem
+import com.bettermingle.app.data.model.Participant
+import com.bettermingle.app.data.model.ParticipantRole
+import com.bettermingle.app.data.model.RsvpStatus
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -127,12 +134,31 @@ fun CarpoolScreen(
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var isOrganizer by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    val allParticipants = remember { mutableStateListOf<Participant>() }
+    var showAddPassengerDialog by remember { mutableStateOf<CarpoolRide?>(null) }
 
     LaunchedEffect(eventId) {
         try {
             val eventDoc = FirebaseFirestore.getInstance()
                 .collection("events").document(eventId).get().await()
             isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+        // Load participants for adding passengers
+        try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId)
+                .collection("participants").get().await()
+            allParticipants.clear()
+            allParticipants.addAll(snapshot.documents.map { doc ->
+                val data = doc.data ?: emptyMap()
+                Participant(
+                    id = doc.id,
+                    eventId = eventId,
+                    userId = data["userId"] as? String ?: "",
+                    displayName = data["displayName"] as? String ?: doc.id.take(8),
+                    isManual = data["isManual"] as? Boolean ?: false
+                )
+            })
         } catch (_: Exception) { }
     }
 
@@ -146,11 +172,19 @@ fun CarpoolScreen(
                 val driverIds = snapshot.documents.mapNotNull { it.getString("driverId") }.distinct()
                 val driverNames = mutableMapOf<String, String>()
                 for (uid in driverIds) {
-                    try {
-                        val userDoc = firestore.collection("users").document(uid).get().await()
-                        driverNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
-                    } catch (_: Exception) {
-                        driverNames[uid] = uid.take(8)
+                    if (ParticipantUtils.isManualId(uid)) {
+                        try {
+                            val partDoc = firestore.collection("events").document(eventId)
+                                .collection("participants").document(uid).get().await()
+                            driverNames[uid] = partDoc.getString("displayName") ?: uid.take(8)
+                        } catch (_: Exception) { driverNames[uid] = uid.take(8) }
+                    } else {
+                        try {
+                            val userDoc = firestore.collection("users").document(uid).get().await()
+                            driverNames[uid] = userDoc.getString("displayName") ?: uid.take(8)
+                        } catch (_: Exception) {
+                            driverNames[uid] = uid.take(8)
+                        }
                     }
                 }
 
@@ -367,6 +401,64 @@ fun CarpoolScreen(
                         )
                     }
                     else -> {
+                    // Add passenger dialog
+                    showAddPassengerDialog?.let { ride ->
+                        val available = allParticipants.filter { it.userId != ride.driverId }
+                        AlertDialog(
+                            onDismissRequest = { showAddPassengerDialog = null },
+                            title = { Text(stringResource(R.string.carpool_add_passenger_title)) },
+                            text = {
+                                Column {
+                                    Text(stringResource(R.string.carpool_select_passenger), style = MaterialTheme.typography.bodyMedium)
+                                    Spacer(modifier = Modifier.height(Spacing.sm))
+                                    if (available.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.carpool_empty_offers_title),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    } else {
+                                        available.forEach { p ->
+                                            ListItem(
+                                                headlineContent = { Text(p.displayName) },
+                                                modifier = Modifier.clickable {
+                                                    val r = ride
+                                                    val participant = p
+                                                    showAddPassengerDialog = null
+                                                    scope.launch {
+                                                        try {
+                                                            val passengerData = hashMapOf(
+                                                                "userId" to participant.userId,
+                                                                "displayName" to participant.displayName,
+                                                                "status" to "APPROVED",
+                                                                "pickupLocation" to "",
+                                                                "createdAt" to System.currentTimeMillis()
+                                                            )
+                                                            FirebaseFirestore.getInstance()
+                                                                .collection("events").document(eventId)
+                                                                .collection("carpoolRides").document(r.id)
+                                                                .collection("passengers")
+                                                                .add(passengerData).await()
+                                                            loadRides()
+                                                        } catch (_: Exception) {
+                                                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed)) }
+                                                        }
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {},
+                            dismissButton = {
+                                TextButton(onClick = { showAddPassengerDialog = null }) {
+                                    Text(stringResource(R.string.common_cancel))
+                                }
+                            }
+                        )
+                    }
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Spacing.screenPadding),
@@ -377,6 +469,8 @@ fun CarpoolScreen(
                                 ride = ride,
                                 eventId = eventId,
                                 currentUserId = currentUserId,
+                                isOrganizer = isOrganizer,
+                                onAddPassenger = { showAddPassengerDialog = ride },
                                 onClose = {
                                     scope.launch {
                                         try {
@@ -428,6 +522,8 @@ private fun CarpoolRideCard(
     ride: CarpoolRide,
     eventId: String,
     currentUserId: String,
+    isOrganizer: Boolean = false,
+    onAddPassenger: () -> Unit = {},
     onClose: () -> Unit,
     onDelete: () -> Unit,
     onRequestRide: () -> Unit,
@@ -635,6 +731,11 @@ private fun CarpoolRideCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (isOrganizer && ride.type == CarpoolType.OFFER && !ride.isClosed) {
+                        TextButton(onClick = onAddPassenger) {
+                            Text(stringResource(R.string.carpool_add_passenger), color = AccentOrange)
+                        }
+                    }
                     if (isOwner) {
                         IconButton(onClick = onDelete) {
                             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete), tint = AccentOrange)

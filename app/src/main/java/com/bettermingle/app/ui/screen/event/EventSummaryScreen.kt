@@ -77,6 +77,7 @@ import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.preferences.TierLimits
 import com.bettermingle.app.data.preferences.AppSettings
 import com.bettermingle.app.utils.EventPdfGenerator
+import com.bettermingle.app.utils.ParticipantUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -177,10 +178,19 @@ fun EventSummaryScreen(
             val topPayerEntry = payerTotals.maxByOrNull { it.value }
             var topPayerName = ""
             if (topPayerEntry != null) {
-                try {
-                    val userDoc = firestore.collection("users").document(topPayerEntry.key).get().await()
-                    topPayerName = userDoc.getString("displayName") ?: ""
-                } catch (_: Exception) { }
+                val payerId = topPayerEntry.key
+                if (ParticipantUtils.isManualId(payerId)) {
+                    try {
+                        val partDoc = firestore.collection("events").document(eventId)
+                            .collection("participants").document(payerId).get().await()
+                        topPayerName = partDoc.getString("displayName") ?: ""
+                    } catch (_: Exception) { }
+                } else {
+                    try {
+                        val userDoc = firestore.collection("users").document(payerId).get().await()
+                        topPayerName = userDoc.getString("displayName") ?: ""
+                    } catch (_: Exception) { }
+                }
             }
 
             // Messages

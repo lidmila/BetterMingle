@@ -117,11 +117,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
             val batch = firestore.batch()
 
             budgetItems.forEach { item ->
-                val doc = eventRef.collection("budget").document()
+                val doc = eventRef.collection("budgetCategories").document()
                 batch.set(doc, mapOf(
                     "name" to item.name,
-                    "estimatedAmount" to item.estimatedAmount,
-                    "actualAmount" to 0,
+                    "planned" to item.estimatedAmount,
                     "fromTemplate" to true,
                     "createdAt" to System.currentTimeMillis()
                 ))
@@ -130,8 +129,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
             tasks.forEach { task ->
                 val doc = eventRef.collection("tasks").document()
                 batch.set(doc, mapOf(
-                    "title" to task.title,
-                    "completed" to false,
+                    "name" to task.title,
+                    "color" to "Modrá",
+                    "assignedTo" to emptyList<String>(),
+                    "isCompleted" to false,
                     "fromTemplate" to true,
                     "createdAt" to System.currentTimeMillis()
                 ))
@@ -141,7 +142,10 @@ class CreateEventViewModel(application: Application) : AndroidViewModel(applicat
                 val doc = eventRef.collection("schedule").document()
                 batch.set(doc, mapOf(
                     "title" to block.title,
-                    "time" to block.timeLabel,
+                    "startTime" to null,
+                    "endTime" to null,
+                    "location" to "",
+                    "description" to block.timeLabel,
                     "fromTemplate" to true,
                     "createdAt" to System.currentTimeMillis()
                 ))

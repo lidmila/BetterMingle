@@ -64,6 +64,7 @@ import com.bettermingle.app.ui.theme.PrimaryBlue
 import com.bettermingle.app.ui.theme.Spacing
 import com.bettermingle.app.ui.theme.Success
 import com.google.firebase.auth.FirebaseAuth
+import com.bettermingle.app.utils.ParticipantUtils
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -109,6 +110,7 @@ fun CateringScreen(
                 .collection("participants").get().await()
 
             val userIds = partDocs.documents.mapNotNull { it.getString("userId") }.distinct()
+                .filter { !ParticipantUtils.isManualId(it) }
             val result = mutableListOf<ParticipantDietary>()
 
             // Batch fetch users in chunks of 30 (Firestore whereIn limit)

@@ -1,6 +1,9 @@
 package com.bettermingle.app.ui.screen.event
 
 import com.bettermingle.app.R
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +36,8 @@ import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material3.DropdownMenu
@@ -98,7 +103,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.preferences.TierLimits
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.ListItem
+import com.bettermingle.app.data.model.Participant
+import com.bettermingle.app.data.model.ParticipantRole
+import com.bettermingle.app.data.model.RsvpStatus
+import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -109,7 +122,9 @@ data class PollWithOptions(
     val poll: Poll,
     val options: List<PollOption>,
     val voteCounts: Map<String, Int>, // optionId -> count
-    val userVotes: Set<String> // optionIds user has voted for
+    val userVotes: Set<String>, // optionIds user has voted for
+    val voterIds: Set<String> = emptySet(), // userIds of all voters
+    val optionVoterIds: Map<String, Set<String>> = emptyMap() // optionId -> set of userIds
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,12 +148,39 @@ fun VotingScreen(
     var showClosePollDialog by remember { mutableStateOf<PollWithOptions?>(null) }
     var showColorPicker by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val manualParticipants = remember { mutableStateListOf<Participant>() }
+    val participantNames = remember { mutableStateMapOf<String, String>() }
+    var proxyVotingUser by remember { mutableStateOf<Participant?>(null) }
+    var showProxySelectDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         try {
             val eventDoc = FirebaseFirestore.getInstance()
                 .collection("events").document(eventId).get().await()
             isOrganizer = eventDoc.getString("createdBy") == currentUserId
+        } catch (_: Exception) { }
+        // Load participants for proxy voting and voter name display
+        try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId)
+                .collection("participants").get().await()
+            manualParticipants.clear()
+            for (doc in snapshot.documents) {
+                val data = doc.data ?: continue
+                val userId = data["userId"] as? String ?: continue
+                val displayName = data["displayName"] as? String ?: doc.id.take(8)
+                val isManual = data["isManual"] as? Boolean ?: false
+                participantNames[userId] = displayName
+                if (isManual) {
+                    manualParticipants.add(Participant(
+                        id = doc.id,
+                        eventId = eventId,
+                        userId = userId,
+                        displayName = displayName,
+                        isManual = true
+                    ))
+                }
+            }
         } catch (_: Exception) { }
     }
 
@@ -184,21 +226,31 @@ fun VotingScreen(
                     )
                 }.sortedBy { it.sortOrder }
 
-                // Load vote counts and user votes
+                // Load vote counts, user votes, voter IDs per option
                 val voteCounts = mutableMapOf<String, Int>()
                 val userVotes = mutableSetOf<String>()
+                val voterIds = mutableSetOf<String>()
+                val optionVoterIds = mutableMapOf<String, MutableSet<String>>()
+                val activeUserId = proxyVotingUser?.userId ?: currentUserId
                 for (option in options) {
                     val votesSnapshot = firestore.collection("events").document(eventId)
                         .collection("polls").document(pollDoc.id)
                         .collection("options").document(option.id)
                         .collection("votes").get().await()
                     voteCounts[option.id] = votesSnapshot.size()
-                    if (votesSnapshot.documents.any { (it.data?.get("userId") as? String) == currentUserId }) {
-                        userVotes.add(option.id)
+                    val optVoters = mutableSetOf<String>()
+                    for (voteDoc in votesSnapshot.documents) {
+                        val voterId = voteDoc.data?.get("userId") as? String ?: continue
+                        voterIds.add(voterId)
+                        optVoters.add(voterId)
+                        if (voterId == activeUserId) {
+                            userVotes.add(option.id)
+                        }
                     }
+                    optionVoterIds[option.id] = optVoters
                 }
 
-                loaded.add(PollWithOptions(poll, options, voteCounts, userVotes))
+                loaded.add(PollWithOptions(poll, options, voteCounts, userVotes, voterIds, optionVoterIds))
             }
 
             pollsWithOptions.clear()
@@ -397,16 +449,89 @@ fun VotingScreen(
                 )
             }
             else -> {
+            // Proxy voting select dialog
+            if (showProxySelectDialog) {
+                AlertDialog(
+                    onDismissRequest = { showProxySelectDialog = false },
+                    title = { Text(stringResource(R.string.voting_vote_for_title)) },
+                    text = {
+                        Column {
+                            Text(stringResource(R.string.voting_select_guest), style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+                            manualParticipants.forEach { guest ->
+                                ListItem(
+                                    headlineContent = { Text(guest.displayName) },
+                                    modifier = Modifier.clickable {
+                                        proxyVotingUser = guest
+                                        showProxySelectDialog = false
+                                    }
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {},
+                    dismissButton = {
+                        TextButton(onClick = { showProxySelectDialog = false }) {
+                            Text(stringResource(R.string.common_cancel))
+                        }
+                    }
+                )
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
+                // Proxy voting banner + controls
+                if (isOrganizer && manualParticipants.isNotEmpty()) {
+                    item(key = "proxy_controls") {
+                        BetterMingleCard {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (proxyVotingUser != null) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.voting_vote_for_title),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = proxyVotingUser!!.displayName,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = AccentOrange
+                                        )
+                                    }
+                                    TextButton(onClick = { proxyVotingUser = null }) {
+                                        Text(stringResource(R.string.common_cancel))
+                                    }
+                                } else {
+                                    Text(
+                                        text = stringResource(R.string.voting_vote_for_guest),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                if (proxyVotingUser == null) {
+                                    IconButton(onClick = { showProxySelectDialog = true }) {
+                                        Icon(Icons.Default.PersonAdd, contentDescription = null, tint = AccentOrange)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 items(pollsWithOptions, key = { it.poll.id }) { pollData ->
                     PollCard(
                         pollData = pollData,
                         eventId = eventId,
-                        currentUserId = currentUserId,
+                        currentUserId = proxyVotingUser?.userId ?: currentUserId,
+                        participantNames = participantNames,
                         onVoted = { loadPolls() },
                         onEdit = { editingPoll = pollData },
                         onClose = {
@@ -427,6 +552,7 @@ private fun PollCard(
     pollData: PollWithOptions,
     eventId: String,
     currentUserId: String,
+    participantNames: Map<String, String> = emptyMap(),
     onVoted: () -> Unit,
     onEdit: () -> Unit,
     onClose: () -> Unit,
@@ -437,9 +563,13 @@ private fun PollCard(
     val isCreator = pollData.poll.createdBy == currentUserId
     val isExpired = pollData.poll.deadline != null && System.currentTimeMillis() > pollData.poll.deadline
     val isEffectivelyClosed = pollData.poll.isClosed || isExpired
+    var isExpanded by remember { mutableStateOf(false) }
+    val totalVotes = pollData.voteCounts.values.sum()
+    val hasVoted = pollData.userVotes.isNotEmpty()
 
-    BetterMingleCard {
+    BetterMingleCard(onClick = { isExpanded = !isExpanded }) {
         Column {
+            // Header - always visible
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -453,7 +583,7 @@ private fun PollCard(
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isCreator && !isEffectivelyClosed) {
+                    if (isCreator && !isEffectivelyClosed && isExpanded) {
                         IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 Icons.Default.Lock,
@@ -472,16 +602,22 @@ private fun PollCard(
                         }
                     }
                     PollTypeBadge(type = pollData.poll.pollType)
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.xs))
-
-            // Selection mode indicator
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Summary line - always visible (vote count + status)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = Spacing.xs)
+            ) {
                 if (isEffectivelyClosed) {
                     if (isExpired && !pollData.poll.isClosed) {
-                        // Expired badge
                         Box(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.extraSmall)
@@ -514,7 +650,6 @@ private fun PollCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = PrimaryBlue
                     )
-                    // Show remaining time if deadline is set
                     if (pollData.poll.deadline != null) {
                         Spacer(modifier = Modifier.width(Spacing.sm))
                         Text(
@@ -524,22 +659,68 @@ private fun PollCard(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "$totalVotes ${stringResource(R.string.voting_votes_count)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Spacer(modifier = Modifier.height(Spacing.md))
+            // Voter summary - who voted / who hasn't (collapsed view)
+            if (participantNames.isNotEmpty()) {
+                val votedNames = pollData.voterIds.mapNotNull { participantNames[it] }
+                val notVotedNames = participantNames.filter { it.key !in pollData.voterIds }.values.toList()
+                if (votedNames.isNotEmpty() || notVotedNames.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                    @OptIn(ExperimentalLayoutApi::class)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        participantNames.forEach { (uid, name) ->
+                            val voted = uid in pollData.voterIds
+                            Box(
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .background(
+                                        if (voted) Success.copy(alpha = 0.10f)
+                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (voted) Success
+                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
-            val totalVotes = pollData.voteCounts.values.sum()
-            val hasVoted = pollData.userVotes.isNotEmpty()
+            // Collapsible options section
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column(modifier = Modifier.padding(top = Spacing.md)) {
 
             for (option in pollData.options) {
                 val voteCount = pollData.voteCounts[option.id] ?: 0
                 val isSelected = option.id in pollData.userVotes
+                val optVoters = pollData.optionVoterIds[option.id] ?: emptySet()
+                val optVoterNames = optVoters.mapNotNull { participantNames[it] }
                 PollOptionItem(
                     option = option,
                     voteCount = voteCount,
                     totalVotes = totalVotes,
                     isSelected = isSelected,
                     allowMultiple = pollData.poll.allowMultiple,
+                    voterNames = optVoterNames,
                     onVote = {
                         if (!isEffectivelyClosed && !isSelected) {
                             hapticView.performHapticClick()
@@ -597,6 +778,9 @@ private fun PollCard(
                 )
                 Spacer(modifier = Modifier.height(Spacing.xs))
             }
+
+                } // Column inside AnimatedVisibility
+            } // AnimatedVisibility
         }
     }
 }
@@ -632,6 +816,7 @@ fun PollOptionItem(
     totalVotes: Int,
     isSelected: Boolean,
     allowMultiple: Boolean = false,
+    voterNames: List<String> = emptyList(),
     onVote: () -> Unit
 ) {
     val progress = if (totalVotes > 0) voteCount.toFloat() / totalVotes else 0f
@@ -683,6 +868,16 @@ fun PollOptionItem(
                 color = if (isSelected) PrimaryBlue else AccentPink.copy(alpha = 0.5f),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
+
+            // Voter names under this option
+            if (voterNames.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                Text(
+                    text = voterNames.joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

@@ -489,6 +489,36 @@
     <string name="participants_role_update_error">Nepodařilo se aktualizovat roli</string>
     <string name="participants_coorg_limit_title">Prémiová funkce</string>
     <string name="participants_coorg_limit_message">Co-organizátoři jsou dostupní na plánech Pro a Business.</string>
+    <string name="participants_add_manual">Přidat hosta</string>
+    <string name="participants_add_manual_title">Přidat hosta</string>
+    <string name="participants_add_manual_name_label">Jméno</string>
+    <string name="participants_add_manual_role_label">Role (volitelné)</string>
+    <string name="participants_manual_badge">Host</string>
+    <string name="participants_manual_no_profile">Tento účastník nemá účet BetterMingle.</string>
+    <string name="participants_link_account">Propojit s účtem</string>
+    <string name="participants_link_title">Propojit s účtem</string>
+    <string name="participants_link_description">Vyberte uživatele pro propojení s tímto hostem:</string>
+    <string name="participants_link_success">Účastník úspěšně propojen</string>
+    <string name="participants_link_error">Propojení se nezdařilo</string>
+    <string name="participants_share_invite">Sdílet pozvánku</string>
+    <string name="participants_add_options_title">Přidat účastníka</string>
+    <string name="participants_delete_manual">Odebrat hosta</string>
+    <string name="participants_delete_manual_confirm">Odebrat hosta \"%1$s\"? Bude odebrán i z výdajů a úkolů.</string>
+    <string name="participants_change_rsvp">Změnit RSVP</string>
+    <string name="participants_change_rsvp_title">RSVP pro %1$s</string>
+    <string name="rooms_assign_participant">Přiřadit účastníka</string>
+    <string name="rooms_assign_dialog_title">Přiřadit do pokoje</string>
+    <string name="rooms_assign_description">Vyberte účastníka pro přiřazení do pokoje:</string>
+    <string name="rooms_unassign_participant">Odebrat z pokoje</string>
+    <string name="voting_vote_for_guest">Hlasovat za hosta</string>
+    <string name="voting_vote_for_title">Hlasovat jménem</string>
+    <string name="voting_select_guest">Vyberte hosta, za kterého chcete hlasovat:</string>
+    <string name="wishlist_claim_for_guest">Rezervovat za hosta</string>
+    <string name="wishlist_claim_for_title">Rezervovat jménem</string>
+    <string name="wishlist_select_guest">Vyberte hosta, pro kterého chcete rezervovat:</string>
+    <string name="carpool_add_passenger">Přidat spolujezdce</string>
+    <string name="carpool_add_passenger_title">Přidat spolujezdce k jízdě</string>
+    <string name="carpool_select_passenger">Vyberte účastníka k přidání:</string>
 
     <!-- Rating -->
     <string name="rating_title">Hodnocení</string>
@@ -885,6 +915,8 @@
     <string name="activity_deleted_event">smazal/a akci: %1$s</string>
     <string name="activity_changed_status">změnil/a stav akce na %1$s</string>
     <string name="activity_joined_event">se připojil/a k akci</string>
+    <string name="activity_added_manual_participant">Přidán host: %1$s</string>
+    <string name="activity_linked_participant">Host %1$s propojen s účtem %2$s</string>
     <string name="activity_change_name">název</string>
     <string name="activity_change_description">popis</string>
     <string name="activity_change_theme">téma</string>

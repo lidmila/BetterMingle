@@ -208,7 +208,9 @@ class EventRepository(context: Context) {
                 "avatarUrl" to participant.avatarUrl,
                 "role" to participant.role.name,
                 "rsvp" to participant.rsvp.name,
-                "joinedAt" to participant.joinedAt
+                "joinedAt" to participant.joinedAt,
+                "isManual" to participant.isManual,
+                "linkedUserId" to participant.linkedUserId
             )
             firestore.collection("events")
                 .document(eventId)
@@ -317,7 +319,9 @@ class EventRepository(context: Context) {
                     avatarUrl = data["avatarUrl"] as? String ?: "",
                     role = role,
                     rsvp = rsvp,
-                    joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+                    joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    isManual = data["isManual"] as? Boolean ?: false,
+                    linkedUserId = data["linkedUserId"] as? String
                 )
                 participantDao.insertParticipant(participant)
             }

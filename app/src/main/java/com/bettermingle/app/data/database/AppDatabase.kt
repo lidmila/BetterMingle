@@ -26,7 +26,7 @@ import com.bettermingle.app.data.dao.PollDao
         Expense::class,
         Message::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -49,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "bettermingle_database"
                 )
-                    .fallbackToDestructiveMigrationFrom(1, 2, 3, 4)
+                    .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5)
                     .build()
                 INSTANCE = instance
                 instance

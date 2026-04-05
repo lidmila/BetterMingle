@@ -78,7 +78,13 @@ import com.bettermingle.app.ui.theme.TextOnColor
 import com.bettermingle.app.ui.component.ModuleColorPickerDialog
 import com.bettermingle.app.data.repository.EventRepository
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.ListItem
+import com.bettermingle.app.data.model.Participant
+import com.bettermingle.app.data.model.ParticipantRole
+import com.bettermingle.app.data.model.RsvpStatus
 import com.bettermingle.app.utils.ActivityLogger
+import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -102,6 +108,8 @@ fun WishlistScreen(
     var showColorPicker by remember { mutableStateOf(false) }
     val currentUser = remember { FirebaseAuth.getInstance().currentUser }
     val currentUserId = currentUser?.uid ?: ""
+    val manualParticipants = remember { mutableStateListOf<Participant>() }
+    var showClaimForGuestDialog by remember { mutableStateOf<WishlistItem?>(null) }
 
     // Check if current user is the event organizer
     LaunchedEffect(eventId) {
@@ -110,6 +118,25 @@ fun WishlistScreen(
                 .collection("events").document(eventId).get().await()
             val createdBy = eventDoc.getString("createdBy") ?: ""
             isOrganizer = createdBy == currentUserId
+        } catch (_: Exception) { }
+        // Load manual participants for claiming on behalf
+        try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("events").document(eventId)
+                .collection("participants").get().await()
+            manualParticipants.clear()
+            manualParticipants.addAll(snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                val isManual = data["isManual"] as? Boolean ?: false
+                if (!isManual) return@mapNotNull null
+                Participant(
+                    id = doc.id,
+                    eventId = eventId,
+                    userId = data["userId"] as? String ?: "",
+                    displayName = data["displayName"] as? String ?: doc.id.take(8),
+                    isManual = true
+                )
+            })
         } catch (_: Exception) { }
     }
 
@@ -269,6 +296,61 @@ fun WishlistScreen(
                     )
                 }
                 else -> {
+                // Claim for guest dialog
+                showClaimForGuestDialog?.let { wishItem ->
+                    AlertDialog(
+                        onDismissRequest = { showClaimForGuestDialog = null },
+                        title = { Text(stringResource(R.string.wishlist_claim_for_title)) },
+                        text = {
+                            Column {
+                                Text(stringResource(R.string.wishlist_select_guest), style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                manualParticipants.forEach { guest ->
+                                    ListItem(
+                                        headlineContent = { Text(guest.displayName) },
+                                        modifier = Modifier.clickable {
+                                            val wi = wishItem
+                                            val g = guest
+                                            showClaimForGuestDialog = null
+                                            val idx = items.indexOfFirst { it.id == wi.id }
+                                            if (idx >= 0) {
+                                                items[idx] = items[idx].copy(
+                                                    status = WishlistItemStatus.RESERVED,
+                                                    claimedBy = g.userId,
+                                                    claimedByName = g.displayName
+                                                )
+                                            }
+                                            scope.launch {
+                                                try {
+                                                    FirebaseFirestore.getInstance()
+                                                        .collection("events").document(eventId)
+                                                        .collection("wishlistItems").document(wi.id)
+                                                        .update(
+                                                            hashMapOf<String, Any?>(
+                                                                "status" to WishlistItemStatus.RESERVED.name,
+                                                                "claimedBy" to g.userId,
+                                                                "claimedByName" to g.displayName
+                                                            )
+                                                        ).await()
+                                                    ActivityLogger.log(eventId, "wishlist", context.getString(R.string.activity_wishlist_reserved, wi.name))
+                                                } catch (_: Exception) {
+                                                    scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.error_save_failed)) }
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = {},
+                        dismissButton = {
+                            TextButton(onClick = { showClaimForGuestDialog = null }) {
+                                Text(stringResource(R.string.common_cancel))
+                            }
+                        }
+                    )
+                }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.screenPadding),
@@ -279,6 +361,8 @@ fun WishlistScreen(
                             item = item,
                             isOrganizer = isOrganizer,
                             currentUserId = currentUserId,
+                            hasManualParticipants = isOrganizer && manualParticipants.isNotEmpty(),
+                            onClaimForGuest = { showClaimForGuestDialog = item },
                             onStatusChange = { newStatus ->
                                 val idx = items.indexOfFirst { it.id == item.id }
                                 if (idx >= 0) {
@@ -357,6 +441,8 @@ private fun WishlistItemCard(
     item: WishlistItem,
     isOrganizer: Boolean,
     currentUserId: String,
+    hasManualParticipants: Boolean = false,
+    onClaimForGuest: () -> Unit = {},
     onStatusChange: (WishlistItemStatus) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -464,6 +550,16 @@ private fun WishlistItemCard(
                     Text(text = badgeText, style = MaterialTheme.typography.bodySmall, color = badgeColor)
                 }
                 Spacer(modifier = Modifier.height(Spacing.xs))
+            }
+
+            // Claim for guest button
+            if (isFree && hasManualParticipants) {
+                TextButton(onClick = onClaimForGuest) {
+                    Text(
+                        text = stringResource(R.string.wishlist_claim_for_guest),
+                        color = AccentOrange
+                    )
+                }
             }
 
             // Status toggle chips - show when item is free (anyone) or claimed by me

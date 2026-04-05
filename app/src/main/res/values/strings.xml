@@ -489,6 +489,36 @@
     <string name="participants_role_update_error">Failed to update role</string>
     <string name="participants_coorg_limit_title">Premium feature</string>
     <string name="participants_coorg_limit_message">Co-organizers are available on Pro and Business plans.</string>
+    <string name="participants_add_manual">Add guest</string>
+    <string name="participants_add_manual_title">Add guest participant</string>
+    <string name="participants_add_manual_name_label">Name</string>
+    <string name="participants_add_manual_role_label">Role (optional)</string>
+    <string name="participants_manual_badge">Guest</string>
+    <string name="participants_manual_no_profile">This participant does not have a BetterMingle account.</string>
+    <string name="participants_link_account">Link to account</string>
+    <string name="participants_link_title">Link to real account</string>
+    <string name="participants_link_description">Select the user to link this guest to:</string>
+    <string name="participants_link_success">Participant linked successfully</string>
+    <string name="participants_link_error">Failed to link participant</string>
+    <string name="participants_share_invite">Share invite link</string>
+    <string name="participants_add_options_title">Add participant</string>
+    <string name="participants_delete_manual">Remove guest</string>
+    <string name="participants_delete_manual_confirm">Remove guest participant \"%1$s\"? This will also remove them from expenses and tasks.</string>
+    <string name="participants_change_rsvp">Change RSVP</string>
+    <string name="participants_change_rsvp_title">RSVP for %1$s</string>
+    <string name="rooms_assign_participant">Assign participant</string>
+    <string name="rooms_assign_dialog_title">Assign to room</string>
+    <string name="rooms_assign_description">Select participant to assign to this room:</string>
+    <string name="rooms_unassign_participant">Remove from room</string>
+    <string name="voting_vote_for_guest">Vote for guest</string>
+    <string name="voting_vote_for_title">Vote on behalf of</string>
+    <string name="voting_select_guest">Select guest to vote for:</string>
+    <string name="wishlist_claim_for_guest">Claim for guest</string>
+    <string name="wishlist_claim_for_title">Claim on behalf of</string>
+    <string name="wishlist_select_guest">Select guest to claim for:</string>
+    <string name="carpool_add_passenger">Add passenger</string>
+    <string name="carpool_add_passenger_title">Add passenger to ride</string>
+    <string name="carpool_select_passenger">Select participant to add:</string>
 
     <!-- Rating -->
     <string name="rating_title">Rating</string>
@@ -885,6 +915,8 @@
     <string name="activity_deleted_event">deleted event: %1$s</string>
     <string name="activity_changed_status">changed event status to %1$s</string>
     <string name="activity_joined_event">joined the event</string>
+    <string name="activity_added_manual_participant">Added guest: %1$s</string>
+    <string name="activity_linked_participant">Linked guest %1$s to account %2$s</string>
     <string name="activity_change_name">name</string>
     <string name="activity_change_description">description</string>
     <string name="activity_change_theme">theme</string>

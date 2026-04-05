@@ -1,0 +1,18 @@
+<cs-CZ>
+Co je nového v 1.4.0:
+
+• Přidávání hostů bez aplikace - stačí zadat jméno a hosté fungují ve všech modulech
+• Organizátor může za hosty hlasovat, přiřazovat pokoje, měnit RSVP a další
+• Hosty lze později propojit s reálným účtem
+• Ankety jsou sbalitelné a zobrazují, kdo už hlasoval
+• Opravy šablon při vytváření akce
+</cs-CZ>
+<en-US>
+What's new in 1.4.0:
+
+• Add guests without the app - just enter a name and they work across all modules
+• Organizer can vote, assign rooms, change RSVP and more on behalf of guests
+• Guests can be linked to a real account later
+• Polls are collapsible and show who has voted
+• Fixed templates when creating events
+</en-US>

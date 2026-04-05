@@ -84,7 +84,9 @@ class FirestoreSyncService(context: Context) {
                     catch (_: Exception) { ParticipantRole.PARTICIPANT },
                     rsvp = try { RsvpStatus.valueOf(data["rsvp"] as? String ?: "PENDING") }
                     catch (_: Exception) { RsvpStatus.PENDING },
-                    joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+                    joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    isManual = data["isManual"] as? Boolean ?: false,
+                    linkedUserId = data["linkedUserId"] as? String
                 )
                 participantDao.insertParticipant(participant)
             }

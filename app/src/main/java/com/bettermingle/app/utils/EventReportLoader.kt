@@ -1,6 +1,7 @@
 package com.bettermingle.app.utils
 
 import com.bettermingle.app.data.model.*
+import com.bettermingle.app.utils.ParticipantUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -29,6 +30,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
     suspend fun resolveName(userId: String?): String? {
         if (userId == null) return null
         userIdToName[userId]?.let { return it }
+        if (ParticipantUtils.isManualId(userId)) return userId
         return try {
             val userDoc = firestore.collection("users").document(userId).get().await()
             val name = userDoc.getString("displayName") ?: userId

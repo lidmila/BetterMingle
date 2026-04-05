@@ -27,6 +27,7 @@ service cloud.firestore {
         // If event requires approval, only organizer can create participants
         // Otherwise, any authenticated user can join
         allow create: if request.auth != null && (
+          (request.resource.data.isManual == true && isEventOrganizer(eventId)) ||
           !isSecurityEnabled(eventId) ||
           !requiresApproval(eventId) ||
           isEventOrganizer(eventId)

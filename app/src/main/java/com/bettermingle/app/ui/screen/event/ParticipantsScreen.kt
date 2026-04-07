@@ -79,6 +79,8 @@ import com.bettermingle.app.ui.theme.TextOnColor
 
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material3.AlertDialog
@@ -99,6 +101,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,12 +134,13 @@ fun ParticipantsScreen(
     var roleDialogParticipant by remember { mutableStateOf<Participant?>(null) }
     var showTierLimitDialog by remember { mutableStateOf(false) }
 
-    // Manual participant dialogs
+    // Participant management dialogs
     var showAddOptionsSheet by remember { mutableStateOf(false) }
     var showAddManualDialog by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf<Participant?>(null) }
-    var showDeleteManualDialog by remember { mutableStateOf<Participant?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<Participant?>(null) }
     var showRsvpDialog by remember { mutableStateOf<Participant?>(null) }
+    var showEditDialog by remember { mutableStateOf<Participant?>(null) }
 
     fun loadParticipants() {
         scope.launch {
@@ -156,7 +160,7 @@ fun ParticipantsScreen(
                     .collection("participants")
                     .get().await()
 
-                val userIds = snapshot.documents.mapNotNull { it.getString("userId") }.distinct()
+                val userIds = snapshot.safeDocuments.mapNotNull { it.getString("userId") }.distinct()
                 val userNames = mutableMapOf<String, String>()
                 for (uid in userIds) {
                     if (ParticipantUtils.isManualId(uid)) continue
@@ -167,7 +171,7 @@ fun ParticipantsScreen(
                     } catch (_: Exception) { }
                 }
 
-                val loaded = snapshot.documents.map { doc ->
+                val loaded = snapshot.safeDocuments.map { doc ->
                     val data = doc.data ?: emptyMap()
                     val userId = data["userId"] as? String ?: ""
                     val role = try {
@@ -320,26 +324,38 @@ fun ParticipantsScreen(
         )
     }
 
-    // Delete manual participant dialog
-    showDeleteManualDialog?.let { participant ->
+    // Delete participant dialog
+    showDeleteDialog?.let { participant ->
         AlertDialog(
-            onDismissRequest = { showDeleteManualDialog = null },
-            title = { Text(stringResource(R.string.participants_delete_manual)) },
-            text = { Text(stringResource(R.string.participants_delete_manual_confirm, participant.displayName)) },
+            onDismissRequest = { showDeleteDialog = null },
+            title = {
+                Text(
+                    if (participant.isManual) stringResource(R.string.participants_delete_manual)
+                    else stringResource(R.string.participants_delete_participant)
+                )
+            },
+            text = {
+                Text(
+                    if (participant.isManual) stringResource(R.string.participants_delete_manual_confirm, participant.displayName)
+                    else stringResource(R.string.participants_delete_participant_confirm, participant.displayName)
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     val p = participant
-                    showDeleteManualDialog = null
+                    showDeleteDialog = null
                     scope.launch {
                         try {
                             FirebaseFirestore.getInstance()
                                 .collection("events").document(eventId)
                                 .collection("participants").document(p.id)
                                 .delete().await()
+                            ActivityLogger.log(eventId, "participant", context.getString(R.string.activity_removed_participant, p.displayName))
                             loadParticipants()
-                            snackbarHostState.showSnackbar(context.getString(R.string.participants_role_updated))
+                            snackbarHostState.showSnackbar(context.getString(R.string.participants_removed_success))
                         } catch (e: Exception) {
-                            Log.e("ParticipantsScreen", "Failed to delete manual participant", e)
+                            Log.e("ParticipantsScreen", "Failed to delete participant", e)
+                            snackbarHostState.showSnackbar(context.getString(R.string.participants_removed_error))
                         }
                     }
                 }) {
@@ -347,7 +363,7 @@ fun ParticipantsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteManualDialog = null }) {
+                TextButton(onClick = { showDeleteDialog = null }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             }
@@ -396,6 +412,20 @@ fun ParticipantsScreen(
                 TextButton(onClick = { showRsvpDialog = null }) {
                     Text(stringResource(R.string.common_cancel))
                 }
+            }
+        )
+    }
+
+    // Edit participant dialog
+    showEditDialog?.let { participant ->
+        EditParticipantDialog(
+            eventId = eventId,
+            participant = participant,
+            onDismiss = { showEditDialog = null },
+            onSaved = {
+                showEditDialog = null
+                loadParticipants()
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.participants_edit_saved)) }
             }
         )
     }
@@ -558,10 +588,11 @@ fun ParticipantsScreen(
                 items(participants, key = { it.id }) { participant ->
                     ParticipantItem(
                         participant = participant,
-                        showRoleAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER && !participant.isManual,
+                        showRoleAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER,
                         showLinkAction = isOrganizer && participant.isManual,
-                        showRsvpAction = isOrganizer && participant.isManual,
-                        showDeleteAction = isOrganizer && participant.isManual,
+                        showRsvpAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER,
+                        showDeleteAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER,
+                        showEditAction = isOrganizer && participant.role != ParticipantRole.ORGANIZER,
                         onRoleClick = {
                             if (!TierLimits.canAddCoOrganizers(premiumTier)) {
                                 showTierLimitDialog = true
@@ -571,7 +602,8 @@ fun ParticipantsScreen(
                         },
                         onLinkClick = { showLinkDialog = participant },
                         onRsvpClick = { showRsvpDialog = participant },
-                        onDeleteClick = { showDeleteManualDialog = participant },
+                        onDeleteClick = { showDeleteDialog = participant },
+                        onEditClick = { showEditDialog = participant },
                         onClick = {
                             if (participant.isManual) {
                                 // Show simplified profile for manual participants
@@ -636,10 +668,12 @@ private fun ParticipantItem(
     showLinkAction: Boolean = false,
     showRsvpAction: Boolean = false,
     showDeleteAction: Boolean = false,
+    showEditAction: Boolean = false,
     onRoleClick: () -> Unit = {},
     onLinkClick: () -> Unit = {},
     onRsvpClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
     onClick: () -> Unit
 ) {
     BetterMingleCard(onClick = onClick) {
@@ -711,6 +745,17 @@ private fun ParticipantItem(
                 }
             }
 
+            if (showEditAction) {
+                IconButton(onClick = onEditClick, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.participants_edit_title),
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
             if (showRoleAction) {
                 IconButton(onClick = onRoleClick, modifier = Modifier.size(32.dp)) {
                     Icon(
@@ -721,7 +766,17 @@ private fun ParticipantItem(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(Spacing.xs))
+            }
+
+            if (showDeleteAction) {
+                IconButton(onClick = onDeleteClick, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.participants_delete_participant),
+                        tint = AccentOrange,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             if (participant.isManual) {
@@ -739,7 +794,13 @@ private fun ParticipantItem(
                     }
                 }
             } else {
-                RsvpBadge(status = participant.rsvp)
+                if (showRsvpAction) {
+                    Box(modifier = Modifier.clickable { onRsvpClick() }) {
+                        RsvpBadge(status = participant.rsvp)
+                    }
+                } else {
+                    RsvpBadge(status = participant.rsvp)
+                }
             }
         }
     }
@@ -977,6 +1038,68 @@ private fun AddManualParticipantDialog(
                 enabled = name.isNotBlank()
             ) {
                 Text(stringResource(R.string.participants_add))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    )
+}
+
+@Composable
+private fun EditParticipantDialog(
+    eventId: String,
+    participant: Participant,
+    onDismiss: () -> Unit,
+    onSaved: () -> Unit
+) {
+    var displayName by remember { mutableStateOf(participant.displayName) }
+    var customRole by remember { mutableStateOf(participant.customRole) }
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.participants_edit_title)) },
+        text = {
+            Column {
+                BetterMingleTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    label = stringResource(R.string.participants_edit_name_label),
+                    enabled = participant.isManual
+                )
+                Spacer(modifier = Modifier.height(Spacing.formFieldSpacing))
+                BetterMingleTextField(
+                    value = customRole,
+                    onValueChange = { customRole = it },
+                    label = stringResource(R.string.participants_edit_role_label)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        try {
+                            val updates = mutableMapOf<String, Any>(
+                                "customRole" to customRole.trim()
+                            )
+                            if (participant.isManual) {
+                                updates["displayName"] = displayName.trim()
+                            }
+                            FirebaseFirestore.getInstance()
+                                .collection("events").document(eventId)
+                                .collection("participants").document(participant.id)
+                                .update(updates).await()
+                            onSaved()
+                        } catch (e: Exception) {
+                            Log.e("ParticipantsScreen", "Failed to edit participant", e)
+                        }
+                    }
+                },
+                enabled = if (participant.isManual) displayName.isNotBlank() else true
+            ) {
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {

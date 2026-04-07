@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.ConcurrentHashMap
+import com.bettermingle.app.utils.safeDocuments
 
 suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coroutineScope {
     val firestore = FirebaseFirestore.getInstance()
@@ -18,7 +19,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
     val participantDocs = eventRef.collection("participants").get().await()
     val userIdToName = ConcurrentHashMap<String, String>()
     val participants = mutableListOf<ParticipantDetail>()
-    for (doc in participantDocs.documents) {
+    for (doc in participantDocs.safeDocuments) {
         val uid = doc.id
         val name = doc.getString("displayName") ?: doc.getString("name") ?: uid
         val rsvp = (doc.getString("rsvp") ?: "PENDING").uppercase()
@@ -45,7 +46,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
     val pollsDeferred = async {
         val pollDocs = eventRef.collection("polls").get().await()
         val now = System.currentTimeMillis()
-        pollDocs.documents.map { pollDoc ->
+        pollDocs.safeDocuments.map { pollDoc ->
             val title = pollDoc.getString("title") ?: pollDoc.getString("question") ?: ""
             val isClosed = pollDoc.getBoolean("isClosed") ?: false
             val deadline = (pollDoc.get("deadline") as? Number)?.toLong()
@@ -53,7 +54,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
             val optionDocs = eventRef.collection("polls").document(pollDoc.id)
                 .collection("options").get().await()
-            val options = optionDocs.documents.map { optDoc ->
+            val options = optionDocs.safeDocuments.map { optDoc ->
                 val label = optDoc.getString("text") ?: optDoc.getString("label") ?: ""
                 val voteDocs = eventRef.collection("polls").document(pollDoc.id)
                     .collection("options").document(optDoc.id)
@@ -66,12 +67,12 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
     val budgetDeferred = async {
         val categoryDocs = eventRef.collection("budgetCategories").get().await()
-        categoryDocs.documents.map { catDoc ->
+        categoryDocs.safeDocuments.map { catDoc ->
             val name = catDoc.getString("name") ?: ""
             val planned = (catDoc.get("planned") as? Number)?.toDouble() ?: 0.0
             val expenseDocs = eventRef.collection("budgetCategories").document(catDoc.id)
                 .collection("expenses").get().await()
-            val actualTotal = expenseDocs.documents.sumOf {
+            val actualTotal = expenseDocs.safeDocuments.sumOf {
                 (it.get("amount") as? Number)?.toDouble() ?: 0.0
             }
             BudgetCategoryDetail(name = name, planned = planned, actualTotal = actualTotal)
@@ -81,7 +82,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
     // Sequential fetches for sections that need resolveName (avoid concurrent map issues)
     val expenses = run {
         val expenseDocs = eventRef.collection("expenses").get().await()
-        expenseDocs.documents.map { expDoc ->
+        expenseDocs.safeDocuments.map { expDoc ->
             val description = expDoc.getString("description") ?: ""
             val amount = (expDoc.get("amount") as? Number)?.toDouble() ?: 0.0
             val currency = expDoc.getString("currency") ?: "CZK"
@@ -91,7 +92,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
             val splitDocs = eventRef.collection("expenses").document(expDoc.id)
                 .collection("splits").get().await()
-            val splits = splitDocs.documents.map { splitDoc ->
+            val splits = splitDocs.safeDocuments.map { splitDoc ->
                 val userId = splitDoc.getString("userId") ?: splitDoc.id
                 val splitAmount = (splitDoc.get("amount") as? Number)?.toDouble() ?: 0.0
                 val isSettled = splitDoc.getBoolean("isSettled") ?: false
@@ -114,7 +115,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
     val wishlistItems = run {
         val wishDocs = eventRef.collection("wishlistItems").get().await()
-        wishDocs.documents.map { doc ->
+        wishDocs.safeDocuments.map { doc ->
             val name = doc.getString("name") ?: ""
             val price = (doc.get("price") as? Number)?.toDouble()
             val status = doc.getString("status") ?: "AVAILABLE"
@@ -130,7 +131,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
     val tasks = run {
         val taskDocs = eventRef.collection("tasks").get().await()
-        taskDocs.documents.map { doc ->
+        taskDocs.safeDocuments.map { doc ->
             val name = doc.getString("name") ?: ""
             val isCompleted = doc.getBoolean("isCompleted") ?: false
             @Suppress("UNCHECKED_CAST")
@@ -147,7 +148,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
     val packingItems = run {
         val packDocs = eventRef.collection("packingItems").get().await()
-        packDocs.documents.map { doc ->
+        packDocs.safeDocuments.map { doc ->
             val name = doc.getString("name") ?: ""
             val isChecked = doc.getBoolean("isChecked") ?: false
             val userId = doc.getString("userId")
@@ -161,7 +162,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
     val carpoolRides = run {
         val rideDocs = eventRef.collection("carpoolRides").get().await()
-        rideDocs.documents.map { rideDoc ->
+        rideDocs.safeDocuments.map { rideDoc ->
             val driverId = rideDoc.getString("driverId") ?: ""
             val driverName = resolveName(driverId) ?: driverId
             val departureLocation = rideDoc.getString("departureLocation") ?: ""
@@ -171,7 +172,7 @@ suspend fun loadDetailedEventReport(eventId: String): DetailedEventReport = coro
 
             val passengerDocs = eventRef.collection("carpoolRides").document(rideDoc.id)
                 .collection("passengers").get().await()
-            val passengers = passengerDocs.documents.map { pDoc ->
+            val passengers = passengerDocs.safeDocuments.map { pDoc ->
                 val pName = resolveName(pDoc.id) ?: pDoc.getString("displayName") ?: pDoc.id
                 val pStatus = pDoc.getString("status") ?: "PENDING"
                 CarpoolPassengerDetail(displayName = pName, status = pStatus)

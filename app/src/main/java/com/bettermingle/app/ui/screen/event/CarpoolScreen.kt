@@ -111,6 +111,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,7 +150,7 @@ fun CarpoolScreen(
                 .collection("events").document(eventId)
                 .collection("participants").get().await()
             allParticipants.clear()
-            allParticipants.addAll(snapshot.documents.map { doc ->
+            allParticipants.addAll(snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 Participant(
                     id = doc.id,
@@ -169,7 +170,7 @@ fun CarpoolScreen(
                 val snapshot = firestore.collection("events").document(eventId)
                     .collection("carpoolRides").get().await()
 
-                val driverIds = snapshot.documents.mapNotNull { it.getString("driverId") }.distinct()
+                val driverIds = snapshot.safeDocuments.mapNotNull { it.getString("driverId") }.distinct()
                 val driverNames = mutableMapOf<String, String>()
                 for (uid in driverIds) {
                     if (ParticipantUtils.isManualId(uid)) {
@@ -188,7 +189,7 @@ fun CarpoolScreen(
                     }
                 }
 
-                val loaded = snapshot.documents.map { doc ->
+                val loaded = snapshot.safeDocuments.map { doc ->
                     val data = doc.data ?: emptyMap()
                     val driverId = data["driverId"] as? String ?: ""
                     val typeStr = data["type"] as? String ?: "OFFER"
@@ -540,7 +541,7 @@ private fun CarpoolRideCard(
                 .collection("carpoolRides").document(ride.id)
                 .collection("passengers").get().await()
             passengers.clear()
-            passengers.addAll(snapshot.documents.map { doc ->
+            passengers.addAll(snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 CarpoolPassenger(
                     id = doc.id,

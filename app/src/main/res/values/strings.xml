@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Add participant</string>
     <string name="participants_delete_manual">Remove guest</string>
     <string name="participants_delete_manual_confirm">Remove guest participant \"%1$s\"? This will also remove them from expenses and tasks.</string>
+    <string name="participants_delete_participant">Remove participant</string>
+    <string name="participants_delete_participant_confirm">Remove participant \"%1$s\"? They will lose access to this event and be removed from expenses and tasks.</string>
+    <string name="participants_removed_success">Participant removed</string>
+    <string name="participants_removed_error">Failed to remove participant</string>
+    <string name="participants_edit_title">Edit participant</string>
+    <string name="participants_edit_name_label">Name</string>
+    <string name="participants_edit_role_label">Custom role (optional)</string>
+    <string name="participants_edit_saved">Participant updated</string>
     <string name="participants_change_rsvp">Change RSVP</string>
     <string name="participants_change_rsvp_title">RSVP for %1$s</string>
     <string name="rooms_assign_participant">Assign participant</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Vote for guest</string>
     <string name="voting_vote_for_title">Vote on behalf of</string>
     <string name="voting_select_guest">Select guest to vote for:</string>
+    <string name="voting_vote_for_participant">Vote for participant</string>
+    <string name="voting_select_participant">Select participant to vote for:</string>
+    <string name="voting_select_voters">Select voters</string>
+    <string name="voting_select_all">Select all</string>
     <string name="wishlist_claim_for_guest">Claim for guest</string>
     <string name="wishlist_claim_for_title">Claim on behalf of</string>
     <string name="wishlist_select_guest">Select guest to claim for:</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">changed event status to %1$s</string>
     <string name="activity_joined_event">joined the event</string>
     <string name="activity_added_manual_participant">Added guest: %1$s</string>
+    <string name="activity_removed_participant">Removed participant: %1$s</string>
     <string name="activity_linked_participant">Linked guest %1$s to account %2$s</string>
     <string name="activity_change_name">name</string>
     <string name="activity_change_description">description</string>

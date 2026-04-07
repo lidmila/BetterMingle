@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Teilnehmer hinzufügen</string>
     <string name="participants_delete_manual">Gast entfernen</string>
     <string name="participants_delete_manual_confirm">Gast-Teilnehmer \"%1$s\" entfernen? Er wird auch aus Ausgaben und Aufgaben entfernt.</string>
+    <string name="participants_delete_participant">Teilnehmer entfernen</string>
+    <string name="participants_delete_participant_confirm">Teilnehmer \"%1$s\" entfernen? Der Zugang zu dieser Veranstaltung geht verloren und er wird aus Ausgaben und Aufgaben entfernt.</string>
+    <string name="participants_removed_success">Teilnehmer entfernt</string>
+    <string name="participants_removed_error">Teilnehmer konnte nicht entfernt werden</string>
+    <string name="participants_edit_title">Teilnehmer bearbeiten</string>
+    <string name="participants_edit_name_label">Name</string>
+    <string name="participants_edit_role_label">Benutzerdefinierte Rolle (optional)</string>
+    <string name="participants_edit_saved">Teilnehmer aktualisiert</string>
     <string name="participants_change_rsvp">RSVP ändern</string>
     <string name="participants_change_rsvp_title">RSVP für %1$s</string>
     <string name="rooms_assign_participant">Teilnehmer zuweisen</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Für Gast abstimmen</string>
     <string name="voting_vote_for_title">Im Namen abstimmen</string>
     <string name="voting_select_guest">Gast auswählen, für den Sie abstimmen möchten:</string>
+    <string name="voting_vote_for_participant">Für Teilnehmer abstimmen</string>
+    <string name="voting_select_participant">Teilnehmer auswählen, für den Sie abstimmen möchten:</string>
+    <string name="voting_select_voters">Wähler auswählen</string>
+    <string name="voting_select_all">Alle auswählen</string>
     <string name="wishlist_claim_for_guest">Für Gast reservieren</string>
     <string name="wishlist_claim_for_title">Im Namen reservieren</string>
     <string name="wishlist_select_guest">Gast auswählen, für den Sie reservieren möchten:</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">hat Event-Status geändert auf %1$s</string>
     <string name="activity_joined_event">ist dem Event beigetreten</string>
     <string name="activity_added_manual_participant">Gast hinzugefügt: %1$s</string>
+    <string name="activity_removed_participant">Teilnehmer entfernt: %1$s</string>
     <string name="activity_linked_participant">Gast %1$s mit Konto %2$s verknüpft</string>
     <string name="activity_change_name">Name</string>
     <string name="activity_change_description">Beschreibung</string>

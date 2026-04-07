@@ -85,6 +85,7 @@ import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.bettermingle.app.utils.safeDocuments
 
 private data class BudgetCategory(
     val id: String,
@@ -141,13 +142,13 @@ fun BudgetScreen(
 
             // Load categories
             val snapshot = budgetRef.orderBy("createdAt").get().await()
-            categories = snapshot.documents.map { doc ->
+            categories = snapshot.safeDocuments.map { doc ->
                 // Load expenses per category
                 val expensesSnapshot = budgetRef.document(doc.id)
                     .collection("expenses")
                     .orderBy("createdAt", Query.Direction.DESCENDING)
                     .get().await()
-                val expenses = expensesSnapshot.documents.map { expDoc ->
+                val expenses = expensesSnapshot.safeDocuments.map { expDoc ->
                     BudgetExpense(
                         id = expDoc.id,
                         amount = (expDoc.get("amount") as? Number)?.toDouble() ?: 0.0,
@@ -252,7 +253,7 @@ fun BudgetScreen(
                         try {
                             // Delete expenses subcollection first
                             val expenses = budgetRef.document(catId).collection("expenses").get().await()
-                            for (doc in expenses.documents) { doc.reference.delete().await() }
+                            for (doc in expenses.safeDocuments) { doc.reference.delete().await() }
                             budgetRef.document(catId).delete().await()
                             loadData()
                         } catch (e: Exception) {

@@ -24,7 +24,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Event
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -177,7 +177,7 @@ fun YearInReviewScreen(
             ))
             // Most active month
             if (stats.mostActiveMonth.isNotEmpty()) add(ReviewPageData(
-                Success, PrimaryBlue, Icons.Default.TrendingUp,
+                Success, PrimaryBlue, Icons.AutoMirrored.Filled.TrendingUp,
                 label = stats.mostActiveMonth,
                 description = monthDesc,
                 subtitle = monthSubtitle
@@ -231,7 +231,7 @@ fun YearInReviewScreen(
         ) {
             IconButton(onClick = onNavigateBack) {
                 Icon(
-                    Icons.Default.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.common_back),
                     tint = Color.White
                 )

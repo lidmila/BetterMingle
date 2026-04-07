@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 object ManualParticipantLinker {
 
@@ -51,13 +52,13 @@ object ManualParticipantLinker {
 
             // 5. Migrate references in expenses (paidBy)
             val expenses = eventRef.collection("expenses").get().await()
-            for (expDoc in expenses.documents) {
+            for (expDoc in expenses.safeDocuments) {
                 if (expDoc.getString("paidBy") == manualParticipantId) {
                     expDoc.reference.update("paidBy", realUserId).await()
                 }
                 // Migrate splits
                 val splits = expDoc.reference.collection("splits").get().await()
-                for (splitDoc in splits.documents) {
+                for (splitDoc in splits.safeDocuments) {
                     if (splitDoc.getString("userId") == manualParticipantId) {
                         splitDoc.reference.update("userId", realUserId).await()
                     }
@@ -66,7 +67,7 @@ object ManualParticipantLinker {
 
             // 6. Migrate references in tasks (assignedTo array)
             val tasks = eventRef.collection("tasks").get().await()
-            for (taskDoc in tasks.documents) {
+            for (taskDoc in tasks.safeDocuments) {
                 @Suppress("UNCHECKED_CAST")
                 val assignedTo = (taskDoc.get("assignedTo") as? List<String>) ?: emptyList()
                 if (manualParticipantId in assignedTo) {
@@ -81,7 +82,7 @@ object ManualParticipantLinker {
 
             // 7. Migrate references in rooms (assignments array)
             val rooms = eventRef.collection("rooms").get().await()
-            for (roomDoc in rooms.documents) {
+            for (roomDoc in rooms.safeDocuments) {
                 @Suppress("UNCHECKED_CAST")
                 val assignments = (roomDoc.get("assignments") as? List<String>) ?: emptyList()
                 if (manualParticipantId in assignments) {
@@ -96,7 +97,7 @@ object ManualParticipantLinker {
 
             // 8. Migrate wishlist claimedBy
             val wishlistItems = eventRef.collection("wishlistItems").get().await()
-            for (doc in wishlistItems.documents) {
+            for (doc in wishlistItems.safeDocuments) {
                 if (doc.getString("claimedBy") == manualParticipantId) {
                     doc.reference.update("claimedBy", realUserId).await()
                 }
@@ -104,7 +105,7 @@ object ManualParticipantLinker {
 
             // 9. Migrate packing items userId
             val packingItems = eventRef.collection("packingItems").get().await()
-            for (doc in packingItems.documents) {
+            for (doc in packingItems.safeDocuments) {
                 if (doc.getString("userId") == manualParticipantId) {
                     doc.reference.update("userId", realUserId).await()
                 }

@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Agregar participante</string>
     <string name="participants_delete_manual">Eliminar invitado</string>
     <string name="participants_delete_manual_confirm">¿Eliminar al invitado \"%1$s\"? También se eliminará de gastos y tareas.</string>
+    <string name="participants_delete_participant">Eliminar participante</string>
+    <string name="participants_delete_participant_confirm">¿Eliminar al participante \"%1$s\"? Perderá acceso a este evento y será eliminado de gastos y tareas.</string>
+    <string name="participants_removed_success">Participante eliminado</string>
+    <string name="participants_removed_error">No se pudo eliminar al participante</string>
+    <string name="participants_edit_title">Editar participante</string>
+    <string name="participants_edit_name_label">Nombre</string>
+    <string name="participants_edit_role_label">Rol personalizado (opcional)</string>
+    <string name="participants_edit_saved">Participante actualizado</string>
     <string name="participants_change_rsvp">Cambiar RSVP</string>
     <string name="participants_change_rsvp_title">RSVP para %1$s</string>
     <string name="rooms_assign_participant">Asignar participante</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Votar por invitado</string>
     <string name="voting_vote_for_title">Votar en nombre de</string>
     <string name="voting_select_guest">Selecciona el invitado por el que votar:</string>
+    <string name="voting_vote_for_participant">Votar por participante</string>
+    <string name="voting_select_participant">Selecciona el participante por el que votar:</string>
+    <string name="voting_select_voters">Seleccionar votantes</string>
+    <string name="voting_select_all">Seleccionar todo</string>
     <string name="wishlist_claim_for_guest">Reclamar para invitado</string>
     <string name="wishlist_claim_for_title">Reclamar en nombre de</string>
     <string name="wishlist_select_guest">Selecciona el invitado para el que reclamar:</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">cambió el estado del evento a %1$s</string>
     <string name="activity_joined_event">se unió al evento</string>
     <string name="activity_added_manual_participant">Invitado agregado: %1$s</string>
+    <string name="activity_removed_participant">Participante eliminado: %1$s</string>
     <string name="activity_linked_participant">Invitado %1$s vinculado con cuenta %2$s</string>
     <string name="activity_change_name">nombre</string>
     <string name="activity_change_description">descripción</string>

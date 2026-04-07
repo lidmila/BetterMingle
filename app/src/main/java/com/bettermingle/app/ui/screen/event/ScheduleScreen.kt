@@ -91,6 +91,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +126,7 @@ fun ScheduleScreen(
                 .collection("events").document(eventId)
                 .collection("schedule").get().await()
 
-            val loaded = snapshot.documents.map { doc ->
+            val loaded = snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 ScheduleItem(
                     id = doc.id,

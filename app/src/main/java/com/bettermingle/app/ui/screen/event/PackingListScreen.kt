@@ -77,6 +77,7 @@ import com.bettermingle.app.utils.removeModuleFromEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +111,7 @@ fun PackingListScreen(
                     .collection("events").document(eventId)
                     .collection("packingItems").get().await()
 
-                val loaded = snapshot.documents.map { doc ->
+                val loaded = snapshot.safeDocuments.map { doc ->
                     val data = doc.data ?: emptyMap()
                     PackingItem(
                         id = doc.id,

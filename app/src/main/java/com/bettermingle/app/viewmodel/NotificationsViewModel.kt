@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 data class NotificationsUiState(
     val activities: List<ActivityItem> = emptyList(),
@@ -102,7 +103,7 @@ class NotificationsViewModel(application: Application) : AndroidViewModel(applic
                     .whereEqualTo("userId", currentUserId)
                     .get().await()
 
-                val eventIds = participantDocs.documents.mapNotNull {
+                val eventIds = participantDocs.safeDocuments.mapNotNull {
                     it.reference.parent.parent?.id
                 }.distinct()
 
@@ -126,7 +127,7 @@ class NotificationsViewModel(application: Application) : AndroidViewModel(applic
                             .limit(50)
                             .get().await()
 
-                        for (doc in activityDocs.documents) {
+                        for (doc in activityDocs.safeDocuments) {
                             val data = doc.data ?: continue
                             allRemote.add(
                                 ActivityItem(

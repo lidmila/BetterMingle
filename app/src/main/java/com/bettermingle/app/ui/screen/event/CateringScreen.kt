@@ -69,6 +69,7 @@ import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 private data class ParticipantDietary(
     val displayName: String,
@@ -109,7 +110,7 @@ fun CateringScreen(
             val partDocs = firestore.collection("events").document(eventId)
                 .collection("participants").get().await()
 
-            val userIds = partDocs.documents.mapNotNull { it.getString("userId") }.distinct()
+            val userIds = partDocs.safeDocuments.mapNotNull { it.getString("userId") }.distinct()
                 .filter { !ParticipantUtils.isManualId(it) }
             val result = mutableListOf<ParticipantDietary>()
 
@@ -119,7 +120,7 @@ fun CateringScreen(
                     val userDocs = firestore.collection("users")
                         .whereIn(FieldPath.documentId(), chunk)
                         .get().await()
-                    for (userDoc in userDocs.documents) {
+                    for (userDoc in userDocs.safeDocuments) {
                         val prefs = (userDoc.get("dietaryPreferences") as? List<*>)
                             ?.filterIsInstance<String>() ?: emptyList()
                         if (prefs.isNotEmpty()) {

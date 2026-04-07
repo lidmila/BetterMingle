@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Dodaj uczestnika</string>
     <string name="participants_delete_manual">Usuń gościa</string>
     <string name="participants_delete_manual_confirm">Usunąć gościa \"%1$s\"? Zostanie również usunięty z wydatków i zadań.</string>
+    <string name="participants_delete_participant">Usuń uczestnika</string>
+    <string name="participants_delete_participant_confirm">Usunąć uczestnika \"%1$s\"? Straci dostęp do tego wydarzenia i zostanie usunięty z wydatków i zadań.</string>
+    <string name="participants_removed_success">Uczestnik usunięty</string>
+    <string name="participants_removed_error">Nie udało się usunąć uczestnika</string>
+    <string name="participants_edit_title">Edytuj uczestnika</string>
+    <string name="participants_edit_name_label">Imię</string>
+    <string name="participants_edit_role_label">Rola niestandardowa (opcjonalnie)</string>
+    <string name="participants_edit_saved">Uczestnik zaktualizowany</string>
     <string name="participants_change_rsvp">Zmień RSVP</string>
     <string name="participants_change_rsvp_title">RSVP dla %1$s</string>
     <string name="rooms_assign_participant">Przypisz uczestnika</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Głosuj za gościa</string>
     <string name="voting_vote_for_title">Głosuj w imieniu</string>
     <string name="voting_select_guest">Wybierz gościa, za którego chcesz głosować:</string>
+    <string name="voting_vote_for_participant">Głosuj za uczestnika</string>
+    <string name="voting_select_participant">Wybierz uczestnika, za którego chcesz głosować:</string>
+    <string name="voting_select_voters">Wybierz głosujących</string>
+    <string name="voting_select_all">Zaznacz wszystko</string>
     <string name="wishlist_claim_for_guest">Zarezerwuj dla gościa</string>
     <string name="wishlist_claim_for_title">Zarezerwuj w imieniu</string>
     <string name="wishlist_select_guest">Wybierz gościa, dla którego chcesz zarezerwować:</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">zmienił status wydarzenia na %1$s</string>
     <string name="activity_joined_event">dołączył do wydarzenia</string>
     <string name="activity_added_manual_participant">Dodano gościa: %1$s</string>
+    <string name="activity_removed_participant">Usunięto uczestnika: %1$s</string>
     <string name="activity_linked_participant">Gość %1$s połączony z kontem %2$s</string>
     <string name="activity_change_name">nazwę</string>
     <string name="activity_change_description">opis</string>

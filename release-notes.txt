@@ -1,6 +1,6 @@
 <cs-CZ>
-Oprava problému, kdy se některým uživatelům s předplaceným tarifem nesprávně zobrazoval základní (bezplatný) účet. Nyní se prémiové funkce načítají spolehlivě.
+Oprava padu aplikace na zařízeních s 16KB velikostí stránek — vyřešen problém bránící publikaci na Google Play.
 </cs-CZ>
 <en-US>
-Fixed an issue where some users with a paid subscription were incorrectly shown as having a free account. Premium features now load reliably.
+Fixed crash on devices with 16KB page size — resolved issue blocking Google Play publishing.
 </en-US>

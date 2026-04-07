@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 class RoomRepository {
     private val firestore = FirebaseFirestore.getInstance()
@@ -18,7 +19,7 @@ class RoomRepository {
         val listener = firestore.collection("events").document(eventId)
             .collection("rooms")
             .addSnapshotListener { snapshot, _ ->
-                val rooms = snapshot?.documents?.map { doc ->
+                val rooms = snapshot?.safeDocuments?.map { doc ->
                     documentToRoom(eventId, doc.id, doc.data ?: emptyMap())
                 } ?: emptyList()
                 trySend(rooms)

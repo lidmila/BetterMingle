@@ -93,6 +93,7 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,7 +128,7 @@ fun RoomsScreen(
                 .collection("events").document(eventId)
                 .collection("participants").get().await()
             allParticipants.clear()
-            allParticipants.addAll(snapshot.documents.map { doc ->
+            allParticipants.addAll(snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 Participant(
                     id = doc.id,
@@ -148,7 +149,7 @@ fun RoomsScreen(
             val snapshot = firestore.collection("events").document(eventId)
                 .collection("rooms").get().await()
 
-            val loaded = snapshot.documents.map { doc ->
+            val loaded = snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 @Suppress("UNCHECKED_CAST")
                 val assignments = (data["assignments"] as? List<String>) ?: emptyList()

@@ -90,6 +90,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +126,7 @@ fun WishlistScreen(
                 .collection("events").document(eventId)
                 .collection("participants").get().await()
             manualParticipants.clear()
-            manualParticipants.addAll(snapshot.documents.mapNotNull { doc ->
+            manualParticipants.addAll(snapshot.safeDocuments.mapNotNull { doc ->
                 val data = doc.data ?: return@mapNotNull null
                 val isManual = data["isManual"] as? Boolean ?: false
                 if (!isManual) return@mapNotNull null
@@ -147,7 +148,7 @@ fun WishlistScreen(
                     .collection("events").document(eventId)
                     .collection("wishlistItems").get().await()
 
-                val loaded = snapshot.documents.map { doc ->
+                val loaded = snapshot.safeDocuments.map { doc ->
                     val data = doc.data ?: emptyMap()
                     val statusStr = data["status"] as? String
                     val status = try {

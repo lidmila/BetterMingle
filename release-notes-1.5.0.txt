@@ -1,0 +1,18 @@
+<cs-CZ>
+Co je nového v 1.5.0:
+
+• Organizátor má plnou kontrolu nad všemi účastníky — mazání, úprava rolí, RSVP i u reálných uživatelů
+• Nový dialog pro úpravu účastníka — změna jména (hosté) a vlastní role (všichni)
+• Hlasování jménem libovolného účastníka — nejen hostů, ale i uživatelů, kteří nechtějí aplikaci používat
+• Ikona mazání nyní viditelná přímo v seznamu účastníků
+• Oprava chybného hlášení "Role aktualizována" při odebrání účastníka
+</cs-CZ>
+<en-US>
+What's new in 1.5.0:
+
+• Organizer has full control over all participants — delete, edit roles, RSVP for real users too
+• New edit participant dialog — change name (guests) and custom role (everyone)
+• Proxy voting for any participant — not just guests, but also users who don't want to use the app
+• Delete icon now visible directly in the participant list
+• Fixed incorrect "Role updated" message when removing a participant
+</en-US>

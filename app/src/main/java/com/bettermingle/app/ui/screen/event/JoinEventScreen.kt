@@ -47,6 +47,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,8 +73,8 @@ fun JoinEventScreen(
                 .limit(1)
                 .get().await()
 
-            if (snapshot.documents.isNotEmpty()) {
-                val doc = snapshot.documents[0]
+            if (snapshot.safeDocuments.isNotEmpty()) {
+                val doc = snapshot.safeDocuments[0]
                 eventId = doc.id
                 eventName = doc.getString("name") ?: ""
                 eventDescription = doc.getString("description") ?: ""

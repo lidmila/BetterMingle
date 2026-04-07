@@ -90,6 +90,7 @@ import com.bettermingle.app.utils.ActivityLogger
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -159,7 +160,7 @@ fun EventSettingsScreen(
                 val parts = FirebaseFirestore.getInstance()
                     .collection("events").document(eventId)
                     .collection("participants").get().await()
-                val userParticipant = parts.documents.firstOrNull { it.getString("userId") == currentUserId }
+                val userParticipant = parts.safeDocuments.firstOrNull { it.getString("userId") == currentUserId }
                 val role = userParticipant?.getString("role") ?: ""
                 if (role.equals("CO_ORGANIZER", ignoreCase = true)) {
                     isOrganizer = true

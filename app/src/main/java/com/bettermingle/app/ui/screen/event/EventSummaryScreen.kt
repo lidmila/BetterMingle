@@ -85,6 +85,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.bettermingle.app.utils.safeDocuments
 
 internal data class SummaryStats(
     val eventName: String = "",
@@ -155,7 +156,7 @@ fun EventSummaryScreen(
             var declinedCount = 0
             var maybeCount = 0
             var pendingCount = 0
-            for (doc in parts.documents) {
+            for (doc in parts.safeDocuments) {
                 when ((doc.getString("rsvp") ?: "PENDING").uppercase()) {
                     "ACCEPTED" -> acceptedCount++
                     "DECLINED" -> declinedCount++
@@ -166,11 +167,11 @@ fun EventSummaryScreen(
 
             // Expenses
             val expenses = eventRef.collection("expenses").get().await()
-            val totalExpenses = expenses.documents.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
+            val totalExpenses = expenses.safeDocuments.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
 
             // Find top payer
             val payerTotals = mutableMapOf<String, Double>()
-            for (doc in expenses.documents) {
+            for (doc in expenses.safeDocuments) {
                 val payer = doc.getString("paidBy") ?: continue
                 val amount = (doc.get("amount") as? Number)?.toDouble() ?: 0.0
                 payerTotals[payer] = (payerTotals[payer] ?: 0.0) + amount
@@ -203,7 +204,7 @@ fun EventSummaryScreen(
             val now = System.currentTimeMillis()
             var activePollCount = 0
             var closedPollCount = 0
-            for (doc in polls.documents) {
+            for (doc in polls.safeDocuments) {
                 val isClosed = doc.getBoolean("isClosed") ?: false
                 val deadline = (doc.get("deadline") as? Number)?.toLong()
                 val isExpired = deadline != null && now > deadline
@@ -229,7 +230,7 @@ fun EventSummaryScreen(
             // Most active participant
             val activities = eventRef.collection("activity").get().await()
             val actorCounts = mutableMapOf<String, Int>()
-            for (doc in activities.documents) {
+            for (doc in activities.safeDocuments) {
                 val actor = doc.getString("actorName") ?: continue
                 actorCounts[actor] = (actorCounts[actor] ?: 0) + 1
             }

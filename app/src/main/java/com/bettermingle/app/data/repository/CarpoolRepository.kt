@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 class CarpoolRepository {
     private val firestore = FirebaseFirestore.getInstance()
@@ -20,7 +21,7 @@ class CarpoolRepository {
         val listener = firestore.collection("events").document(eventId)
             .collection("carpoolRides")
             .addSnapshotListener { snapshot, _ ->
-                val rides = snapshot?.documents?.map { doc ->
+                val rides = snapshot?.safeDocuments?.map { doc ->
                     documentToRide(eventId, doc.id, doc.data ?: emptyMap())
                 } ?: emptyList()
                 trySend(rides)
@@ -33,7 +34,7 @@ class CarpoolRepository {
             .collection("carpoolRides").document(rideId)
             .collection("passengers")
             .addSnapshotListener { snapshot, _ ->
-                val passengers = snapshot?.documents?.map { doc ->
+                val passengers = snapshot?.safeDocuments?.map { doc ->
                     val data = doc.data ?: emptyMap()
                     CarpoolPassenger(
                         id = doc.id,

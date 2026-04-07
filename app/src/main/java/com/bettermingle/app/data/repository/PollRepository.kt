@@ -13,6 +13,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 class PollRepository(context: Context) {
     private val db = AppDatabase.getDatabase(context)
@@ -130,7 +131,7 @@ class PollRepository(context: Context) {
             val pollDocs = firestore.collection("events").document(eventId)
                 .collection("polls").get().await()
 
-            for (doc in pollDocs.documents) {
+            for (doc in pollDocs.safeDocuments) {
                 val data = doc.data ?: continue
                 val pollType = try { PollType.valueOf(data["pollType"] as? String ?: "CUSTOM") }
                 catch (_: Exception) { PollType.CUSTOM }
@@ -153,7 +154,7 @@ class PollRepository(context: Context) {
                     .collection("polls").document(doc.id)
                     .collection("options").get().await()
 
-                for (optDoc in optDocs.documents) {
+                for (optDoc in optDocs.safeDocuments) {
                     val optData = optDoc.data ?: continue
                     val option = PollOption(
                         id = optDoc.id,

@@ -106,6 +106,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 data class TaskColor(val name: String, val color: Color, val nameResId: Int)
 
@@ -148,7 +149,7 @@ fun TasksScreen(
                 val snapshot = firestore.collection("events").document(eventId)
                     .collection("tasks").get().await()
 
-                val loaded = snapshot.documents.map { doc ->
+                val loaded = snapshot.safeDocuments.map { doc ->
                     val data = doc.data ?: emptyMap()
                     @Suppress("UNCHECKED_CAST")
                     EventLabel(
@@ -506,7 +507,7 @@ private fun CreateTaskDialog(
             val snapshot = FirebaseFirestore.getInstance()
                 .collection("events").document(eventId)
                 .collection("participants").get().await()
-            participants.addAll(snapshot.documents.map { doc ->
+            participants.addAll(snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 Participant(
                     id = doc.id,

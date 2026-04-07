@@ -142,6 +142,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Collections
+import com.bettermingle.app.utils.safeDocuments
 
 data class ModuleInfo(
     val key: String,
@@ -364,7 +365,7 @@ fun EventDashboardScreen(
             participantsDeferred.await()?.let { parts ->
                 participantCount = parts.size()
                 if (!isOrganizer && currentUserId.isNotEmpty()) {
-                    val userParticipant = parts.documents.firstOrNull { it.getString("userId") == currentUserId }
+                    val userParticipant = parts.safeDocuments.firstOrNull { it.getString("userId") == currentUserId }
                     val role = userParticipant?.getString("role") ?: ""
                     if (role.equals("CO_ORGANIZER", ignoreCase = true)) {
                         isOrganizer = true
@@ -372,10 +373,10 @@ fun EventDashboardScreen(
                 }
             }
             pollsDeferred.await()?.let { polls ->
-                pollCount = polls.documents.count { !(it.getBoolean("isClosed") ?: false) }
+                pollCount = polls.safeDocuments.count { !(it.getBoolean("isClosed") ?: false) }
             }
             expensesDeferred.await()?.let { expenses ->
-                val total = expenses.documents.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
+                val total = expenses.safeDocuments.sumOf { (it.get("amount") as? Number)?.toDouble() ?: 0.0 }
                 expenseTotal = if (total > 0) "${String.format("%,.0f", total)} $currencyCzk" else ""
             }
             ridesDeferred.await()?.let { rideCount = it.size() }
@@ -405,7 +406,7 @@ fun EventDashboardScreen(
                     try {
                         val lastSeen = (lastSeenDoc.get(moduleKey) as? Number)?.toLong() ?: 0L
                         val items = eventRef.collection(collection).get().await()
-                        val newCount = items.documents.count { doc ->
+                        val newCount = items.safeDocuments.count { doc ->
                             val createdAt = (doc.get("createdAt") as? Number)?.toLong() ?: 0L
                             createdAt > lastSeen
                         }

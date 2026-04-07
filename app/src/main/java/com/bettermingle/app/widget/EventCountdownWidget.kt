@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
+import com.bettermingle.app.utils.safeDocuments
 
 class EventCountdownWidget : GlanceAppWidget() {
 
@@ -62,7 +63,7 @@ class EventCountdownWidget : GlanceAppWidget() {
             var closestEvent: WidgetData? = null
             var closestDiff = Long.MAX_VALUE
 
-            for (participantDoc in participantDocs.documents) {
+            for (participantDoc in participantDocs.safeDocuments) {
                 val eventRef = participantDoc.reference.parent.parent ?: continue
                 try {
                     val eventDoc = eventRef.get().await()

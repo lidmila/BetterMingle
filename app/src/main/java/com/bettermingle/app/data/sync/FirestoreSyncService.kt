@@ -12,6 +12,7 @@ import com.bettermingle.app.data.model.RsvpStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 /**
  * Handles bidirectional sync between local Room database and Firestore.
@@ -40,9 +41,9 @@ class FirestoreSyncService(context: Context) {
                 .whereEqualTo("createdBy", userId)
                 .get().await()
 
-            val remoteEventIds = ownedDocs.documents.mapNotNull { it.id }.toSet()
+            val remoteEventIds = ownedDocs.safeDocuments.mapNotNull { it.id }.toSet()
 
-            for (doc in ownedDocs.documents) {
+            for (doc in ownedDocs.safeDocuments) {
                 val event = documentToEvent(doc.id, doc.data ?: continue)
                 eventDao.insertEvent(event)
                 pullParticipants(doc.id)
@@ -72,7 +73,7 @@ class FirestoreSyncService(context: Context) {
             val docs = firestore.collection("events").document(eventId)
                 .collection("participants").get().await()
 
-            for (doc in docs.documents) {
+            for (doc in docs.safeDocuments) {
                 val data = doc.data ?: continue
                 val participant = Participant(
                     id = doc.id,
@@ -126,7 +127,7 @@ class FirestoreSyncService(context: Context) {
             for (sub in subcollections) {
                 val docs = firestore.collection("events").document(eventId)
                     .collection(sub).get().await()
-                for (doc in docs.documents) {
+                for (doc in docs.safeDocuments) {
                     doc.reference.delete().await()
                 }
             }

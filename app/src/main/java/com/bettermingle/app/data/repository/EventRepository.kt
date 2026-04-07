@@ -18,6 +18,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 class EventRepository(context: Context) {
     private val db = AppDatabase.getDatabase(context)
@@ -140,7 +141,7 @@ class EventRepository(context: Context) {
                 subcollections.map { sub ->
                     async {
                         try {
-                            eventRef.collection(sub).get().await().documents
+                            eventRef.collection(sub).get().await().safeDocuments
                         } catch (e: Exception) {
                             Log.w("EventRepository", "Failed to fetch subcollection $sub for $eventId", e)
                             emptyList<com.google.firebase.firestore.DocumentSnapshot>()
@@ -239,7 +240,7 @@ class EventRepository(context: Context) {
                 .await()
 
             Log.d("EventRepository", "syncFromCloud: found ${ownedEvents.size()} owned events")
-            for (doc in ownedEvents.documents) {
+            for (doc in ownedEvents.safeDocuments) {
                 val event = documentToEvent(doc.id, doc.data ?: continue)
                 eventDao.insertEvent(event)
                 syncedEventIds.add(doc.id)
@@ -256,7 +257,7 @@ class EventRepository(context: Context) {
                 .get()
                 .await()
 
-            for (participantDoc in participantDocs.documents) {
+            for (participantDoc in participantDocs.safeDocuments) {
                 // Path: events/{eventId}/participants/{participantId}
                 val eventRef = participantDoc.reference.parent.parent ?: continue
                 val eventId = eventRef.id
@@ -302,7 +303,7 @@ class EventRepository(context: Context) {
                 .get()
                 .await()
 
-            for (doc in participants.documents) {
+            for (doc in participants.safeDocuments) {
                 val data = doc.data ?: continue
                 val role = try {
                     ParticipantRole.valueOf((data["role"] as? String ?: "PARTICIPANT").uppercase())

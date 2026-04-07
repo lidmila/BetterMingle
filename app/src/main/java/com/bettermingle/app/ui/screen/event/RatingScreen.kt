@@ -68,6 +68,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.bettermingle.app.utils.safeDocuments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +94,7 @@ fun RatingScreen(
             val snapshot = firestore.collection("events").document(eventId)
                 .collection("ratings").get().await()
 
-            val loaded = snapshot.documents.map { doc ->
+            val loaded = snapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 EventRating(
                     id = doc.id,

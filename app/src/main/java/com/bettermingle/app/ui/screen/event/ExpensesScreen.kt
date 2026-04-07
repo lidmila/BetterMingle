@@ -127,6 +127,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import com.bettermingle.app.utils.safeDocuments
 
 // --- Helper functions ---
 
@@ -213,7 +214,7 @@ fun ExpensesScreen(
                 .collection("expenses").get().await()
 
             // Load user names and avatars for paidBy
-            val userIds = expensesSnapshot.documents.mapNotNull { it.getString("paidBy") }.distinct()
+            val userIds = expensesSnapshot.safeDocuments.mapNotNull { it.getString("paidBy") }.distinct()
             for (uid in userIds) {
                 if (ParticipantUtils.isManualId(uid)) {
                     try {
@@ -231,7 +232,7 @@ fun ExpensesScreen(
                 }
             }
 
-            val loadedExpenses = expensesSnapshot.documents.map { doc ->
+            val loadedExpenses = expensesSnapshot.safeDocuments.map { doc ->
                 val data = doc.data ?: emptyMap()
                 Expense(
                     id = doc.id,
@@ -260,7 +261,7 @@ fun ExpensesScreen(
                     .collection("expenses").document(expense.id)
                     .collection("splits").get().await()
 
-                for (splitDoc in splitsSnapshot.documents) {
+                for (splitDoc in splitsSnapshot.safeDocuments) {
                     val splitData = splitDoc.data ?: continue
                     val userId = splitData["userId"] as? String ?: continue
                     val amount = (splitData["amount"] as? Number)?.toDouble() ?: 0.0
@@ -301,7 +302,7 @@ fun ExpensesScreen(
                 val ref = firestore.collection("events").document(eventId)
                     .collection("expenses").document(expense.id)
                 val splits = ref.collection("splits").get().await()
-                for (doc in splits.documents) { doc.reference.delete().await() }
+                for (doc in splits.safeDocuments) { doc.reference.delete().await() }
                 ref.delete().await()
                 ActivityLogger.log(eventId, "expense", context.getString(R.string.activity_deleted_expense, expense.description, expense.amount.toString()))
                 loadExpenses()
@@ -314,11 +315,11 @@ fun ExpensesScreen(
             try {
                 val expensesSnapshot = firestore.collection("events").document(eventId)
                     .collection("expenses").get().await()
-                for (expenseDoc in expensesSnapshot.documents) {
+                for (expenseDoc in expensesSnapshot.safeDocuments) {
                     val paidBy = expenseDoc.getString("paidBy") ?: continue
                     if (paidBy != debt.toUserId) continue
                     val splitsSnapshot = expenseDoc.reference.collection("splits").get().await()
-                    for (splitDoc in splitsSnapshot.documents) {
+                    for (splitDoc in splitsSnapshot.safeDocuments) {
                         val userId = splitDoc.getString("userId") ?: continue
                         if (userId == debt.fromUserId) {
                             splitDoc.reference.update("isSettled", true).await()
@@ -340,7 +341,7 @@ fun ExpensesScreen(
             val participantsSnapshot = firestore.collection("events").document(eventId)
                 .collection("participants").get().await()
             val loaded = mutableListOf<Pair<String, String>>()
-            for (doc in participantsSnapshot.documents) {
+            for (doc in participantsSnapshot.safeDocuments) {
                 val uid = doc.getString("userId") ?: continue
                 val isManual = doc.getBoolean("isManual") ?: ParticipantUtils.isManualId(uid)
                 val name = if (isManual) {
@@ -1098,7 +1099,7 @@ private fun AddExpenseDialog(
                             // Create equal splits among all participants
                             val participantsSnapshot = firestore.collection("events").document(eventId)
                                 .collection("participants").get().await()
-                            val participantIds = participantsSnapshot.documents.mapNotNull {
+                            val participantIds = participantsSnapshot.safeDocuments.mapNotNull {
                                 it.getString("userId")
                             }
                             if (participantIds.isNotEmpty()) {

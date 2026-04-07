@@ -13,6 +13,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 class ExpenseRepository(context: Context) {
     private val db = AppDatabase.getDatabase(context)
@@ -88,7 +89,7 @@ class ExpenseRepository(context: Context) {
             val expenses = mutableMapOf<String, Double>() // userId -> total paid
             val shares = mutableMapOf<String, Double>()   // userId -> total owed
 
-            for (doc in expenseDocs.documents) {
+            for (doc in expenseDocs.safeDocuments) {
                 val data = doc.data ?: continue
                 val paidBy = data["paidBy"] as? String ?: continue
                 val amount = (data["amount"] as? Number)?.toDouble() ?: continue
@@ -100,7 +101,7 @@ class ExpenseRepository(context: Context) {
                     .collection("expenses").document(doc.id)
                     .collection("splits").get().await()
 
-                for (splitDoc in splitDocs.documents) {
+                for (splitDoc in splitDocs.safeDocuments) {
                     val splitData = splitDoc.data ?: continue
                     val splitUserId = splitData["userId"] as? String ?: continue
                     val splitAmount = (splitData["amount"] as? Number)?.toDouble() ?: continue
@@ -149,7 +150,7 @@ class ExpenseRepository(context: Context) {
             val docs = firestore.collection("events").document(eventId)
                 .collection("expenses").get().await()
 
-            for (doc in docs.documents) {
+            for (doc in docs.safeDocuments) {
                 val data = doc.data ?: continue
                 val expense = Expense(
                     id = doc.id,

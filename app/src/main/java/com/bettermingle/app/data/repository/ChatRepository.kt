@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 data class ChatMessageUi(
     val message: Message,
@@ -31,7 +32,7 @@ class ChatRepository(context: Context) {
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(100)
             .addSnapshotListener { snapshot, _ ->
-                val messages = snapshot?.documents?.map { doc ->
+                val messages = snapshot?.safeDocuments?.map { doc ->
                     val data = doc.data ?: emptyMap()
                     val message = Message(
                         id = doc.id,

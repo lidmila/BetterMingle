@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Ajouter un participant</string>
     <string name="participants_delete_manual">Supprimer l\'invité</string>
     <string name="participants_delete_manual_confirm">Supprimer le participant invité \"%1$s\" ? Il sera également supprimé des dépenses et des tâches.</string>
+    <string name="participants_delete_participant">Supprimer le participant</string>
+    <string name="participants_delete_participant_confirm">Supprimer le participant \"%1$s\" ? Il perdra l\'accès à cet événement et sera supprimé des dépenses et des tâches.</string>
+    <string name="participants_removed_success">Participant supprimé</string>
+    <string name="participants_removed_error">Impossible de supprimer le participant</string>
+    <string name="participants_edit_title">Modifier le participant</string>
+    <string name="participants_edit_name_label">Nom</string>
+    <string name="participants_edit_role_label">Rôle personnalisé (facultatif)</string>
+    <string name="participants_edit_saved">Participant mis à jour</string>
     <string name="participants_change_rsvp">Changer le RSVP</string>
     <string name="participants_change_rsvp_title">RSVP pour %1$s</string>
     <string name="rooms_assign_participant">Assigner un participant</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Voter pour un invité</string>
     <string name="voting_vote_for_title">Voter au nom de</string>
     <string name="voting_select_guest">Sélectionnez l\'invité pour lequel voter :</string>
+    <string name="voting_vote_for_participant">Voter pour un participant</string>
+    <string name="voting_select_participant">Sélectionnez le participant pour lequel voter :</string>
+    <string name="voting_select_voters">Sélectionner les votants</string>
+    <string name="voting_select_all">Tout sélectionner</string>
     <string name="wishlist_claim_for_guest">Réserver pour un invité</string>
     <string name="wishlist_claim_for_title">Réserver au nom de</string>
     <string name="wishlist_select_guest">Sélectionnez l\'invité pour lequel réserver :</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">a changé le statut de l\'événement en %1$s</string>
     <string name="activity_joined_event">a rejoint l\'événement</string>
     <string name="activity_added_manual_participant">Invité ajouté : %1$s</string>
+    <string name="activity_removed_participant">Participant supprimé : %1$s</string>
     <string name="activity_linked_participant">Invité %1$s lié au compte %2$s</string>
     <string name="activity_change_name">nom</string>
     <string name="activity_change_description">description</string>

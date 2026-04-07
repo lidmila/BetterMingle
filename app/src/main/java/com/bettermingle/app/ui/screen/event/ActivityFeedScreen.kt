@@ -62,6 +62,7 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 import java.util.Locale
+import com.bettermingle.app.utils.safeDocuments
 
 private data class ActivityItem(
     val id: String,
@@ -108,7 +109,7 @@ fun ActivityFeedScreen(
                 .limit(100)
                 .get().await()
 
-            val loaded = snapshot.documents.mapNotNull { doc ->
+            val loaded = snapshot.safeDocuments.mapNotNull { doc ->
                 val data = doc.data ?: return@mapNotNull null
                 ActivityItem(
                     id = doc.id,

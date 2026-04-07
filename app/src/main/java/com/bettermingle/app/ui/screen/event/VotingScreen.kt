@@ -56,6 +56,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Switch
@@ -104,19 +106,15 @@ import com.bettermingle.app.data.preferences.PremiumTier
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.bettermingle.app.data.preferences.TierLimits
 import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material3.ListItem
 import com.bettermingle.app.data.model.Participant
 import com.bettermingle.app.data.model.ParticipantRole
-import com.bettermingle.app.data.model.RsvpStatus
-import com.bettermingle.app.ui.component.UserAvatar
 import com.bettermingle.app.utils.ActivityLogger
-import com.bettermingle.app.utils.ParticipantUtils
 import com.bettermingle.app.utils.removeModuleFromEvent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.bettermingle.app.utils.safeDocuments
 
 data class PollWithOptions(
     val poll: Poll,
@@ -148,10 +146,8 @@ fun VotingScreen(
     var showClosePollDialog by remember { mutableStateOf<PollWithOptions?>(null) }
     var showColorPicker by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val manualParticipants = remember { mutableStateListOf<Participant>() }
+    val allParticipants = remember { mutableStateListOf<Participant>() }
     val participantNames = remember { mutableStateMapOf<String, String>() }
-    var proxyVotingUser by remember { mutableStateOf<Participant?>(null) }
-    var showProxySelectDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         try {
@@ -159,27 +155,29 @@ fun VotingScreen(
                 .collection("events").document(eventId).get().await()
             isOrganizer = eventDoc.getString("createdBy") == currentUserId
         } catch (_: Exception) { }
-        // Load participants for proxy voting and voter name display
+        // Load participants for voter display and organizer voter-select dialog
         try {
             val snapshot = FirebaseFirestore.getInstance()
                 .collection("events").document(eventId)
                 .collection("participants").get().await()
-            manualParticipants.clear()
-            for (doc in snapshot.documents) {
+            allParticipants.clear()
+            for (doc in snapshot.safeDocuments) {
                 val data = doc.data ?: continue
                 val userId = data["userId"] as? String ?: continue
                 val displayName = data["displayName"] as? String ?: doc.id.take(8)
                 val isManual = data["isManual"] as? Boolean ?: false
+                val role = try {
+                    ParticipantRole.valueOf((data["role"] as? String ?: "PARTICIPANT").uppercase())
+                } catch (_: Exception) { ParticipantRole.PARTICIPANT }
                 participantNames[userId] = displayName
-                if (isManual) {
-                    manualParticipants.add(Participant(
-                        id = doc.id,
-                        eventId = eventId,
-                        userId = userId,
-                        displayName = displayName,
-                        isManual = true
-                    ))
-                }
+                allParticipants.add(Participant(
+                    id = doc.id,
+                    eventId = eventId,
+                    userId = userId,
+                    displayName = displayName,
+                    isManual = isManual,
+                    role = role
+                ))
             }
         } catch (_: Exception) { }
     }
@@ -192,7 +190,7 @@ fun VotingScreen(
                 .collection("polls").get().await()
 
             val loaded = mutableListOf<PollWithOptions>()
-            for (pollDoc in pollsSnapshot.documents) {
+            for (pollDoc in pollsSnapshot.safeDocuments) {
                 val data = pollDoc.data ?: continue
                 val pollType = try {
                     PollType.valueOf((data["pollType"] as? String ?: "CUSTOM").uppercase())
@@ -215,7 +213,7 @@ fun VotingScreen(
                     .collection("polls").document(pollDoc.id)
                     .collection("options").get().await()
 
-                val options = optionsSnapshot.documents.map { optDoc ->
+                val options = optionsSnapshot.safeDocuments.map { optDoc ->
                     val optData = optDoc.data ?: emptyMap()
                     PollOption(
                         id = optDoc.id,
@@ -231,7 +229,6 @@ fun VotingScreen(
                 val userVotes = mutableSetOf<String>()
                 val voterIds = mutableSetOf<String>()
                 val optionVoterIds = mutableMapOf<String, MutableSet<String>>()
-                val activeUserId = proxyVotingUser?.userId ?: currentUserId
                 for (option in options) {
                     val votesSnapshot = firestore.collection("events").document(eventId)
                         .collection("polls").document(pollDoc.id)
@@ -239,11 +236,11 @@ fun VotingScreen(
                         .collection("votes").get().await()
                     voteCounts[option.id] = votesSnapshot.size()
                     val optVoters = mutableSetOf<String>()
-                    for (voteDoc in votesSnapshot.documents) {
+                    for (voteDoc in votesSnapshot.safeDocuments) {
                         val voterId = voteDoc.data?.get("userId") as? String ?: continue
                         voterIds.add(voterId)
                         optVoters.add(voterId)
-                        if (voterId == activeUserId) {
+                        if (voterId == currentUserId) {
                             userVotes.add(option.id)
                         }
                     }
@@ -449,88 +446,18 @@ fun VotingScreen(
                 )
             }
             else -> {
-            // Proxy voting select dialog
-            if (showProxySelectDialog) {
-                AlertDialog(
-                    onDismissRequest = { showProxySelectDialog = false },
-                    title = { Text(stringResource(R.string.voting_vote_for_title)) },
-                    text = {
-                        Column {
-                            Text(stringResource(R.string.voting_select_guest), style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.height(Spacing.sm))
-                            manualParticipants.forEach { guest ->
-                                ListItem(
-                                    headlineContent = { Text(guest.displayName) },
-                                    modifier = Modifier.clickable {
-                                        proxyVotingUser = guest
-                                        showProxySelectDialog = false
-                                    }
-                                )
-                            }
-                        }
-                    },
-                    confirmButton = {},
-                    dismissButton = {
-                        TextButton(onClick = { showProxySelectDialog = false }) {
-                            Text(stringResource(R.string.common_cancel))
-                        }
-                    }
-                )
-            }
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.screenPadding),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
-                // Proxy voting banner + controls
-                if (isOrganizer && manualParticipants.isNotEmpty()) {
-                    item(key = "proxy_controls") {
-                        BetterMingleCard {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                if (proxyVotingUser != null) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.voting_vote_for_title),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            text = proxyVotingUser!!.displayName,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = AccentOrange
-                                        )
-                                    }
-                                    TextButton(onClick = { proxyVotingUser = null }) {
-                                        Text(stringResource(R.string.common_cancel))
-                                    }
-                                } else {
-                                    Text(
-                                        text = stringResource(R.string.voting_vote_for_guest),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                if (proxyVotingUser == null) {
-                                    IconButton(onClick = { showProxySelectDialog = true }) {
-                                        Icon(Icons.Default.PersonAdd, contentDescription = null, tint = AccentOrange)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 items(pollsWithOptions, key = { it.poll.id }) { pollData ->
                     PollCard(
                         pollData = pollData,
                         eventId = eventId,
-                        currentUserId = proxyVotingUser?.userId ?: currentUserId,
+                        currentUserId = currentUserId,
+                        isOrganizer = isOrganizer,
+                        allParticipants = allParticipants,
                         participantNames = participantNames,
                         onVoted = { loadPolls() },
                         onEdit = { editingPoll = pollData },
@@ -552,6 +479,8 @@ private fun PollCard(
     pollData: PollWithOptions,
     eventId: String,
     currentUserId: String,
+    isOrganizer: Boolean = false,
+    allParticipants: List<Participant> = emptyList(),
     participantNames: Map<String, String> = emptyMap(),
     onVoted: () -> Unit,
     onEdit: () -> Unit,
@@ -566,6 +495,7 @@ private fun PollCard(
     var isExpanded by remember { mutableStateOf(false) }
     val totalVotes = pollData.voteCounts.values.sum()
     val hasVoted = pollData.userVotes.isNotEmpty()
+    var voterSelectOption by remember { mutableStateOf<PollOption?>(null) }
 
     BetterMingleCard(onClick = { isExpanded = !isExpanded }) {
         Column {
@@ -722,55 +652,54 @@ private fun PollCard(
                     allowMultiple = pollData.poll.allowMultiple,
                     voterNames = optVoterNames,
                     onVote = {
-                        if (!isEffectivelyClosed && !isSelected) {
+                        if (!isEffectivelyClosed) {
                             hapticView.performHapticClick()
-                            // For single-select: check if user already voted
-                            if (!pollData.poll.allowMultiple && hasVoted) {
-                                // Remove existing vote first, then add new one
-                                scope.launch {
-                                    try {
-                                        val firestore = FirebaseFirestore.getInstance()
-                                        val pollRef = firestore.collection("events").document(eventId)
-                                            .collection("polls").document(pollData.poll.id)
-
-                                        // Remove all existing votes by this user
-                                        for (existingOptionId in pollData.userVotes) {
-                                            val existingVotes = pollRef.collection("options")
-                                                .document(existingOptionId)
-                                                .collection("votes")
-                                                .get().await()
-                                            for (voteDoc in existingVotes.documents) {
-                                                if ((voteDoc.data?.get("userId") as? String) == currentUserId) {
-                                                    voteDoc.reference.delete().await()
+                            if (isOrganizer && allParticipants.isNotEmpty()) {
+                                // Organizer: open voter-select dialog
+                                voterSelectOption = option
+                            } else if (!isSelected) {
+                                // Regular participant: direct vote
+                                if (!pollData.poll.allowMultiple && hasVoted) {
+                                    scope.launch {
+                                        try {
+                                            val firestore = FirebaseFirestore.getInstance()
+                                            val pollRef = firestore.collection("events").document(eventId)
+                                                .collection("polls").document(pollData.poll.id)
+                                            for (existingOptionId in pollData.userVotes) {
+                                                val existingVotes = pollRef.collection("options")
+                                                    .document(existingOptionId)
+                                                    .collection("votes")
+                                                    .get().await()
+                                                for (voteDoc in existingVotes.safeDocuments) {
+                                                    if ((voteDoc.data?.get("userId") as? String) == currentUserId) {
+                                                        voteDoc.reference.delete().await()
+                                                    }
                                                 }
                                             }
-                                        }
-
-                                        // Add new vote
-                                        val voteId = UUID.randomUUID().toString()
-                                        pollRef.collection("options").document(option.id)
-                                            .collection("votes").document(voteId)
-                                            .set(mapOf("userId" to currentUserId, "value" to 1))
-                                            .await()
-                                        ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
-                                        onVoted()
-                                    } catch (_: Exception) { }
-                                }
-                            } else {
-                                // Multi-select or first vote
-                                scope.launch {
-                                    try {
-                                        val voteId = UUID.randomUUID().toString()
-                                        FirebaseFirestore.getInstance()
-                                            .collection("events").document(eventId)
-                                            .collection("polls").document(pollData.poll.id)
-                                            .collection("options").document(option.id)
-                                            .collection("votes").document(voteId)
-                                            .set(mapOf("userId" to currentUserId, "value" to 1))
-                                            .await()
-                                        ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
-                                        onVoted()
-                                    } catch (_: Exception) { }
+                                            val voteId = UUID.randomUUID().toString()
+                                            pollRef.collection("options").document(option.id)
+                                                .collection("votes").document(voteId)
+                                                .set(mapOf("userId" to currentUserId, "value" to 1))
+                                                .await()
+                                            ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
+                                            onVoted()
+                                        } catch (_: Exception) { }
+                                    }
+                                } else {
+                                    scope.launch {
+                                        try {
+                                            val voteId = UUID.randomUUID().toString()
+                                            FirebaseFirestore.getInstance()
+                                                .collection("events").document(eventId)
+                                                .collection("polls").document(pollData.poll.id)
+                                                .collection("options").document(option.id)
+                                                .collection("votes").document(voteId)
+                                                .set(mapOf("userId" to currentUserId, "value" to 1))
+                                                .await()
+                                            ActivityLogger.log(eventId, "vote", context.getString(R.string.activity_voted_for, option.label, pollData.poll.title))
+                                            onVoted()
+                                        } catch (_: Exception) { }
+                                    }
                                 }
                             }
                         }
@@ -783,6 +712,182 @@ private fun PollCard(
             } // AnimatedVisibility
         }
     }
+
+    // Voter-select dialog for organizer
+    voterSelectOption?.let { option ->
+        VoterSelectDialog(
+            option = option,
+            poll = pollData.poll,
+            eventId = eventId,
+            allParticipants = allParticipants,
+            currentVoterIds = pollData.optionVoterIds[option.id] ?: emptySet(),
+            allOptionVoterIds = pollData.optionVoterIds,
+            onDismiss = { voterSelectOption = null },
+            onSaved = {
+                voterSelectOption = null
+                onVoted()
+            },
+            scope = scope
+        )
+    }
+}
+
+@Composable
+private fun VoterSelectDialog(
+    option: PollOption,
+    poll: Poll,
+    eventId: String,
+    allParticipants: List<Participant>,
+    currentVoterIds: Set<String>,
+    allOptionVoterIds: Map<String, Set<String>>,
+    onDismiss: () -> Unit,
+    onSaved: () -> Unit,
+    scope: kotlinx.coroutines.CoroutineScope
+) {
+    val selectedUserIds = remember { mutableStateListOf<String>().also { it.addAll(currentVoterIds) } }
+    var isSaving by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { if (!isSaving) onDismiss() },
+        title = { Text(option.label) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = stringResource(R.string.voting_select_voters),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(Spacing.sm))
+
+                // Select all toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (selectedUserIds.size == allParticipants.size) {
+                                selectedUserIds.clear()
+                            } else {
+                                selectedUserIds.clear()
+                                selectedUserIds.addAll(allParticipants.map { it.userId })
+                            }
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = selectedUserIds.size == allParticipants.size,
+                        onCheckedChange = {
+                            if (it) {
+                                selectedUserIds.clear()
+                                selectedUserIds.addAll(allParticipants.map { p -> p.userId })
+                            } else {
+                                selectedUserIds.clear()
+                            }
+                        },
+                        colors = CheckboxDefaults.colors(checkedColor = PrimaryBlue)
+                    )
+                    Text(
+                        text = stringResource(R.string.voting_select_all),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                allParticipants.forEach { participant ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (participant.userId in selectedUserIds) {
+                                    selectedUserIds.remove(participant.userId)
+                                } else {
+                                    selectedUserIds.add(participant.userId)
+                                }
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = participant.userId in selectedUserIds,
+                            onCheckedChange = {
+                                if (it) selectedUserIds.add(participant.userId)
+                                else selectedUserIds.remove(participant.userId)
+                            },
+                            colors = CheckboxDefaults.colors(checkedColor = PrimaryBlue)
+                        )
+                        Text(
+                            text = participant.displayName,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    isSaving = true
+                    scope.launch {
+                        try {
+                            val firestore = FirebaseFirestore.getInstance()
+                            val pollRef = firestore.collection("events").document(eventId)
+                                .collection("polls").document(poll.id)
+                            val optionRef = pollRef.collection("options").document(option.id)
+
+                            val toAdd = selectedUserIds.filter { it !in currentVoterIds }
+                            val toRemove = currentVoterIds.filter { it !in selectedUserIds }
+
+                            // For single-select polls: remove votes on OTHER options for newly added users
+                            if (!poll.allowMultiple) {
+                                for (userId in toAdd) {
+                                    for ((otherOptionId, voterIds) in allOptionVoterIds) {
+                                        if (otherOptionId != option.id && userId in voterIds) {
+                                            val votes = pollRef.collection("options")
+                                                .document(otherOptionId)
+                                                .collection("votes").get().await()
+                                            for (voteDoc in votes.safeDocuments) {
+                                                if ((voteDoc.data?.get("userId") as? String) == userId) {
+                                                    voteDoc.reference.delete().await()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Remove votes for unchecked users
+                            for (userId in toRemove) {
+                                val votes = optionRef.collection("votes").get().await()
+                                for (voteDoc in votes.safeDocuments) {
+                                    if ((voteDoc.data?.get("userId") as? String) == userId) {
+                                        voteDoc.reference.delete().await()
+                                    }
+                                }
+                            }
+
+                            // Add votes for newly checked users
+                            for (userId in toAdd) {
+                                val voteId = UUID.randomUUID().toString()
+                                optionRef.collection("votes").document(voteId)
+                                    .set(mapOf("userId" to userId, "value" to 1))
+                                    .await()
+                            }
+
+                            onSaved()
+                        } catch (_: Exception) {
+                            isSaving = false
+                        }
+                    }
+                },
+                enabled = !isSaving
+            ) {
+                Text(stringResource(R.string.common_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSaving) {
+                Text(stringResource(R.string.common_cancel))
+            }
+        }
+    )
 }
 
 @Composable

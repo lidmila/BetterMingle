@@ -504,6 +504,14 @@
     <string name="participants_add_options_title">Přidat účastníka</string>
     <string name="participants_delete_manual">Odebrat hosta</string>
     <string name="participants_delete_manual_confirm">Odebrat hosta \"%1$s\"? Bude odebrán i z výdajů a úkolů.</string>
+    <string name="participants_delete_participant">Odebrat účastníka</string>
+    <string name="participants_delete_participant_confirm">Odebrat účastníka \"%1$s\"? Ztratí přístup k této akci a bude odebrán z výdajů a úkolů.</string>
+    <string name="participants_removed_success">Účastník odebrán</string>
+    <string name="participants_removed_error">Nepodařilo se odebrat účastníka</string>
+    <string name="participants_edit_title">Upravit účastníka</string>
+    <string name="participants_edit_name_label">Jméno</string>
+    <string name="participants_edit_role_label">Role (volitelné)</string>
+    <string name="participants_edit_saved">Účastník upraven</string>
     <string name="participants_change_rsvp">Změnit RSVP</string>
     <string name="participants_change_rsvp_title">RSVP pro %1$s</string>
     <string name="rooms_assign_participant">Přiřadit účastníka</string>
@@ -513,6 +521,10 @@
     <string name="voting_vote_for_guest">Hlasovat za hosta</string>
     <string name="voting_vote_for_title">Hlasovat jménem</string>
     <string name="voting_select_guest">Vyberte hosta, za kterého chcete hlasovat:</string>
+    <string name="voting_vote_for_participant">Hlasovat za účastníka</string>
+    <string name="voting_select_participant">Vyberte účastníka, za kterého chcete hlasovat:</string>
+    <string name="voting_select_voters">Vyberte hlasující</string>
+    <string name="voting_select_all">Vybrat vše</string>
     <string name="wishlist_claim_for_guest">Rezervovat za hosta</string>
     <string name="wishlist_claim_for_title">Rezervovat jménem</string>
     <string name="wishlist_select_guest">Vyberte hosta, pro kterého chcete rezervovat:</string>
@@ -916,6 +928,7 @@
     <string name="activity_changed_status">změnil/a stav akce na %1$s</string>
     <string name="activity_joined_event">se připojil/a k akci</string>
     <string name="activity_added_manual_participant">Přidán host: %1$s</string>
+    <string name="activity_removed_participant">Odebrán účastník: %1$s</string>
     <string name="activity_linked_participant">Host %1$s propojen s účtem %2$s</string>
     <string name="activity_change_name">název</string>
     <string name="activity_change_description">popis</string>

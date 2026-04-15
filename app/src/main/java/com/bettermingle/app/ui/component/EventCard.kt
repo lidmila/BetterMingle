@@ -252,7 +252,9 @@ fun EventCard(
         }
 
         // === Zone D: Participants + Module icons ===
-        if (participantCount > 0 || event.enabledModules.isNotEmpty()) {
+        @Suppress("USELESS_ELVIS")
+        val safeModules = event.enabledModules ?: emptyList()
+        if (participantCount > 0 || safeModules.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
             Spacer(modifier = Modifier.height(12.dp))
@@ -300,13 +302,13 @@ fun EventCard(
                 }
 
                 // Module icons
-                if (event.enabledModules.isNotEmpty()) {
+                if (safeModules.isNotEmpty()) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val displayModules = event.enabledModules.take(5)
-                        val remaining = event.enabledModules.size - 5
+                        val displayModules = safeModules.take(5)
+                        val remaining = safeModules.size - 5
 
                         displayModules.forEach { module ->
                             Icon(

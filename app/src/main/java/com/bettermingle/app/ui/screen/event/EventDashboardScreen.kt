@@ -315,8 +315,10 @@ fun EventDashboardScreen(
                     coverImageUrl = localEvent.coverImageUrl
                     eventStatus = localEvent.status.name
                     inviteCode = localEvent.inviteCode
-                    enabledModules = localEvent.enabledModules.ifEmpty { EventModule.entries.toList() }
-                    moduleColors = localEvent.moduleColors
+                    @Suppress("USELESS_ELVIS")
+                    enabledModules = (localEvent.enabledModules ?: emptyList()).ifEmpty { EventModule.entries.toList() }
+                    @Suppress("USELESS_ELVIS")
+                    moduleColors = localEvent.moduleColors ?: emptyMap()
                     isCreator = localEvent.createdBy == currentUserId
                     isOrganizer = isCreator
                     isLoading = false

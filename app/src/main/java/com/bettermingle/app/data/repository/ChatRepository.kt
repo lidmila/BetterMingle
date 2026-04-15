@@ -45,7 +45,9 @@ class ChatRepository(context: Context) {
                     )
 
                     @Suppress("UNCHECKED_CAST")
-                    val rawReactions = data["reactions"] as? Map<String, List<String>> ?: emptyMap()
+                    val rawReactions = (data["reactions"] as? Map<String, Any?>)
+                        ?.mapValues { (_, v) -> (v as? List<*>)?.filterIsInstance<String>() ?: emptyList() }
+                        ?: emptyMap()
 
                     ChatMessageUi(message = message, reactions = rawReactions)
                 } ?: emptyList()

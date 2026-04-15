@@ -1,6 +1,14 @@
 <cs-CZ>
-Oprava padu aplikace na zařízeních s 16KB velikostí stránek — vyřešen problém bránící publikaci na Google Play.
+Opravy stability pro zařízení s 16KB velikostí stránek:
+- Opravena chyba NullPointerException při iteraci seznamů na novějších zařízeních s Androidem 15+
+- Vylepšena odolnost Room databázových konvertorů vůči neočekávaným null hodnotám
+- Opravena deserializace reakcí v chatu, která mohla způsobit pád aplikace
+- Vylepšena null bezpečnost při synchronizaci dat s Firestore
 </cs-CZ>
 <en-US>
-Fixed crash on devices with 16KB page size — resolved issue blocking Google Play publishing.
+Stability fixes for 16KB page size devices:
+- Fixed NullPointerException when iterating lists on newer Android 15+ devices
+- Improved Room database converter resilience against unexpected null values
+- Fixed chat reaction deserialization that could cause a crash
+- Improved null safety during Firestore data synchronization
 </en-US>

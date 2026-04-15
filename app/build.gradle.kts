@@ -31,8 +31,8 @@ android {
         applicationId = "com.bettermingle.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.5.1"
+        versionCode = 12
+        versionName = "1.5.2"
 
         androidResources.localeFilters += listOf("en", "cs", "de", "pl", "fr", "es")
 

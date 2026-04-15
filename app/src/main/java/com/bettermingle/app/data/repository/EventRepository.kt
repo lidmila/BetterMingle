@@ -180,7 +180,8 @@ class EventRepository(context: Context) {
                 "inviteCode" to event.inviteCode,
                 "maxParticipants" to event.maxParticipants,
                 "status" to event.status.name,
-                "enabledModules" to event.enabledModules.map { it.name },
+                @Suppress("USELESS_ELVIS")
+                "enabledModules" to (event.enabledModules ?: emptyList()).map { it.name },
                 "securityEnabled" to event.securityEnabled,
                 "eventPin" to event.eventPin,
                 "hideFinancials" to event.hideFinancials,

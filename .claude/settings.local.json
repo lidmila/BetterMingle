@@ -109,7 +109,8 @@
       "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat assembleRelease)",
       "WebFetch(domain:developers.google.com)",
       "Bash(openssl x509:*)",
-      "Bash(./gradlew --version)"
+      "Bash(./gradlew --version)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

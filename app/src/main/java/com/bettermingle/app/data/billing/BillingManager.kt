@@ -8,10 +8,12 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryProductDetailsResult
 import com.android.billingclient.api.QueryPurchasesParams
 import com.bettermingle.app.data.preferences.SettingsManager
 import com.google.firebase.auth.FirebaseAuth
@@ -82,7 +84,12 @@ class BillingManager(
 
     private val billingClient = BillingClient.newBuilder(context)
         .setListener(purchasesUpdatedListener)
-        .enablePendingPurchases()
+        .enablePendingPurchases(
+            PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build()
+        )
+        .enableAutoServiceReconnection()
         .build()
 
     fun startConnection() {
@@ -126,9 +133,10 @@ class BillingManager(
             .build()
 
         val subResult = suspendCancellableCoroutine { cont ->
-            billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsList ->
+            billingClient.queryProductDetailsAsync(subParams) { billingResult, queryResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    cont.resume(productDetailsList)
+                    logUnfetched(queryResult)
+                    cont.resume(queryResult.productDetailsList)
                 } else {
                     Log.e(TAG, "Query products failed: ${billingResult.debugMessage}")
                     cont.resume(emptyList())
@@ -149,9 +157,10 @@ class BillingManager(
             .build()
 
         val inappResult = suspendCancellableCoroutine { cont ->
-            billingClient.queryProductDetailsAsync(inappParams) { billingResult, productDetailsList ->
+            billingClient.queryProductDetailsAsync(inappParams) { billingResult, queryResult ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    cont.resume(productDetailsList)
+                    logUnfetched(queryResult)
+                    cont.resume(queryResult.productDetailsList)
                 } else {
                     Log.e(TAG, "Query INAPP products failed: ${billingResult.debugMessage}")
                     cont.resume(emptyList())
@@ -185,6 +194,16 @@ class BillingManager(
 
         _uiState.value = _uiState.value.copy(products = products)
         Log.d(TAG, "Loaded ${products.size} products")
+    }
+
+    private fun logUnfetched(queryResult: QueryProductDetailsResult) {
+        queryResult.unfetchedProductList.forEach { unfetched ->
+            Log.w(
+                TAG,
+                "Product not fetched: ${unfetched.productId} (${unfetched.productType}), " +
+                    "status ${unfetched.statusCode}"
+            )
+        }
     }
 
     private suspend fun queryExistingPurchases() {

@@ -1,0 +1,14 @@
+<cs-CZ>
+Co je nového v 1.5.3:
+
+• Vylepšení stability a výkonu
+• Aktualizace interních knihoven
+• Drobné opravy chyb
+</cs-CZ>
+<en-US>
+What's new in 1.5.3:
+
+• Stability and performance improvements
+• Updated internal libraries
+• Minor bug fixes
+</en-US>

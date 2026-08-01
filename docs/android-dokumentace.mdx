@@ -1,0 +1,1318 @@
+---
+title: BetterMingle — kompletní dokumentace Android verze
+description: Referenční specifikace stávající nativní Android aplikace (Kotlin + Jetpack Compose) jako podklad pro přepis do Expo / React Native.
+version: 1.5.3 (versionCode 13)
+date: 2026-08-01
+status: podklad pro migraci na Expo
+---
+
+# BetterMingle — dokumentace Android verze
+
+> Tento dokument popisuje **stávající stav** nativní Android aplikace do detailu potřebného
+> pro přepis 1:1 do Expo / React Native. Vše, co je tu uvedeno, je odvozeno přímo ze zdrojového
+> kódu v `app/src/main/`, z `firestore.rules` a z `functions/src/`.
+
+---
+
+## 1. Základní údaje
+
+| Položka | Hodnota |
+| --- | --- |
+| Název aplikace | BetterMingle |
+| Package / applicationId | `com.bettermingle.app` |
+| Verze | `1.5.3`, versionCode `13` |
+| `minSdk` | 29 (Android 10) |
+| `targetSdk` / `compileSdk` | 36 (Android 16) |
+| Jazyk | Kotlin 2.0.21 |
+| UI framework | Jetpack Compose (BOM 2024.09.00), Material 3 |
+| Build | AGP 8.13.0, Gradle KTS, KSP |
+| Orientace | Portrait pod 600 dp šířky, jinak volná |
+| Jazyky UI | `en`, `cs`, `de`, `pl`, `fr`, `es` (1046 stringů na jazyk) |
+| Doména | `bettermingle.app` |
+| Právní stránky | `codewhiskers.app` |
+
+### Účel aplikace
+
+Aplikace pro **skupinové plánování akcí** (svatba, teambuilding, výlet, oslava…).
+Organizátor založí akci, pozve účastníky odkazem/QR kódem a k akci si zapne **moduly** —
+hlasování, výdaje, chat, program, úkoly, balicí seznam, spolujízdu, ubytování, dárky,
+catering a rozpočet. Data jsou v Firebase (Firestore + Auth + Storage + FCM), lokálně
+cachovaná v Room a v DataStore.
+
+---
+
+## 2. Technologický stack
+
+### Runtime a knihovny
+
+| Oblast | Knihovna (Android) |
+| --- | --- |
+| UI | Jetpack Compose, Material 3, `material-icons-extended` |
+| Navigace | `androidx.navigation:navigation-compose` 2.7.6 |
+| Stav | `ViewModel` + `StateFlow`, lokální `remember`/`mutableStateOf` |
+| Lokální DB | Room 2.6.1 (+ KSP compiler) |
+| Preferences | DataStore Preferences 1.0.0 |
+| Backend | Firebase BOM 34.3.0 — Auth, Firestore, Storage, Analytics, Messaging |
+| Přihlášení | Credential Manager 1.5.0 + `googleid` 1.1.1, fallback `play-services-auth` 21.3.0 |
+| Platby | Google Play Billing 9.1.0 |
+| Reklamy | Google Mobile Ads (AdMob) 23.6.0 |
+| Obrázky | Coil 2.5.0 (`coil-compose`, `coil-gif`) |
+| Místa | Google Places SDK 4.4.1 |
+| QR kódy | ZXing core 3.5.3 |
+| Widget | Jetpack Glance 1.1.1 |
+| Analytika | PostHog Android 3.7.4 (+ Firebase Analytics) |
+| Background | WorkManager 2.9.0 |
+
+### Doporučené mapování na Expo
+
+Pro plánovanou migraci (podle vzoru projektu **Lucciola** — Expo SDK 54, expo-router, zustand,
+`@react-native-firebase`, EAS Build):
+
+| Android | Expo / RN ekvivalent |
+| --- | --- |
+| Jetpack Compose | React Native + StyleSheet |
+| navigation-compose | `expo-router` (file-based) |
+| ViewModel + StateFlow | `zustand` store |
+| Room | `expo-sqlite` nebo AsyncStorage cache |
+| DataStore | `@react-native-async-storage/async-storage` |
+| Firebase SDK | `@react-native-firebase/*` |
+| Play Billing | `react-native-purchases` (RevenueCat) — v Lucciole se používá |
+| AdMob | `react-native-google-mobile-ads` |
+| Coil | `expo-image` |
+| Glance widget | nativní modul / vynechat v první fázi |
+| Places SDK | Google Places REST API |
+| ZXing | `react-native-qrcode-svg` |
+| `stringResource` | `expo-localization` + vlastní `i18n.ts` |
+
+---
+
+## 3. Architektura
+
+```
+app/src/main/java/com/bettermingle/app/
+├── MainActivity.kt              # vstupní bod, locale, deep link e-mail sign-in
+├── BetterMingleApp.kt           # Application, init notifikačních kanálů
+├── navigation/Navigation.kt     # Routes + NavHost + bottom bar
+├── data/
+│   ├── model/                   # 16 datových modelů
+│   ├── dao/                     # 5 Room DAO
+│   ├── database/                # AppDatabase (v6), Converters
+│   ├── repository/              # 7 repository (Event, Auth, Chat, Expense, Poll, Room, Carpool)
+│   ├── sync/                    # CloudSyncManager, FirestoreSyncService, SyncWorker
+│   ├── preferences/             # SettingsManager (DataStore), TierLimits
+│   ├── billing/                 # BillingManager
+│   └── ads/                     # AdManager
+├── ui/
+│   ├── theme/                   # Color, Type, Spacing, Shape, Animation, Theme
+│   ├── component/               # 17 sdílených komponent
+│   └── screen/                  # auth / create / event / home / profile
+├── viewmodel/                   # 7 ViewModelů
+├── notification/                # kanály, FCM service
+├── utils/                       # 14 utilit
+└── widget/                      # Glance countdown widget
+```
+
+**Datový tok:** UI (Compose) → ViewModel / přímý Firestore přístup → Repository → Room (cache)
++ Firestore (zdroj pravdy). Řada modulových obrazovek čte a zapisuje do Firestore **přímo**,
+bez repository vrstvy — je to nekonzistence, kterou by bylo dobré při přepisu sjednotit.
+
+---
+
+## 4. Design systém
+
+### 4.1 Barevná paleta
+
+Styl: **glassmorphism premium** — světlé lavender pozadí, pastelové dlaždice, sytý indigo akcent.
+
+#### Hlavní barvy
+
+| Token | Hex | Použití |
+| --- | --- | --- |
+| `PrimaryBlue` | `#5B5FEF` | primární indigo-fialová |
+| `AccentPink` | `#E879B8` | rose akcent |
+| `AccentOrange` | `#E85D3A` | coral akcent, FAB v modulech |
+| `AccentPurple` | `#8B5CF6` | fialová, kategorie nápojů |
+| `AccentGold` | `#F5A623` | amber, upozornění |
+| `AccentTeal` | `#14B8A6` | teal pro moduly |
+| `AccentRed` | `#EF4444` | červená |
+| `AccentLime` | `#84CC16` | lime |
+| `SurfacePeach` | `#EDE4F0` | lavender tint |
+
+#### Pozadí a text
+
+| Token | Hex |
+| --- | --- |
+| `BackgroundPrimary` | `#F8F7FC` |
+| `BackgroundSecondary` | `#F1EFF6` |
+| `TextPrimary` | `#1A1B3D` |
+| `TextSecondary` | `#6E7191` |
+| `TextOnColor` | `#FFFFFF` |
+| `BorderColor` | `#E0DFF0` |
+| `SurfaceSecondary` | `#ECEAF4` |
+
+#### Funkční barvy
+
+| Token | Hex | Pozadí |
+| --- | --- | --- |
+| `Success` | `#34D399` | `SuccessBackground #F0FDF4` |
+| `Error` | `#EF4444` | `ErrorBackground #FEF2F2` |
+| `Warning` | `#F5A623` | `WarningBackground #FFFBEB` |
+| `BalancePositive` | `#86EFAC` | kladný zůstatek |
+| `BalanceNegative` | `#FED7AA` | záporný zůstatek |
+
+#### Pastelové barvy (pozadí dlaždic modulů)
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `pastelBlue` | `#DCD9F5` | `#2A2A50` |
+| `pastelPink` | `#F5D8EA` | `#3A2535` |
+| `pastelOrange` | `#FADDD4` | `#3A2820` |
+| `pastelGreen` | `#D0F0E4` | `#1A3028` |
+| `pastelGold` | `#FAF0D8` | `#332D1A` |
+| `pastelPurple` | `#E8D5FC` | `#2D2540` |
+| `pastelTeal` | `#CCF0ED` | `#1A302E` |
+| `pastelRed` | `#FDD9D9` | `#2D1A1A` |
+| `pastelLime` | `#E4F5C5` | `#252D1A` |
+| `pastelGray` | `#E8E7F0` | `#28283A` |
+
+#### Dark mode
+
+| Token | Hex |
+| --- | --- |
+| `DarkBackgroundPrimary` | `#121218` |
+| `DarkBackgroundSecondary` | `#1C1C24` |
+| `DarkSurfaceCard` | `#242430` |
+| `DarkTextPrimary` | `#E8E8F0` |
+| `DarkTextSecondary` | `#9D9DB5` |
+| `DarkBorderColor` | `#35354A` |
+
+Pastely jsou vystaveny přes `BetterMingleExtendedColors` (CompositionLocal), aby se přepínaly
+podle režimu. V Expo se tomu bude odpovídat theme objekt s variantami `light` / `dark`.
+
+#### Stíny
+
+| Token | Hodnota |
+| --- | --- |
+| `GlassShadow` | `#1A5B5FEF` (10 % primary) |
+| `CardShadow` | `#265B5FEF` (15 % primary) |
+| `DarkCardShadow` | `#26000000` |
+
+### 4.2 Paleta barev modulů
+
+Uživatel si může v nastavení akce přebarvit každý modul. Povolených 9 hodnot
+(`MODULE_COLOR_PALETTE`), ukládá se hex do `events/{id}.moduleColors`:
+
+`blue #5B5FEF`, `pink #E879B8`, `orange #E85D3A`, `green #34D399`, `gold #F5A623`,
+`purple #8B5CF6`, `teal #14B8A6`, `red #EF4444`, `lime #84CC16`
+
+### 4.3 Typografie
+
+Font: **systémový** (`FontFamily.Default`) — v Expo tedy systémový font, žádný custom.
+
+| Styl | Velikost / řádek | Váha | Letter-spacing |
+| --- | --- | --- | --- |
+| displayLarge | 57 / 64 | Bold | −1.5 |
+| displayMedium | 45 / 52 | Bold | −0.5 |
+| displaySmall | 36 / 44 | Bold | −0.25 |
+| headlineLarge | 32 / 40 | Bold | −0.5 |
+| headlineMedium | 28 / 36 | Bold | −0.25 |
+| headlineSmall | 22 / 32 | Bold | −0.25 |
+| titleLarge | 22 / 28 | SemiBold | 0 |
+| titleMedium | 16 / 24 | SemiBold | 0.1 |
+| titleSmall | 14 / 20 | SemiBold | 0.1 |
+| bodyLarge | 16 / 24 | Normal | 0.15 |
+| bodyMedium | 14 / 20 | Normal | 0.15 |
+| bodySmall | 12 / 16 | Normal | 0.2 |
+| labelLarge | 14 / 20 | SemiBold | 0.1 |
+| labelMedium | 12 / 16 | SemiBold | 0.3 |
+| labelSmall | 11 / 16 | SemiBold | 0.3 |
+
+### 4.4 Spacing
+
+```
+none 0 · xs 4 · sm 8 · md 16 · lg 24 · xl 32 · xxl 48   (dp)
+
+cardPadding 20 · screenPadding 20 · sectionSpacing 24 · itemSpacing 8
+buttonPadding 24 · iconSpacing 8
+touchTarget 48 · floatingButtonOffset 72 · bottomNavHeight 80 · topBarHeight 64
+iconXS 16 · iconSM 20 · iconMD 24 · iconLG 32 · iconXL 48 · iconXXL 80
+formFieldSpacing 16 · formSectionSpacing 32 · listItemPadding 16 · listItemSpacing 8
+```
+
+### 4.5 Zaoblení
+
+```
+Shapes: extraSmall 8 · small 14 · medium 20 · large 24 · extraLarge 28
+
+CornerRadius: xs 4 · sm 8 · md 14 · lg 20 · xl 24 · xxl 28 · pill 100
+button = pill · card = 20 · cardLarge = 24 · input = 14 · chip = pill · badge = 4 · modal = 24
+```
+
+### 4.6 Animace (`BetterMingleMotion`)
+
+| Trvání | ms |
+| --- | --- |
+| `QUICK` | 150 |
+| `STANDARD` | 300 |
+| `EMPHASIZE` | 500 |
+
+- **Přechod obrazovek:** fade in 300 ms + slide horizontálně o ¼ šířky, `FastOutSlowInEasing`.
+  Pop směr obrácený. Odchod: fade out 150 ms.
+- **Bottom sheet:** fade + slide vertikálně o ⅓.
+- **Položky seznamu:** fade + spring slide (`DampingRatioLowBouncy`, `StiffnessLow`).
+- **FAB:** fade + spring scale z 0.6 (`DampingRatioMediumBouncy`, `StiffnessMedium`).
+- **Oslava:** fade 500 ms + spring scale z 0.3.
+
+---
+
+## 5. Navigace
+
+### 5.1 Bottom navigation (4 taby)
+
+| Tab | Route | Ikona |
+| --- | --- | --- |
+| Akce | `event_list` | Event (kalendář) |
+| Vytvořit | `create_event` | Add (+) |
+| Upozornění | `notifications` | Notifications (zvonek) |
+| Profil | `profile` | Person |
+
+- Vybraná položka: `PrimaryBlue`, indikátor `AccentPink` s 20 % alfou.
+- Na zvonku se zobrazuje **badge** s počtem nepřečtených (`AccentOrange`, max „99"),
+  hodnota z lokálního DataStore. Po vstupu na tab se vynuluje.
+- Bottom bar je viditelný jen na těchto 4 routách.
+
+### 5.2 Kompletní seznam rout
+
+| Konstanta | Route | Obrazovka |
+| --- | --- | --- |
+| `ONBOARDING` | `onboarding` | OnboardingScreen |
+| `LOGIN` | `login` | LoginScreen |
+| `REGISTER` | `register` | RegisterScreen |
+| `FORGOT_PASSWORD` | `forgot_password` | ForgotPasswordScreen |
+| `EMAIL_LINK` | `email_link` | EmailLinkScreen |
+| `PROFILE_SETUP` | `profile_setup` | ProfileSetupScreen |
+| `EVENT_LIST` | `event_list` | EventListScreen |
+| `CREATE_EVENT` | `create_event` | CreateEventScreen |
+| `NOTIFICATIONS` | `notifications` | NotificationsScreen |
+| `PROFILE` | `profile` | ProfileScreen |
+| `EDIT_PROFILE` | `edit_profile` | EditProfileScreen |
+| `SETTINGS` | `settings` | SettingsScreen |
+| `HELP` | `help` | HelpScreen |
+| `ABOUT` | `about` | AboutScreen |
+| `UPGRADE` | `upgrade` | UpgradeScreen |
+| `YEAR_IN_REVIEW` | `year_in_review` | YearInReviewScreen |
+| `PRIVACY_POLICY` | `privacy_policy` | LegalWebViewScreen |
+| `TERMS_OF_SERVICE` | `terms_of_service` | LegalWebViewScreen |
+| `DELETE_ACCOUNT_REQUEST` | `delete_account_request` | LegalWebViewScreen |
+| `EVENT_DASHBOARD` | `event_dashboard/{eventId}` | EventDashboardScreen |
+| `VOTING` | `voting/{eventId}` | VotingScreen |
+| `PARTICIPANTS` | `participants/{eventId}` | ParticipantsScreen |
+| `EXPENSES` | `expenses/{eventId}` | ExpensesScreen |
+| `CARPOOL` | `carpool/{eventId}` | CarpoolScreen |
+| `ROOMS` | `rooms/{eventId}` | RoomsScreen |
+| `SCHEDULE` | `schedule/{eventId}` | ScheduleScreen |
+| `CHAT` | `chat/{eventId}` | ChatScreen |
+| `TASKS` | `tasks/{eventId}` | TasksScreen |
+| `PACKING_LIST` | `packing_list/{eventId}` | PackingListScreen |
+| `WISHLIST` | `wishlist/{eventId}` | WishlistScreen |
+| `CATERING` | `catering/{eventId}` | CateringScreen |
+| `BUDGET` | `budget/{eventId}` | BudgetScreen |
+| `RATING` | `rating/{eventId}` | RatingScreen |
+| `ACTIVITY_FEED` | `activity_feed/{eventId}` | ActivityFeedScreen |
+| `EVENT_SUMMARY` | `event_summary/{eventId}` | EventSummaryScreen |
+| `EVENT_SETTINGS` | `event_settings/{eventId}` | EventSettingsScreen |
+| `INVITATION` | `invitation/{inviteCode}` | JoinEventScreen |
+
+### 5.3 Startovní destinace
+
+```
+!přihlášen && !onboardingCompleted → onboarding
+!přihlášen                        → login
+přihlášen                         → profile_setup → event_list
+```
+
+### 5.4 Deep linky
+
+| Vzor | Účel |
+| --- | --- |
+| `https://bettermingle.app/invite/*` | pozvánka do akce |
+| `https://bettermingle.app/event/*` | sdílení akce |
+| `https://bettermingle.app/emailSignIn*` | přihlášení e-mailovým odkazem |
+
+Vždy i varianta s `www.`, všechny s `autoVerify="true"`.
+
+---
+
+## 6. Obrazovky
+
+### 6.1 Onboarding a autentizace
+
+#### OnboardingScreen
+Uvítací sekvence před prvním přihlášením. Po dokončení se do DataStore uloží
+`onboardingCompleted = true` a uživatel jde na `login`.
+
+#### LoginScreen
+- Přihlášení e-mailem a heslem.
+- Google Sign-In přes Credential Manager (s fallbackem na legacy `play-services-auth` na emulátorech).
+- Odkazy na registraci, zapomenuté heslo a přihlášení odkazem v e-mailu.
+
+#### RegisterScreen
+Registrace e-mail + heslo. Po úspěchu → `profile_setup`.
+
+#### ForgotPasswordScreen
+Odeslání resetovacího e-mailu přes Firebase Auth.
+
+#### EmailLinkScreen
+Přihlášení bez hesla (magic link). E-mail se ukládá do `SharedPreferences("email_link_auth")`
+pod klíč `pending_email`; `MainActivity.handleEmailSignInLink()` pak dokončí přihlášení
+při návratu z odkazu.
+
+#### ProfileSetupScreen
+Doplnění jména a výběr avatara po prvním přihlášení. Nastavuje
+`profile_setup_completed` v DataStore.
+
+---
+
+### 6.2 Seznam akcí (`EventListScreen`)
+
+Odpovídá screenshotu „Tvoje akce".
+
+- Nadpis **„Tvoje akce"** + podtitulek s celkovým počtem („1 akcí celkem").
+- **Vyhledávací pole** „Hledat akce…" s ikonou lupy (`PrimaryBlue`), zaoblení pill.
+- **Řádek filtrů** (horizontálně scrollovatelné chipy):
+  Plánování · Potvrzeno · Probíhá · Dokončeno · Zrušeno — odpovídají `EventStatus`.
+- **Sekce** s nadpisem a počtem v pilulce vpravo — např. „Nadcházející" + `1`.
+- **Karta akce** (`EventCard`):
+  - vlevo nahoře status chip (Plánování = žlutá/`AccentGold` pozadí),
+  - vpravo nahoře chip s tématem (Svatba = růžová),
+  - název akce (headline, tučně) — může obsahovat emoji,
+  - popis (secondary),
+  - řádek s ikonou kalendáře + datum (`15. 5. 2027`),
+  - řádek s ikonou pinu + místo,
+  - oddělovač,
+  - patička: počet účastníků s ikonou skupiny vlevo; vpravo ikony zapnutých modulů
+    a přetečení jako `+6`.
+- **FAB** vpravo dole, `PrimaryBlue`, ikona `+` → `create_event`.
+- Coach mark `event_list_create`.
+- Pro FREE tier se v seznamu zobrazuje **nativní reklama** (`NativeAdCard`).
+
+---
+
+### 6.3 Vytvoření akce (`CreateEventScreen`, 1560 řádků)
+
+Dvoufázový tok.
+
+#### Fáze 1 — výběr šablony
+Odpovídá screenshotu „Vyber šablonu".
+
+- Header s ikonou `X` (zavřít) a titulkem „Vyber šablonu".
+- Podtitulek: „Rychlý start s předem připravenými moduly a nastavením."
+- Coach mark banner `create_event_template`: „Vyber šablonu pro rychlé nastavení" + „Rozumím".
+- **Mřížka 2 sloupce** s kartami šablon. Každá karta: emoji, název, popis a barevné
+  metriky — `N modulů` (lavender), `N× rozpočet` (gold), `N úkolů` (pink), `N× program` (green).
+- Dole tlačítko **„Vlastní akce"** (outlined, pill) → přeskočí šablonu.
+
+**Seznam šablon** (`eventTemplates`):
+
+| Šablona | Emoji | Téma | Moduly | Premium |
+| --- | --- | --- | --- | --- |
+| Svatba | 💍 | Svatba | VOTING, EXPENSES, CHAT, SCHEDULE, TASKS, CARPOOL, ROOMS, PACKING_LIST | ne |
+| Narozeniny | 🎂 | Narozeniny | VOTING, EXPENSES, CHAT, PACKING_LIST | ne |
+| Teambuilding | 🤝 | Teambuilding | SCHEDULE, TASKS, VOTING, EXPENSES, ROOMS | ne |
+| Výlet | 🏕️ | Výlet | CARPOOL, ROOMS, SCHEDULE, PACKING_LIST, EXPENSES | ne |
+| Rozlučka se svobodou | 💃 | Rozlučka | CHAT, SCHEDULE, EXPENSES, CARPOOL, TASKS | ne |
+| Pracovní workshop | 📋 | Workshop | SCHEDULE, TASKS, VOTING, ROOMS | ne |
+| Rodinné setkání | 👨‍👩‍👧‍👦 | Rodinné setkání | CHAT, SCHEDULE, EXPENSES, PACKING_LIST, WISHLIST | ne |
+| Sport | ⚽ | Sport | SCHEDULE, VOTING, TASKS, ROOMS | ne |
+| Festival | 🎵 | Festival | SCHEDULE, CARPOOL, EXPENSES, CHAT | **ano** |
+| Firemní akce | 🏢 | Firemní akce | SCHEDULE, TASKS, VOTING, EXPENSES, ROOMS | **ano** |
+| Oslava | 🎉 | Oslava | VOTING, EXPENSES, CHAT, PACKING_LIST | **ano** |
+
+Premium šablony jsou odemčené jen pro tier **BUSINESS**; při kliknutí na zamčenou
+šablonu se naviguje na `upgrade`.
+
+Každá šablona nese `suggestedBudgetItems`, `suggestedTasks` a `suggestedScheduleBlocks`
+(položka + čas jako `"16:00"`), které se po vytvoření akce zapíší do příslušných
+subkolekcí.
+
+#### Fáze 2 — formulář akce
+
+Pole: název, popis, téma (`PREDEFINED_THEMES`), místo (Google Places autocomplete),
+datum od/do, úvodní text, výběr modulů, pozvané e-maily, bezpečnostní nastavení
+(PIN, skrytí financí, ochrana proti screenshotům, auto-smazání, schvalování účastníků).
+
+Formulář podporuje **předvyplnění** při duplikaci akce přes `savedStateHandle`:
+`prefill_name`, `prefill_description`, `prefill_location`, `prefill_introText`,
+`prefill_theme`, `prefill_modules`.
+
+Při opuštění s rozpracovanými daty se zobrazí dialog „zahodit změny?".
+
+Po vytvoření: FREE tier vidí **interstitial reklamu**, pak přechod na dashboard.
+
+---
+
+### 6.4 Dashboard akce (`EventDashboardScreen`, 1336 řádků)
+
+Nejdůležitější obrazovka. Odpovídá screenshotům 1 a 19.
+
+#### Top bar
+- Zpět (šipka), název akce s emoji.
+- Akce vpravo: **ikona dokumentu** (export PDF), **sdílet**, **kalendář** (přidat do kalendáře),
+  **tři tečky** (overflow menu).
+
+#### Tělo
+1. **Popis akce** (`Náš velký den!`) — podporuje jednoduchý markdown (`parseSimpleMarkdown`).
+2. **Countdown karta** — plná `PrimaryBlue`, zaoblení 24 dp:
+   - název akce nahoře uprostřed (bílý, menší),
+   - 4 bloky oddělené dvojtečkou: **dní : hodin : minut : sekund**,
+   - každý blok je poloprůhledný obdélník s velkým tučným číslem a popiskem pod ním,
+   - blok sekund má **zlatý (`AccentGold`) obrys** a při každé změně animuje.
+3. **Sekce „Moduly"** v šedém kontejneru:
+   - Coach mark `dashboard_modules` s ikonou žárovky a textem
+     „Klepni na modul pro vstup. Organizátoři mohou podržet pro přesunutí a přidávat nebo
+     odebírat moduly." + „Rozumím".
+   - **Mřížka 3 sloupce** dlaždic modulů.
+
+#### Dlaždice modulu (`FeatureModuleCard`)
+- Pastelové pozadí odvozené z barvy modulu (`pastelForColor`).
+- Uprostřed nahoře kruh v bílé/světlé barvě s ikonou v sytém odstínu.
+- Pod ním název modulu tučně.
+- Volitelný podtitulek s počtem (např. „3 aktivní", celková částka výdajů).
+- **Badge** s počtem nových položek od posledního zobrazení.
+- **Drag & drop** pro organizátora — pořadí se ukládá do `enabledModules`.
+- Dlouhé podržení → možnost odebrat modul.
+
+#### Pořadí dlaždic
+1. **Uživatelské moduly** v pořadí `enabledModules`.
+2. **Systémové moduly** (vždy viditelné): Účastníci, Aktivita, Hodnocení,
+   *(Souhrn — jen když `status == COMPLETED`)*, Nastavení.
+3. **Dlaždice „+"** (`AddItem`) — jen pro organizátora a pokud zbývá co přidat.
+
+#### Výchozí barvy modulů
+
+| Modul | Klíč | Ikona (Material TwoTone) | Barva |
+| --- | --- | --- | --- |
+| Hlasování | `voting` | Ballot | `PrimaryBlue` |
+| Výdaje | `expenses` | Payments | `AccentOrange` |
+| Spolujízda | `carpool` | DirectionsCar | `Success` |
+| Ubytování | `rooms` | Hotel | `AccentGold` |
+| Chat | `chat` | ChatBubble | `AccentOrange` |
+| Program | `schedule` | CalendarMonth | `PrimaryBlue` |
+| Úkoly | `tasks` | Checklist | `AccentPink` |
+| Balicí seznam | `packing` | Backpack | `Success` |
+| Dárky / Wishlist | `wishlist` | CardGiftcard | `AccentPink` |
+| Catering | `catering` | Restaurant | `Success` |
+| Rozpočet | `budget` | Payments | `AccentGold` |
+| Účastníci | `participants` | Groups | `AccentPink` |
+| Aktivita | `activity` | Timeline | `PrimaryBlue` |
+| Hodnocení | `rating` | StarRate | `AccentGold` |
+| Souhrn | `summary` | Assessment | `AccentPink` |
+| Nastavení | `settings` | Settings | `onSurfaceVariant` |
+
+#### Badge „nové položky"
+Mapa modul → subkolekce, proti které se počítají položky s `createdAt > lastSeen`:
+
+```
+voting → polls · expenses → expenses · chat → messages · tasks → tasks
+packing → packingItems · carpool → carpoolRides · schedule → schedule
+wishlist → wishlistItems
+```
+
+`lastSeen` je dokument `events/{eventId}/lastSeen/{userId}` s poli podle klíče modulu
+(merge zápis timestampu při vstupu do modulu).
+
+#### Přidání modulu
+Bottom sheet se seznamem dostupných modulů. Zamčené moduly mají štítek
+„Premium" / „Business" a vedou na upgrade.
+
+#### Export PDF
+Bottom sheet **„Vyberte sekce"** (screenshot 2) — přepínače pro:
+Účastníci, Hlasování, Rozpočet, Výdaje, Wishlist, Úkoly, Balicí seznam, Spolujízda.
+Generuje `EventPdfGenerator` (nativní `PdfDocument`, 614 řádků). Export je omezen
+na tier ≠ FREE (`TierLimits.canExportSummary`).
+
+#### Návrat zpět
+Pro FREE tier se při odchodu z dashboardu jednou za session zobrazí interstitial
+(`AdManager.showReturnInterstitial`).
+
+---
+
+### 6.5 Modulové obrazovky
+
+Všechny modulové obrazovky sdílí vzor: top bar (zpět + název + overflow „tři tečky"),
+prázdný stav s ilustrací, obsah, **oranžový FAB** (`AccentOrange`) pro přidání položky.
+
+#### Hlasování (`VotingScreen`, 1422 řádků)
+Screenshot 3.
+
+- Karta ankety: název tučně, vpravo **typ ankety** jako chip (Datum/Místo/Aktivita/Cena/Vlastní)
+  + rozbalovací šipka.
+- Pod tím stavový chip **„Vypršelo"** (`AccentOrange` na světle oranžové) a vpravo počet hlasů
+  („24 hlasů").
+- **Chipy jmen hlasujících** ve wrapu — kdo hlasoval má zelený text na světle zeleném pozadí,
+  kdo ne, má šedý.
+- Rozbalení ukáže jednotlivé varianty s počty a možností hlasovat.
+
+Vlastnosti ankety (`Poll`):
+- `pollType`: `DATE` (modrá), `LOCATION` (růžová), `ACTIVITY` (zelená), `PRICE` (zlatá), `CUSTOM` (šedá)
+- `allowMultiple` — jedna vs. více odpovědí (ikona radio vs. checkbox)
+- `isAnonymous`
+- `deadline` — po vypršení se zobrazí „Vypršelo", `formatRemainingTime()` jinak počítá zbývající čas
+- `isClosed`
+
+Hlas se ukládá jako `events/{e}/polls/{p}/options/{o}/votes/{userId}` s `{ userId, value: 1 }`.
+Při `allowMultiple == false` se předchozí hlas odstraní.
+
+**`VoterSelectDialog`** — organizátor může hlasovat **za jiné účastníky** (včetně manuálních hostů).
+
+Limit: `maxPolls` podle tieru (FREE 1, PRO 3, BUSINESS ∞).
+
+#### Výdaje (`ExpensesScreen`, 1131 řádků)
+Screenshot 4.
+
+- **Souhrnná karta** nahoře — tmavě modrá (`#2A2A6E`-tón), velká částka („0,00 Kč")
+  a pod ní počet výdajů.
+- Taby: **Výdaje** / **Dluhy**.
+- Seznam výdajů: ikona kategorie v barevném kruhu, popis, kdo platil, relativní datum, částka.
+- Sekce dluhů: vypočtené minimální transakce mezi účastníky.
+
+**Dialog „Nový výdaj"**:
+- pole „Popis výdaje",
+- pole „Částka (Kč)",
+- sekce **Kategorie** — chipy s ikonami: Jídlo, Doprava, Ubytování, Nápoje, Ostatní,
+- sekce **Platil/a** — dropdown „Plátce" se jmény účastníků,
+- tlačítka **Zrušit** (modré) / **Přidat**.
+
+Barvy kategorií: jídlo `AccentOrange`, doprava `PrimaryBlue`, ubytování/nápoje/ostatní dle mapy.
+
+**Algoritmus vyrovnání dluhů** (`DebtCalculator.calculateMinimumTransactions`):
+1. `balance[user] = zaplaceno − dlužno`
+2. věřitelé (`> 0.01`) sestupně, dlužníci (`< −0.01`) sestupně dle absolutní hodnoty
+3. greedy párování — vždy `min(věřitel, dlužník)`, zaokrouhleno na 2 desetinná místa
+4. výsledek = seznam `Debt(fromUserId, toUserId, amount)`
+
+`equalSplit(total, count)` dělí rovným dílem se zaokrouhlením na haléře.
+
+**Měny:** `CZK` (výchozí, `NumberFormat` cs-CZ), `EUR`, `USD`, `GBP`, jinak `"%.2f %s"`.
+`formatCzkShort` zkracuje na „tis. Kč" / „mil. Kč".
+
+#### Chat (`ChatScreen`, 421 řádků)
+Screenshot 5.
+
+- Prázdný stav: ilustrace dvou bublin (modrá + růžová), nadpis **„Zatím žádné zprávy"**,
+  podtitulek „Napiš první zprávu a zahaj konverzaci."
+- Dole vstupní řádek: zaoblené pole „Zpráva…" + ikona odeslání (šipka, `TextSecondary`).
+- Zprávy podporují odpovědi (`replyTo`).
+- Push notifikace přes Cloud Function `onNewMessage` (kanál `chat_messages`).
+
+#### Program (`ScheduleScreen`, 624 řádků)
+Screenshot 6.
+
+**Dialog „Přidat bod programu"**:
+- „Název",
+- „Popis (volitelné)",
+- dvojice polí s ikonou hodin: **Začátek** / **Konec**,
+- pole s ikonou pinu: **Místo (volitelné)**,
+- **Zrušit** / **Přidat**.
+
+Model `ScheduleItem`: `title`, `description`, `startTime`, `endTime`, `location`.
+
+#### Úkoly (`TasksScreen`, 675 řádků)
+Screenshot 7.
+
+- Prázdný stav: ilustrace schránky s checkboxy, **„Zatím žádné úkoly"**,
+  „Přidej úkoly a přiřaď je účastníkům."
+- Model je `EventLabel`: `name`, `color`, `assignedTo[]`, `deadline`, `isCompleted`.
+- **Barvy úkolů** (`taskColors`): Modrá `PrimaryBlue`, Růžová `AccentPink`,
+  Oranžová `AccentOrange`, Zlatá `AccentGold`, Zelená `Success`.
+- Přiřazení více účastníkům, deadline, odškrtnutí.
+
+#### Balicí seznam (`PackingListScreen`, 400 řádků)
+Screenshot 8.
+
+- Prázdný stav: ilustrace batohu, **„Prázdný seznam"**, „Přidej věci, které je potřeba zabalit."
+- Model `PackingItem`: `name`, `isChecked`, `userId` (kdo je zodpovědný), `addedBy`.
+
+#### Spolujízda (`CarpoolScreen`, 926 řádků)
+- `CarpoolRide`: `driverId/driverName`, `departureLocation` (+ lat/lng), `departureTime`,
+  `availableSeats` (výchozí 4), `notes`, `type` (`OFFER` / `REQUEST`), `isClosed`.
+- `CarpoolPassenger`: `userId`, `displayName`, `status` (`PENDING`/`APPROVED`/`REJECTED`),
+  `pickupLocation`.
+- Řidič schvaluje pasažéry.
+- **Premium modul.**
+
+#### Ubytování (`RoomsScreen`, 684 řádků)
+- `EventRoom`: `name`, `capacity` (výchozí 2), `notes`, `assignments[]` (userId).
+- Organizátor přiřazuje účastníky do pokojů.
+- **Premium modul.**
+
+#### Dárky / Wishlist (`WishlistScreen`, 679 řádků)
+- `WishlistItem`: `name`, `price`, `productUrl`, `description`,
+  `status` (`FREE`/`RESERVED`/`BOUGHT`), `claimedBy`, `claimedByName`, `addedBy`.
+- Rezervace dárku tak, aby ji obdarovaný neviděl.
+
+#### Catering (`CateringScreen`, 369 řádků)
+- Agreguje **stravovací preference** účastníků z jejich profilů (`users/{uid}.dietaryPreferences`).
+- Zobrazuje jméno, avatar a preference (Vegetarián / Vegan / Bezlepkové).
+- Manuální hosté (bez účtu) se přeskakují.
+- Načítá uživatele po dávkách 30 (limit `whereIn` ve Firestore).
+- **Premium modul.**
+
+#### Rozpočet (`BudgetScreen`, 667 řádků)
+- `BudgetCategory`: `name`, `planned`, `spent`, `expenses[]`.
+- `BudgetExpense`: `amount`, `note`, `addedBy`, `createdAt`.
+- Kategorie zakládá jen organizátor, položky může přidat každý účastník.
+- **Business modul** (jediný).
+
+---
+
+### 6.6 Účastníci (`ParticipantsScreen`, 1109 řádků)
+
+- Seznam s avatarem, jménem, **RSVP badge** a **role badge**.
+- **Manuální hosté** — organizátor přidá jen jméno, host funguje ve všech modulech
+  (hlasuje se za něj, přiřazuje se do pokojů…). Označen `GuestBadge`,
+  `isManual = true`. Později lze propojit s reálným účtem (`linkedUserId`,
+  `ManualParticipantLinker`).
+- **Profilový bottom sheet** s kontakty a preferencemi.
+- Organizátor může měnit RSVP a roli, mazat účastníky.
+- Role: `ORGANIZER`, `CO_ORGANIZER`, `PARTICIPANT` + volitelná `customRole`.
+- RSVP: `PENDING`, `ACCEPTED`, `DECLINED`, `MAYBE`.
+- Co-organizátory smí přidávat jen PRO/BUSINESS.
+- Limit počtu účastníků dle tieru.
+
+---
+
+### 6.7 Nastavení akce (`EventSettingsScreen`, 877 řádků)
+
+Screenshoty 9 a 10.
+
+#### Sekce „Pozvánka"
+Dvě tlačítka vedle sebe: **Kopírovat odkaz** (outlined) a **Sdílet** (`PrimaryBlue`, plné).
+Dále QR kód pozvánky (`QrCodeGenerator`, ZXing).
+
+#### „Upozornění"
+Přepínač „Upozornění na novinky v akci".
+
+#### „Stav akce"
+Chipy: **Plánování** (aktivní = žluté pozadí `AccentGold`), Potvrzeno, Probíhá,
+Dokončeno, Zrušeno. Mapuje na `EventStatus`.
+
+#### „Zvýšená ochrana"
+Přepínač s ikonou štítu, podtitulek „Vypnuto"/„Zapnuto". Zapíná
+`securityEnabled` a odemyká:
+- `eventPin` — PIN pro vstup (`PinVerificationDialog`),
+- `hideFinancials` — skryje výdaje ostatním než organizátorovi a plátci,
+- `screenshotProtection` — `FLAG_SECURE` (`ScreenSecurityUtils`),
+- `autoDeleteDays` — automatické smazání N dní po skončení,
+- `requireApproval` — organizátor musí schválit nové účastníky.
+
+#### „Upravit akci"
+Změnit název, datum a popis.
+
+#### „Duplikovat akci"
+„Vytvořit kopii se stejným nastavením" — předá prefill do `create_event`.
+Jen pro tier ≠ FREE (`canRepeatEvent`).
+
+#### „Barvy modulů"
+Seznam všech zapnutých modulů s barevným kruhem vpravo → `ModuleColorPicker`
+s 9 barvami palety. Ukládá do `events/{id}.moduleColors.{MODULE_NAME}`.
+
+#### „Nebezpečná zóna"
+Červený nadpis, položka **„Smazat akci"** s ikonou koše a podtitulkem
+„Trvale smazat akci a všechna data".
+
+---
+
+### 6.8 Aktivita, hodnocení, souhrn
+
+#### ActivityFeedScreen (220 řádků)
+Chronologický log akcí v události. Zdroj: `events/{id}/activity`.
+
+#### RatingScreen (455 řádků)
+`EventRating` se 4 kategoriemi hodnocenými 1–5:
+`overallRating`, `organizationRating`, `atmosphereRating`, `venueRating` + `comment`.
+Zobrazuje průměry s progress bary.
+
+#### EventSummaryScreen (743 řádků)
+Dostupný jen pro `status == COMPLETED`. Statistiky akce, RSVP chipy,
+karty se souhrny. Export do PDF pro tier ≠ FREE.
+
+---
+
+### 6.9 Upozornění (`NotificationsScreen`)
+
+Screenshot 12.
+
+- Nadpis „Upozornění" (bez zpět, je to tab).
+- Prázdný stav: ikona zvonku (šedá), **„Žádná upozornění"**,
+  „Až se něco stane v tvých akcích, uvidíš to tady."
+- Karty aktivit s ikonou a barvou podle typu, relativní čas.
+- Zdroj: lokální DataStore (`user_activities_json`, max 200 položek) — reaktivní a okamžité.
+- `unread_activity_count` řídí badge v bottom navigaci.
+
+---
+
+### 6.10 Profil (`ProfileScreen`)
+
+Screenshot 13.
+
+- **Hlavička**: plná `PrimaryBlue` karta se zaoblením, uprostřed kruhový avatar
+  (bílé pozadí), pod ním jméno (bílé, tučně) a e-mail (světlejší).
+- **Položky menu** (bílé karty, ikona vlevo, šipka vpravo):
+  1. **Upravit profil** — ikona tužky (`PrimaryBlue`)
+  2. **Rok v akcích** — ikona jiskřiček (`PrimaryBlue`)
+  3. **Mingle Pro** — „Odemkni neomezené akce a funkce", ikona hvězdy (`AccentGold`),
+     karta má **zlatý obrys**
+  4. **Nastavení** — ikona ozubeného kola (`PrimaryBlue`)
+  5. **Upozornění** — ikona zvonku (`AccentGold`)
+
+#### EditProfileScreen (464 řádků)
+Screenshot 16.
+
+- Avatar uprostřed s růžovým kruhovým tlačítkem fotoaparátu, popisek
+  „Klepni pro změnu avatara" → `AvatarPickerDialog`.
+- Pole: **Jméno** (s floating labelem), **Kontaktní email**, **Telefon**,
+  **Oddělení**, **Bio**.
+- Sekce **„Stravovací preference"** — chipy: Vegetarián, Vegan, Bezlepkové.
+- **40 vestavěných avatarů** (`avatar_1.webp` … `avatar_40.webp`);
+  FREE tier má přístup jen k prvním 15.
+- Vlastní fotka se nahrává do Firebase Storage.
+
+#### YearInReviewScreen (426 řádků)
+Screenshot 15.
+
+- Fullscreen pager na `PrimaryBlue` gradientu, bílý text.
+- První stránka: ilustrace, **„Tvůj rok v akcích"**,
+  „Pojďme se ohlédnout za tím, co jsi letos společně zažil/a!", rok.
+- Dole indikátor stránek, patička „Události, na kterých záleží, plánujeme s BetterMingle".
+- Ilustrace: `il_review_intro`, `il_review_events`, `il_review_people`,
+  `il_review_days`, `il_review_location`, `il_review_outro`.
+- `AnimatedCounter` pro čísla, `shareBitmap()` pro sdílení jako obrázek (ikona sdílení vpravo nahoře).
+- Lze pro daný rok odmítnout (`year_in_review_dismissed_year`).
+
+---
+
+### 6.11 Nastavení (`SettingsScreen`, 791 řádků)
+
+Screenshoty 13 a 14.
+
+| Sekce | Položky |
+| --- | --- |
+| **Profil** | Upravit jméno (podtitulek = aktuální jméno) · E-mail (podtitulek = adresa) · Změnit heslo |
+| **Upozornění** | Povolit upozornění (přepínač) |
+| **Vzhled** | Motiv aplikace — chipy **Systém** / **Světlý** / **Tmavý** |
+| **Jazyk** | Jazyk aplikace — chipy **Systém**, **Čeština**, **English**, **Deutsch**, **Polski**, **Français**, **Español** |
+| | Zobrazit nápovědu znovu — „Obnoví všechny nápovědy a tipy v aplikaci" (`resetCoachMarks`) |
+| **O aplikaci** | O aplikaci — podtitulek „Verze: 1.5.3" |
+| **Právní informace** | Zásady ochrany osobních údajů · Obchodní podmínky · Žádost o smazání účtu („Požádat o smazání přes web") |
+
+Nadpisy sekcí jsou `PrimaryBlue`, malé, tučné. Položky jsou bílé karty
+se zaoblením 20 dp, ikonou vlevo v `PrimaryBlue` (nebo `AccentGold` u zvonku).
+
+Změna jazyka volá `AppCompatDelegate.setApplicationLocales()`; jazyk se čte
+**synchronně před `setContent`** v `MainActivity`, aby nedošlo k probliknutí.
+
+Právní obrazovky se otevírají ve `LegalWebViewScreen` s URL podle jazyka:
+
+| Stránka | CS | Ostatní |
+| --- | --- | --- |
+| Zásady | `codewhiskers.app/zasady-ochrany-osobnich-udaju` | `/en/privacy-policy` |
+| Podmínky | `codewhiskers.app/obchodni-podminky` | `/en/terms` |
+| Smazání účtu | `codewhiskers.app/smazani-uctu` | `/en/delete-account` |
+
+---
+
+### 6.12 Upgrade (`UpgradeScreen`, 789 řádků)
+
+- Přepínač **Měsíčně / Ročně**.
+- Karty **Mingle Pro** a **Mingle Business** s animovanou cenou (spring scale z 0.8).
+- Sekce **Lifetime** — jednorázový nákup.
+- **Porovnávací tabulka** funkcí (`ComparisonTable`) FREE / PRO / BUSINESS.
+
+---
+
+## 7. Datový model
+
+### 7.1 Room (lokální cache)
+
+Databáze `bettermingle_database`, **verze 6**, `fallbackToDestructiveMigrationFrom(1..5)`.
+
+Entity: `Event`, `Participant`, `Poll`, `PollOption`, `Expense`, `Message`.
+DAO: `EventDao`, `ParticipantDao`, `PollDao`, `ExpenseDao`, `MessageDao`.
+
+Ostatní modely (Room, ScheduleItem, PackingItem, WishlistItem, CarpoolRide,
+EventLabel, EventRating, EventPhoto) žijí **jen ve Firestore**.
+
+### 7.2 Modely
+
+#### Event
+```kotlin
+id, createdBy, name, description, theme, templateSlug,
+locationName, locationLat, locationLng, locationAddress,
+startDate, endDate, datesFinalized, coverImageUrl,
+inviteCode, maxParticipants, status: EventStatus,
+enabledModules: List<EventModule>,
+// bezpečnost
+securityEnabled, eventPin, hideFinancials, screenshotProtection,
+autoDeleteDays, requireApproval,
+introText, moduleColors: Map<String,String>,
+createdAt, updatedAt
+```
+
+**`EventStatus`**: `PLANNING`, `CONFIRMED`, `ONGOING`, `COMPLETED`, `CANCELLED`
+
+**`EventModule`**: `VOTING`, `EXPENSES`, `CARPOOL`, `ROOMS`, `CHAT`, `SCHEDULE`,
+`TASKS`, `PACKING_LIST`, `WISHLIST`, `CATERING`, `BUDGET`
+
+**`PREDEFINED_THEMES`**: Svatba, Narozeniny, Teambuilding, Firemní akce, Výlet,
+Festival, Oslava, Sport, Rozlučka, Vánoční večírek
+
+#### Participant
+```kotlin
+id, eventId, userId, displayName, avatarUrl,
+role: ParticipantRole, customRole, rsvp: RsvpStatus,
+joinedAt, isManual, linkedUserId
+```
+
+#### Poll / PollOption / PollVote
+```kotlin
+Poll:       id, eventId, createdBy, title, pollType, allowMultiple,
+            isAnonymous, deadline, isClosed, createdAt
+PollOption: id, pollId, label, description, sortOrder
+PollVote:   id, optionId, userId, value   // 1 = ano, 0 = možná, −1 = ne
+```
+Pozn.: v UI se aktuálně zapisuje vždy `value = 1`; tříhodnotová logika je připravená v modelu,
+ale nevyužitá.
+
+#### Expense / ExpenseSplit
+```kotlin
+Expense:      id, eventId, paidBy, description, amount, currency = "CZK",
+              category, receiptUrl, createdAt
+ExpenseSplit: id, expenseId, userId, amount, isSettled
+```
+
+#### UserProfile
+```kotlin
+id, displayName, email, avatarUrl, phone, contactEmail,
+department, bio, dietaryPreferences: List<String>,
+isPremium, premiumUntil
+```
+
+#### Ostatní
+```kotlin
+Message:      id, eventId, userId, userName, content, replyTo, createdAt
+ScheduleItem: id, eventId, title, description, startTime, endTime, location
+PackingItem:  id, eventId, name, isChecked, userId, addedBy
+EventLabel:   id, eventId, name, color, assignedTo[], deadline, isCompleted   // = úkol
+EventRoom:    id, eventId, name, capacity, notes, assignments[]
+WishlistItem: id, eventId, name, price, productUrl, description,
+              status, claimedBy, claimedByName, addedBy, createdAt
+CarpoolRide:  id, eventId, driverId, driverName, departureLocation,
+              departureLat, departureLng, departureTime, availableSeats,
+              notes, type, isClosed, createdAt
+CarpoolPassenger: id, rideId, userId, displayName, status, pickupLocation
+EventRating:  id, eventId, userId, overallRating, organizationRating,
+              atmosphereRating, venueRating, comment, createdAt
+EventPhoto:   id, eventId, uploadedBy, url, caption, createdAt
+```
+
+`DetailedEventReport` + řada `*Detail` tříd slouží výhradně pro generování PDF.
+
+### 7.3 Firestore schéma
+
+```
+users/{userId}
+  displayName, email, avatarUrl, phone, contactEmail, department, bio,
+  dietaryPreferences[], isPremium, premiumTier, premiumUntil,
+  purchaseToken, products[], purchaseTime, updatedAt, fcmToken
+
+events/{eventId}
+  createdBy, name, description, theme, templateSlug,
+  locationName, locationLat, locationLng, locationAddress,
+  startDate, endDate, datesFinalized, coverImageUrl, inviteCode,
+  maxParticipants, status, enabledModules[], invitedEmails[],
+  securityEnabled, eventPin, hideFinancials, screenshotProtection,
+  autoDeleteDays, requireApproval, introText, moduleColors{}, createdAt, updatedAt
+
+  ├── participants/{userId}        userId, displayName, avatarUrl, role, rsvp,
+  │                                joinedAt, isManual, linkedUserId
+  ├── polls/{pollId}               createdBy, title, pollType, allowMultiple,
+  │                                isAnonymous, deadline, isClosed, createdAt
+  │     └── options/{optionId}     label, description, sortOrder
+  │           └── votes/{userId}   userId, value
+  ├── expenses/{expenseId}         paidBy, description, amount, currency,
+  │                                category, receiptUrl, createdAt
+  │     └── splits/{splitId}       userId, amount, isSettled
+  ├── carpoolRides/{rideId}        driverId, driverName, departureLocation, …
+  │     └── passengers/{id}        userId, displayName, status, pickupLocation
+  ├── budgetCategories/{catId}     name, planned
+  │     └── expenses/{expId}       amount, note, addedBy, createdAt
+  ├── rooms/{roomId}               name, capacity, notes, assignments[]
+  ├── schedule/{itemId}            title, description, startTime, endTime, location
+  ├── messages/{messageId}         userId, userName, content, replyTo, createdAt
+  ├── tasks/{taskId}               name, color, assignedTo[], deadline, isCompleted
+  ├── packingItems/{itemId}        name, isChecked, userId, addedBy
+  ├── wishlistItems/{itemId}       name, price, productUrl, description, status,
+  │                                claimedBy, claimedByName, addedBy, createdAt
+  ├── ratings/{userId}             overallRating, organizationRating,
+  │                                atmosphereRating, venueRating, comment, createdAt
+  ├── activity/{activityId}        actorId, actorName, type, description,
+  │                                timestamp, readBy[]
+  └── lastSeen/{userId}            { voting: ts, expenses: ts, chat: ts, … }
+
+joinRequests/{requestId}
+  userId, eventId, status
+```
+
+**Invite kód:** 6 znaků z `A–Z0–9`, generovaný lokálně (`EventRepository.generateInviteCode`).
+
+### 7.4 Synchronizace
+
+`EventRepository.syncFromCloud()`:
+1. Načte akce, kde `createdBy == uid`.
+2. Přes **collection group query** na `participants` s `userId == uid` najde akce,
+   kde je uživatel účastník, a dotáhne je.
+3. Smaže lokální akce, které už v cloudu nejsou.
+
+Zápisy jdou `SetOptions.merge()`. Mazání akce načte 11 subkolekcí paralelně
+a maže po dávkách po 500 dokumentech.
+
+Doplňkově: `CloudSyncManager`, `FirestoreSyncService`, `SyncWorker` (WorkManager).
+
+---
+
+## 8. Bezpečnostní pravidla Firestore
+
+Soubor `firestore.rules`. Klíčové helper funkce:
+
+```js
+isEventParticipant(eventId)  // existuje participants/{uid} NEBO createdBy == uid
+isEventOrganizer(eventId)    // createdBy == uid
+isSecurityEnabled(eventId)
+requiresApproval(eventId)
+hidesFinancials(eventId)     // securityEnabled && hideFinancials
+```
+
+| Cesta | Read | Write |
+| --- | --- | --- |
+| `users/{uid}` | každý přihlášený | jen vlastník |
+| `events/{id}` | tvůrce nebo účastník | create: každý přihlášený; update/delete: organizátor |
+| `…/participants/{id}` | účastník nebo vlastní záznam | create: manuální hosty jen organizátor; jinak pokud není vyžadováno schválení; update/delete: organizátor nebo vlastní záznam |
+| `…/polls/{id}` | účastník | create: účastník; update/delete: organizátor nebo autor |
+| `…/polls/…/options/…/votes` | účastník | účastník |
+| `…/expenses/{id}` | účastník, **a pokud `hideFinancials`, tak jen organizátor nebo plátce** | create: účastník; update/delete: organizátor nebo plátce |
+| `…/budgetCategories/{id}` | účastník | jen organizátor (položky uvnitř může přidat účastník) |
+| ostatní subkolekce | účastník | účastník |
+| collection group `participants` | jen vlastní záznamy | — |
+| `joinRequests/{id}` | žadatel nebo organizátor | create: žadatel; update: organizátor |
+
+---
+
+## 9. Cloud Functions
+
+`functions/src/` (TypeScript, Firebase Functions v2 API).
+
+### invitations.ts
+
+| Funkce | Typ | Popis |
+| --- | --- | --- |
+| `generateInviteLink` | `https.onCall` | Ověří, že volající je organizátor nebo účastník. Pokud akce nemá `inviteCode`, vygeneruje ho. Vrací `{ inviteCode, inviteLink: "https://bettermingle.app/invite/{code}", eventName }`. |
+| `joinByInviteCode` | `https.onCall` | Připojí uživatele podle kódu; řeší i akce chráněné PINem a schvalováním. |
+
+### notifications.ts
+
+| Funkce | Trigger | Kanál |
+| --- | --- | --- |
+| `onNewMessage` | `events/{eventId}/messages/{messageId}` onCreate | `chat_messages` |
+| `onNewPoll` | `events/{eventId}/polls/{pollId}` onCreate | `polls` |
+| `onNewExpense` | `events/{eventId}/expenses/{expenseId}` onCreate | `expenses` |
+| `onEventUpdated` | `events/{eventId}` onUpdate | `event_updates` |
+
+Notifikace se posílají všem účastníkům **kromě autora**, tokeny se čtou
+z `users/{uid}.fcmToken` a odesílají přes `sendEachForMulticast`.
+Text zprávy je oříznut na 100 znaků. Payload nese `{ type, eventId, … }`.
+
+---
+
+## 10. Autentizace
+
+| Metoda | Implementace |
+| --- | --- |
+| E-mail + heslo | Firebase Auth |
+| Google Sign-In | Credential Manager + `googleid`; fallback `play-services-auth` pro emulátory |
+| Magic link | `signInWithEmailLink`, e-mail v `SharedPreferences("email_link_auth")` |
+| Reset hesla | `sendPasswordResetEmail` |
+
+`GOOGLE_CLIENT_ID` se čte z `local.properties` do `BuildConfig`.
+
+Odhlášení: `AuthViewModel.logout()` + navigace na `login` s `popUpTo(0)`.
+`SettingsManager.clearAll()` maže vše kromě `onboardingCompleted`.
+
+---
+
+## 11. Monetizace
+
+### 11.1 Tiery
+
+`PremiumTier`: `FREE`, `PRO`, `BUSINESS`
+
+### 11.2 Limity (`TierLimits`)
+
+| Limit | FREE | PRO | BUSINESS |
+| --- | --- | --- | --- |
+| Max. akcí | 1 | 3 | ∞ |
+| Max. účastníků | 20 | 100 | ∞ |
+| Max. anket na akci | 1 | 3 | ∞ |
+| Co-organizátoři | ✗ | ✓ | ✓ |
+| Reklamy | ✓ | ✗ | ✗ |
+| Dostupných avatarů | 15 | 40 | 40 |
+| Duplikace akce | ✗ | ✓ | ✓ |
+| Export souhrnu / PDF | ✗ | ✓ | ✓ |
+| Premium moduly (Catering, Ubytování, Spolujízda) | ✗ | ✓ | ✓ |
+| Business modul (Rozpočet) | ✗ | ✗ | ✓ |
+| Premium šablony (Festival, Firemní akce, Oslava) | ✗ | ✗ | ✓ |
+
+### 11.3 Produkty Google Play
+
+| Product ID | Typ | Base plans |
+| --- | --- | --- |
+| `mingle_pro` | SUBS | `monthly`, `yearly` |
+| `mingle_business` | SUBS | `monthly`, `yearly` |
+| `mingle_lifetime` | INAPP | — |
+
+**Ceny (CZK, ze stringů):**
+
+| | Měsíčně | Ročně |
+| --- | --- | --- |
+| Pro | 129 Kč | 1 299 Kč |
+| Business | 199 Kč | 1 999 Kč |
+| Lifetime | — | **2 999 Kč** jednorázově |
+
+### 11.4 BillingManager
+
+- Play Billing **9.1.0** (základní artefakt `com.android.billingclient:billing`,
+  **ne** `-ktx`, protože ten je kompilován Kotlinem 2.3 a projekt má 2.0.21).
+- `enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())`
+- `enableAutoServiceReconnection()`
+- Dotazy odděleně pro `SUBS` a `INAPP`, `QueryProductDetailsResult.productDetailsList`,
+  nenačtené produkty se logují.
+- Nákup se potvrzuje (`acknowledgePurchase`) a synchronizuje do
+  `users/{uid}`: `isPremium`, `premiumTier`, `purchaseToken`, `products`, `purchaseTime`.
+- Tier se odvozuje: `mingle_business` → BUSINESS, `mingle_pro`/`mingle_lifetime` → PRO.
+
+> **Pozn.:** Lucciola používá pro IAP RevenueCat (`react-native-purchases`).
+> Při migraci se nabízí sjednotit na RevenueCat i tady.
+
+### 11.5 Reklamy (`AdManager`)
+
+AdMob App ID: `ca-app-pub-9561317089977080~9588620219`
+
+| Formát | Produkční ad unit |
+| --- | --- |
+| Interstitial | `ca-app-pub-9561317089977080/6458752356` |
+| Native | `ca-app-pub-9561317089977080/7915304250` |
+| Banner | `ca-app-pub-9561317089977080/9673053149` |
+
+V debug buildu se používají Googlem poskytnuté testovací ID.
+
+**Pravidla zobrazování:**
+- Jen pro `FREE` tier (`AdManager.hasAds`).
+- Minimální interval mezi interstitialy: **5 minut**.
+- „Return" interstitial (odchod z dashboardu) max. **1× za session**.
+- Interstitial i po vytvoření akce.
+- Nativní reklama v seznamu akcí (`NativeAdCard`), banner (`BannerAdView`).
+
+---
+
+## 12. Notifikace
+
+### Kanály (`NotificationChannels`)
+
+| ID | Název | Důležitost | Popis |
+| --- | --- | --- | --- |
+| `event_updates` | Novinky v akcích | DEFAULT | Upozornění na změny v tvých akcích |
+| `chat_messages` | Zprávy | HIGH | Nové zprávy v chatu akce |
+| `polls` | Hlasování | DEFAULT | Nové ankety a výsledky hlasování |
+| `expenses` | Výdaje | LOW | Nové výdaje a vyrovnání |
+
+Service: `BetterMingleMessagingService` (FCM). Oprávnění `POST_NOTIFICATIONS`.
+
+### Lokální aktivita
+
+`ActivityLogger` zapisuje souběžně:
+1. do **DataStore** (`user_activities_json`, FIFO max 200) — pro okamžitý feed a badge,
+2. do **Firestore** `events/{id}/activity` — pro sdílený feed akce.
+
+Před inicializací se záznamy bufferují a po `ActivityLogger.initialize()` se doplní.
+Názvy akcí se cachují v paměti.
+
+---
+
+## 13. Lokalizace
+
+- 6 jazyků: `en` (výchozí), `cs`, `de`, `es`, `fr`, `pl`.
+- **1046 stringů** v každém jazyce — plná paritní lokalizace.
+- `androidResources.localeFilters` v Gradle + `res/xml/locales_config.xml`.
+- Per-app jazyk přes `AppCompatDelegate.setApplicationLocales`.
+- Volba se ukládá do DataStore (`app_language`), hodnoty:
+  `system`, `cs`, `en`, `de`, `pl`, `fr`, `es`.
+
+> Pro Expo to znamená ~1046 klíčů × 6 jazyků k převodu do `i18n` slovníků.
+
+---
+
+## 14. Doplňkové funkce
+
+### Widget (Jetpack Glance)
+`EventCountdownWidget` + `EventCountdownWidgetReceiver` — odpočet do nejbližší akce
+na plochu. Konfigurace `res/xml/event_countdown_widget_info.xml`.
+
+### PDF export
+`EventPdfGenerator` (614 řádků) — nativní `android.graphics.pdf.PdfDocument`.
+Dva režimy: `generate(stats)` (souhrn) a `generateDetailed(...)` (plný report
+podle vybraných sekcí). Sdílení přes `FileProvider`
+(`${applicationId}.fileprovider`, `res/xml/file_provider_paths.xml`).
+
+### QR kódy
+`QrCodeGenerator` — ZXing, generuje QR pro invite link.
+
+### Google Places
+`PlacesAutocompleteField` — našeptávač míst. API klíč z `local.properties`
+(`GEO_API_KEY`) → manifest placeholder `com.google.android.geo.API_KEY`.
+
+### Coach marks
+`CoachMarkBanner` / `CoachMarkOverlay`, ID:
+`event_list_create`, `dashboard_modules`, `create_event_template`.
+Zobrazené se ukládají jako čárkami oddělený seznam v DataStore
+(`coach_marks_seen`); „Zobrazit nápovědu znovu" v nastavení je resetuje.
+
+### Ochrana obrazovky
+`ScreenSecurityUtils` — `FLAG_SECURE` při zapnutém `screenshotProtection`.
+
+### Haptika
+`HapticFeedback` — vibrační odezva na akce.
+
+### Ochrana proti dvojkliku
+`ClickUtils` — debounce tapů.
+
+### Analytika
+PostHog (`POSTHOG_API_KEY`, `POSTHOG_HOST` z `local.properties`,
+výchozí host `https://eu.i.posthog.com`) + Firebase Analytics.
+
+---
+
+## 15. Aktiva
+
+| Typ | Obsah |
+| --- | --- |
+| Avatary | `avatar_1.webp` … `avatar_40.webp` (40 ks) |
+| Prázdné stavy | `il_empty_carpool`, `il_empty_chat`, `il_empty_debts`, `il_empty_events`, `il_empty_expenses`, `il_empty_packing`, `il_empty_participants`, `il_empty_rating`, `il_empty_rooms`, `il_empty_schedule`, `il_empty_tasks`, `il_empty_voting`, `il_empty_wishlist` (vektorové XML) |
+| Year in Review | `il_review_intro`, `il_review_events`, `il_review_people`, `il_review_days`, `il_review_location`, `il_review_outro` |
+| Logo | `bettermingle_logo.png`, `bettermingle_gif.gif` |
+| Ikona | adaptivní (`ic_launcher_background.xml` + `ic_launcher_foreground.xml`) |
+
+> Vektorové XML ilustrace bude potřeba převést do **SVG** pro `react-native-svg`.
+
+---
+
+## 16. Sdílené UI komponenty
+
+| Komponenta | Účel |
+| --- | --- |
+| `BetterMingleButton` | tlačítko, pill zaoblení |
+| `BetterMingleCard` | bílá karta, zaoblení 20 dp, barevný stín |
+| `BetterMingleTextField` | vstupní pole, zaoblení 14 dp |
+| `EventCard` | karta akce v seznamu |
+| `FeatureModuleCard` | dlaždice modulu na dashboardu |
+| `CountdownTimer` | odpočet dní/hodin/minut/sekund |
+| `EmptyState` | prázdný stav s ilustrací, nadpisem a podtitulkem |
+| `ErrorState` | chybový stav |
+| `ShimmerPlaceholder` | skeleton při načítání |
+| `UserAvatar` | avatar (obrázek nebo iniciály) |
+| `CoachMark` | nápověda / tip |
+| `ModuleColorPicker` | výběr barvy modulu |
+| `PinVerificationDialog` | zadání PINu akce |
+| `PlacesAutocompleteField` | našeptávač míst |
+| `PremiumBanner` | banner s výzvou k upgradu |
+| `QrCodeGenerator` | QR kód |
+| `BannerAdView`, `NativeAdCard` | reklamní plochy |
+
+---
+
+## 17. Poznámky k migraci na Expo
+
+Body, které při přepisu vyžadují rozhodnutí:
+
+1. **Přímé Firestore volání v UI.** Většina modulových obrazovek čte a zapisuje do
+   Firestore přímo z composable. Při přepisu doporučuji sjednotit do zustand store /
+   service vrstvy — jinak se nekonzistence přenese.
+2. **Room → co s lokální cache.** Buď `expo-sqlite`, nebo se spolehnout na
+   offline persistenci Firestore SDK (jednodušší, doporučeno).
+3. **Billing → RevenueCat.** Lucciola už RevenueCat používá; sjednocení ušetří práci.
+   Produkty a ceny je nutné namapovat na RevenueCat entitlements.
+4. **Glance widget** nemá v Expo přímý ekvivalent — buď nativní modul, nebo odložit.
+5. **PDF export** — `EventPdfGenerator` je 614 řádků nativního kreslení na canvas.
+   V RN se nabízí `expo-print` s HTML šablonou, což znamená přepsat layout od nuly.
+6. **Lokalizace** — 1046 klíčů × 6 jazyků; export z `strings.xml` do JSON se dá skriptovat.
+7. **Vektorové ilustrace** — 19 XML drawable → SVG.
+8. **`FLAG_SECURE`** — v Expo přes `expo-screen-capture`.
+9. **Per-app jazyk** — `AppCompatDelegate.setApplicationLocales` nemá RN ekvivalent;
+   řeší se vlastním i18n stavem, ale ztratí se systémová integrace v nastavení Androidu.
+10. **Cloud Functions a Firestore rules zůstávají beze změny** — backend se nemigruje.
+
+---
+
+## Příloha A — Mapa modul → subkolekce → route
+
+| Modul | `EventModule` | Klíč | Route | Firestore subkolekce | Tier |
+| --- | --- | --- | --- | --- | --- |
+| Hlasování | `VOTING` | `voting` | `voting/{id}` | `polls` | FREE |
+| Výdaje | `EXPENSES` | `expenses` | `expenses/{id}` | `expenses` | FREE |
+| Chat | `CHAT` | `chat` | `chat/{id}` | `messages` | FREE |
+| Program | `SCHEDULE` | `schedule` | `schedule/{id}` | `schedule` | FREE |
+| Úkoly | `TASKS` | `tasks` | `tasks/{id}` | `tasks` | FREE |
+| Balicí seznam | `PACKING_LIST` | `packing` | `packing_list/{id}` | `packingItems` | FREE |
+| Dárky | `WISHLIST` | `wishlist` | `wishlist/{id}` | `wishlistItems` | FREE |
+| Spolujízda | `CARPOOL` | `carpool` | `carpool/{id}` | `carpoolRides` | PRO |
+| Ubytování | `ROOMS` | `rooms` | `rooms/{id}` | `rooms` | PRO |
+| Catering | `CATERING` | `catering` | `catering/{id}` | *(profily uživatelů)* | PRO |
+| Rozpočet | `BUDGET` | `budget` | `budget/{id}` | `budgetCategories` | BUSINESS |
+| Účastníci | — | `participants` | `participants/{id}` | `participants` | systémový |
+| Aktivita | — | `activity` | `activity_feed/{id}` | `activity` | systémový |
+| Hodnocení | — | `rating` | `rating/{id}` | `ratings` | systémový |
+| Souhrn | — | `summary` | `event_summary/{id}` | — | systémový, jen COMPLETED |
+| Nastavení | — | `settings` | `event_settings/{id}` | — | systémový |
+
+---
+
+## Příloha B — Rozsah kódu
+
+| Metrika | Hodnota |
+| --- | --- |
+| Kotlin soubory | 121 |
+| Řádky Kotlinu | ~30 280 |
+| Obrazovky | 34 |
+| Sdílené komponenty | 17 |
+| ViewModely | 7 |
+| Repository | 7 |
+| Datové modely | 16 |
+| Utility | 14 |
+| Cloud Functions | 6 |
+| Stringy (na jazyk) | 1 046 |
+| Avatary | 40 |
+| Ilustrace | 19 |
+
+**Největší soubory:**
+
+| Soubor | Řádky |
+| --- | --- |
+| `CreateEventScreen.kt` | 1 560 |
+| `VotingScreen.kt` | 1 422 |
+| `EventDashboardScreen.kt` | 1 336 |
+| `ExpensesScreen.kt` | 1 131 |
+| `ParticipantsScreen.kt` | 1 109 |
+| `CarpoolScreen.kt` | 926 |
+| `EventSettingsScreen.kt` | 877 |
+| `SettingsScreen.kt` | 791 |
+| `UpgradeScreen.kt` | 789 |
+| `Navigation.kt` | 755 |

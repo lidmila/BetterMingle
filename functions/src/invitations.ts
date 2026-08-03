@@ -104,9 +104,24 @@ export const joinByInviteCode = functions.https.onCall(async (request) => {
 
   // Security checks
   if (eventData.securityEnabled) {
-    // PIN verification
-    if (eventData.eventPin && eventData.eventPin !== pin) {
-      throw new functions.https.HttpsError("permission-denied", "Nesprávný PIN.");
+    // PIN se čte z private/security — v dokumentu akce by ho viděl každý
+    // účastník. Starší akce ho ještě mají u sebe, proto ta záloha.
+    const secretDoc = await db
+      .collection("events")
+      .doc(eventId)
+      .collection("private")
+      .doc("security")
+      .get();
+    const eventPin = secretDoc.data()?.pin ?? eventData.eventPin ?? "";
+
+    if (eventPin) {
+      await assertNotRateLimited(uid, eventId);
+
+      if (eventPin !== pin) {
+        await recordFailedPin(uid, eventId);
+        throw new functions.https.HttpsError("permission-denied", "Nesprávný PIN.");
+      }
+      await clearFailedPins(uid, eventId);
     }
 
     // Approval required
@@ -144,10 +159,62 @@ export const joinByInviteCode = functions.https.onCall(async (request) => {
       role: "PARTICIPANT",
       rsvp: "ACCEPTED",
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+      // Dopisujeme i tahle dvě pole, ať mají účastníci jednotný tvar bez
+      // ohledu na to, jestli je přidal pořadatel, nebo přišli přes pozvánku.
+      isManual: false,
+      linkedUserId: null,
     });
 
   return { eventId, status: "joined", eventName: eventData.name };
 });
+
+/**
+ * Ochrana proti hádání PINu. Čtyřmístný PIN má jen 10 000 kombinací, takže
+ * bez omezení by ho stačilo zkoušet dost dlouho. Po pěti chybách je dvojice
+ * uživatel–akce na 15 minut zablokovaná, počítáno od posledního pokusu.
+ */
+const MAX_PIN_ATTEMPTS = 5;
+const PIN_LOCKOUT_MS = 15 * 60 * 1000;
+
+const attemptRef = (uid: string, eventId: string) =>
+  db.collection("pinAttempts").doc(`${uid}_${eventId}`);
+
+async function assertNotRateLimited(uid: string, eventId: string): Promise<void> {
+  const snap = await attemptRef(uid, eventId).get();
+  const data = snap.data();
+  if (!data) return;
+
+  const lastAttempt = data.lastAttemptAt?.toMillis?.() ?? 0;
+  // Okno se počítá od posledního pokusu, takže hádání nejde protahovat
+  const expired = Date.now() - lastAttempt > PIN_LOCKOUT_MS;
+  if (expired) {
+    await attemptRef(uid, eventId).delete();
+    return;
+  }
+
+  if ((data.count ?? 0) >= MAX_PIN_ATTEMPTS) {
+    throw new functions.https.HttpsError(
+      "resource-exhausted",
+      "Příliš mnoho pokusů o PIN. Zkus to znovu za 15 minut."
+    );
+  }
+}
+
+async function recordFailedPin(uid: string, eventId: string): Promise<void> {
+  await attemptRef(uid, eventId).set(
+    {
+      count: admin.firestore.FieldValue.increment(1),
+      lastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
+      uid,
+      eventId,
+    },
+    { merge: true }
+  );
+}
+
+async function clearFailedPins(uid: string, eventId: string): Promise<void> {
+  await attemptRef(uid, eventId).delete().catch(() => undefined);
+}
 
 /**
  * Generate a random 6-character alphanumeric invite code.

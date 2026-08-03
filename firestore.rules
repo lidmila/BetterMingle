@@ -1,139 +1,318 @@
 rules_version = '2';
 
+/**
+ * Zásada: klient smí jen to, co po něm opravdu chceme. Připojení k akci,
+ * ověření PINu a schvalování běží v Cloud Functions pod admin právy, takže
+ * pravidla připojení klientovi zakazují úplně — jinak by šla serverová
+ * kontrola obejít přímým zápisem dokumentu účastníka.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users - only own profile
+    // =========================================================
+    // Uživatelé
+    // =========================================================
+
+    /**
+     * `get` ano, `list` ne. Aplikace potřebuje přečíst profil konkrétního
+     * spoluúčastníka (jméno, stravovací preference do cateringu), ale nikdo
+     * nesmí projít celou kolekci — byly by to e-maily, telefony a alergie
+     * všech uživatelů naráz.
+     */
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Events
+    // =========================================================
+    // Akce
+    // =========================================================
+
     match /events/{eventId} {
-      allow read: if request.auth != null && (
+      allow read: if isSignedIn() && (
         resource.data.createdBy == request.auth.uid ||
         isEventParticipant(eventId)
       );
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && isEventOrganizer(eventId);
 
-      // Participants
+      // Zakladatel musí být ten, kdo píše — jinak by šlo založit akci
+      // podepsanou cizím uživatelem.
+      allow create: if isSignedIn()
+                    && request.resource.data.createdBy == request.auth.uid;
+
+      // Vlastnictví akce se nepřevádí, takže createdBy musí zůstat beze změny.
+      allow update: if isSignedIn()
+                    && isEventOrganizer(eventId)
+                    && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isSignedIn() && isEventOrganizer(eventId);
+
+      /**
+       * PIN akce. Leží stranou od dokumentu akce, protože ten čte každý
+       * účastník — a PIN má znát jen pořadatel a Cloud Function, která ho
+       * ověřuje pod admin právy.
+       */
+      match /private/{docId} {
+        allow read, write: if isSignedIn() && isEventOrganizer(eventId);
+      }
+
+      // -------------------------------------------------------
+      // Účastníci
+      // -------------------------------------------------------
+
       match /participants/{participantId} {
-        allow read: if request.auth != null && (
+        allow read: if isSignedIn() && (
           isEventParticipant(eventId) ||
           resource.data.userId == request.auth.uid
         );
-        // If event requires approval, only organizer can create participants
-        // Otherwise, any authenticated user can join
-        allow create: if request.auth != null && (
-          (request.resource.data.isManual == true && isEventOrganizer(eventId)) ||
-          !isSecurityEnabled(eventId) ||
-          !requiresApproval(eventId) ||
-          isEventOrganizer(eventId)
+
+        /**
+         * Pořadatel přidává ruční hosty a při zakládání akce sám sebe.
+         * Připojení kohokoli dalšího jde výhradně přes `joinByInviteCode`,
+         * která ověří kód, PIN, schvalování i kapacitu.
+         */
+        allow create: if isSignedIn()
+                      && isEventOrganizer(eventId)
+                      && (
+                        request.resource.data.isManual == true ||
+                        (participantId == request.auth.uid &&
+                         request.resource.data.userId == request.auth.uid)
+                      );
+
+        // Účastník si smí měnit jen svou účast (RSVP, přezdívku), ne roli —
+        // jinak by se sám povýšil na spolupořadatele.
+        // `get` s výchozí hodnotou schválně: účastníci připojení přes pozvánku
+        // nemají všechna pole vyplněná a přímé porovnání by jim znemožnilo
+        // změnit i vlastní účast.
+        allow update: if isSignedIn() && (
+          isEventOrganizer(eventId) || (
+            resource.data.userId == request.auth.uid &&
+            request.resource.data.get('role', '') == resource.data.get('role', '') &&
+            request.resource.data.get('userId', '') == resource.data.get('userId', '') &&
+            request.resource.data.get('isManual', false) == resource.data.get('isManual', false) &&
+            request.resource.data.get('linkedUserId', '') == resource.data.get('linkedUserId', '')
+          )
         );
-        allow update, delete: if request.auth != null && (
+
+        allow delete: if isSignedIn() && (
           isEventOrganizer(eventId) ||
           resource.data.userId == request.auth.uid
         );
       }
 
-      // Polls
+      // -------------------------------------------------------
+      // Ankety
+      // -------------------------------------------------------
+
       match /polls/{pollId} {
-        allow read: if request.auth != null && isEventParticipant(eventId);
-        allow create: if request.auth != null && isEventParticipant(eventId);
-        allow update, delete: if request.auth != null && (
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow create: if isSignedIn()
+                      && isEventParticipant(eventId)
+                      && request.resource.data.createdBy == request.auth.uid;
+        allow update, delete: if isSignedIn() && (
           isEventOrganizer(eventId) ||
           resource.data.createdBy == request.auth.uid
         );
 
         match /options/{optionId} {
-          allow read: if request.auth != null && isEventParticipant(eventId);
-          allow write: if request.auth != null && isEventParticipant(eventId);
+          allow read: if isSignedIn() && isEventParticipant(eventId);
+          allow write: if isSignedIn() && isEventParticipant(eventId);
 
+          // ID hlasu je uid hlasujícího, takže nikdo nehlasuje za druhého
+          // ani cizí hlas nepřepíše.
           match /votes/{voteId} {
-            allow read: if request.auth != null && isEventParticipant(eventId);
-            allow write: if request.auth != null && isEventParticipant(eventId);
+            allow read: if isSignedIn() && isEventParticipant(eventId);
+            allow write: if isSignedIn()
+                         && isEventParticipant(eventId)
+                         && voteId == request.auth.uid;
           }
         }
       }
 
-      // Expenses - restricted read when hideFinancials is enabled
+      // -------------------------------------------------------
+      // Výdaje
+      // -------------------------------------------------------
+
       match /expenses/{expenseId} {
-        allow read: if request.auth != null && isEventParticipant(eventId) && (
+        allow read: if isSignedIn() && isEventParticipant(eventId) && (
           !hidesFinancials(eventId) ||
           isEventOrganizer(eventId) ||
           resource.data.paidBy == request.auth.uid
         );
-        allow create: if request.auth != null && isEventParticipant(eventId);
-        allow update, delete: if request.auth != null && (
+        allow create: if isSignedIn() && isEventParticipant(eventId);
+        allow update, delete: if isSignedIn() && (
           isEventOrganizer(eventId) ||
           resource.data.paidBy == request.auth.uid
         );
 
         match /splits/{splitId} {
-          allow read: if request.auth != null && isEventParticipant(eventId) && (
+          allow read: if isSignedIn() && isEventParticipant(eventId) && (
             !hidesFinancials(eventId) ||
             isEventOrganizer(eventId) ||
             resource.data.userId == request.auth.uid
           );
-          allow write: if request.auth != null && isEventParticipant(eventId);
+          allow write: if isSignedIn() && isEventParticipant(eventId);
         }
       }
 
-      // Carpool rides
-      match /carpoolRides/{rideId} {
-        allow read: if request.auth != null && isEventParticipant(eventId);
-        allow create: if request.auth != null && isEventParticipant(eventId);
-        allow update, delete: if request.auth != null && (
-          isEventOrganizer(eventId) ||
-          resource.data.driverId == request.auth.uid
+      // -------------------------------------------------------
+      // Rozpočet — spadá pod skrývání financí stejně jako výdaje
+      // -------------------------------------------------------
+
+      match /budget/{docId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId) && (
+          !hidesFinancials(eventId) || isEventOrganizer(eventId)
         );
-
-        match /passengers/{passengerId} {
-          allow read, write: if request.auth != null && isEventParticipant(eventId);
-        }
+        allow write: if isSignedIn() && isEventOrganizer(eventId);
       }
 
-      // Budget categories
       match /budgetCategories/{categoryId} {
-        allow read: if request.auth != null && isEventParticipant(eventId);
-        allow create: if request.auth != null && isEventOrganizer(eventId);
-        allow update, delete: if request.auth != null && isEventOrganizer(eventId);
+        allow read: if isSignedIn() && isEventParticipant(eventId) && (
+          !hidesFinancials(eventId) || isEventOrganizer(eventId)
+        );
+        allow write: if isSignedIn() && isEventOrganizer(eventId);
 
         match /expenses/{expenseId} {
-          allow read: if request.auth != null && isEventParticipant(eventId);
-          allow create: if request.auth != null && isEventParticipant(eventId);
-          allow update, delete: if request.auth != null && (
+          allow read: if isSignedIn() && isEventParticipant(eventId) && (
+            !hidesFinancials(eventId) ||
+            isEventOrganizer(eventId) ||
+            resource.data.addedBy == request.auth.uid
+          );
+          allow create: if isSignedIn()
+                        && isEventParticipant(eventId)
+                        && request.resource.data.addedBy == request.auth.uid;
+          allow update, delete: if isSignedIn() && (
             isEventOrganizer(eventId) ||
             resource.data.addedBy == request.auth.uid
           );
         }
       }
 
-      // Rooms, schedule, messages, packing, ratings, lastSeen, etc.
-      match /{subcollection}/{docId} {
-        allow read: if request.auth != null && isEventParticipant(eventId);
-        allow write: if request.auth != null && isEventParticipant(eventId);
+      // -------------------------------------------------------
+      // Spolujízda
+      // -------------------------------------------------------
+
+      match /carpoolRides/{rideId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow create: if isSignedIn()
+                      && isEventParticipant(eventId)
+                      && request.resource.data.driverId == request.auth.uid;
+        allow update, delete: if isSignedIn() && (
+          isEventOrganizer(eventId) ||
+          resource.data.driverId == request.auth.uid
+        );
+
+        // ID pasažéra je jeho uid — nikdo nepřihlásí ani neodhlásí druhého.
+        // Stav žádosti mění řidič nebo pořadatel, proto i ta druhá větev.
+        match /passengers/{passengerId} {
+          allow read: if isSignedIn() && isEventParticipant(eventId);
+          allow write: if isSignedIn() && isEventParticipant(eventId) && (
+            passengerId == request.auth.uid ||
+            isEventOrganizer(eventId) ||
+            get(/databases/$(database)/documents/events/$(eventId)/carpoolRides/$(rideId))
+              .data.driverId == request.auth.uid
+          );
+        }
+      }
+
+      // -------------------------------------------------------
+      // Chat — jménem sebe sama, ne cizím
+      // -------------------------------------------------------
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow create: if isSignedIn()
+                      && isEventParticipant(eventId)
+                      && request.resource.data.userId == request.auth.uid;
+        allow update: if false;
+        allow delete: if isSignedIn() && (
+          isEventOrganizer(eventId) ||
+          resource.data.userId == request.auth.uid
+        );
+      }
+
+      // -------------------------------------------------------
+      // Aktivita — záznam smí vzniknout jen pod vlastním jménem
+      // a nikdo ho pak nepřepíše ani nesmaže
+      // -------------------------------------------------------
+
+      match /activity/{entryId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow create: if isSignedIn()
+                      && isEventParticipant(eventId)
+                      && request.resource.data.actorId == request.auth.uid;
+        // Historie se nepřepisuje. `readBy` se plní při zakládání, aplikace
+        // hotový záznam nikdy nemění.
+        allow update, delete: if false;
+      }
+
+      // Hodnocení a značka přečteno mají ID uživatele
+      match /ratings/{ratingId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow write: if isSignedIn()
+                     && isEventParticipant(eventId)
+                     && ratingId == request.auth.uid;
+      }
+
+      match /lastSeen/{userId} {
+        allow read: if isSignedIn() && isEventParticipant(eventId);
+        allow write: if isSignedIn()
+                     && isEventParticipant(eventId)
+                     && userId == request.auth.uid;
+      }
+
+      /**
+       * Společné seznamy — program, úkoly, pokoje, balicí seznam, dárky.
+       * Tyhle moduly jsou ze své podstaty společné, takže je smí měnit každý
+       * účastník.
+       *
+       * Vyjmenované schválně, ne přes zástupný znak: Firestore vyhodnotí
+       * všechna pravidla, která na cestu sedí, a stačí, aby přístup povolilo
+       * jediné z nich. Zástupný `match /{subcollection}/{docId}` by tedy
+       * zpřístupnil i `private/security`, `messages` nebo `budget` a všechna
+       * přísnější pravidla výš by byla k ničemu.
+       */
+      match /rooms/{docId} {
+        allow read, write: if isSignedIn() && isEventParticipant(eventId);
+      }
+
+      match /schedule/{docId} {
+        allow read, write: if isSignedIn() && isEventParticipant(eventId);
+      }
+
+      match /tasks/{docId} {
+        allow read, write: if isSignedIn() && isEventParticipant(eventId);
+      }
+
+      match /packingItems/{docId} {
+        allow read, write: if isSignedIn() && isEventParticipant(eventId);
+      }
+
+      match /wishlistItems/{docId} {
+        allow read, write: if isSignedIn() && isEventParticipant(eventId);
       }
     }
 
-    // Collection group query on participants (used by syncFromCloud)
+    // =========================================================
+    // Napříč akcemi
+    // =========================================================
+
+    // Dotaz přes všechny akce — „ve kterých akcích jsem?"
     match /{path=**}/participants/{participantId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Pending join requests for events with approval required
+    /**
+     * Žádosti o připojení. Zakládá je Cloud Function, klient je jen čte
+     * a pořadatel schvaluje; ruční zakládání by obešlo ověření PINu.
+     */
     match /joinRequests/{requestId} {
-      allow read: if request.auth != null && (
+      allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         isEventOrganizer(resource.data.eventId)
       );
-      allow create: if request.auth != null
-                     && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-                     && isEventOrganizer(resource.data.eventId);
-      allow delete: if request.auth != null && (
+      allow create: if false;
+      allow update: if isSignedIn() && isEventOrganizer(resource.data.eventId);
+      allow delete: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         isEventOrganizer(resource.data.eventId)
       );
@@ -143,7 +322,7 @@ service cloud.firestore {
     // hlášení se prohlížejí v konzoli, aplikace je zpět nenačítá.
     match /translationReports/{reportId} {
       allow read: if false;
-      allow create: if request.auth != null
+      allow create: if isSignedIn()
                     && request.resource.data.keys().hasOnly([
                          'wrongText', 'comment', 'route', 'locale',
                          'platform', 'appVersion', 'buildNumber',
@@ -156,7 +335,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Helper functions
+    // =========================================================
+    // Pomocné funkce
+    // =========================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isEventParticipant(eventId) {
       return exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.auth.uid))
           || get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
@@ -164,14 +350,6 @@ service cloud.firestore {
 
     function isEventOrganizer(eventId) {
       return get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
-    }
-
-    function isSecurityEnabled(eventId) {
-      return get(/databases/$(database)/documents/events/$(eventId)).data.securityEnabled == true;
-    }
-
-    function requiresApproval(eventId) {
-      return get(/databases/$(database)/documents/events/$(eventId)).data.requireApproval == true;
     }
 
     function hidesFinancials(eventId) {

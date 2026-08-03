@@ -139,6 +139,23 @@ service cloud.firestore {
       );
     }
 
+    // Hlášení chybného překladu. Psát smí kdokoli přihlášený, číst nikdo —
+    // hlášení se prohlížejí v konzoli, aplikace je zpět nenačítá.
+    match /translationReports/{reportId} {
+      allow read: if false;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly([
+                         'wrongText', 'comment', 'route', 'locale',
+                         'platform', 'appVersion', 'buildNumber',
+                         'userId', 'createdAt'
+                       ])
+                    && request.resource.data.wrongText is string
+                    && request.resource.data.wrongText.size() <= 200
+                    && request.resource.data.comment is string
+                    && request.resource.data.comment.size() <= 500;
+      allow update, delete: if false;
+    }
+
     // Helper functions
     function isEventParticipant(eventId) {
       return exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.auth.uid))

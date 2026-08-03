@@ -18,3 +18,4 @@ app/release/
 # závislosti testů pravidel
 rules-tests/node_modules/
 firestore-debug.log
+functions/.env

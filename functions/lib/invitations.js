@@ -82,7 +82,7 @@ exports.generateInviteLink = functions.https.onCall(async (request) => {
  * Handles both regular and security-protected events.
  */
 exports.joinByInviteCode = functions.https.onCall(async (request) => {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     const uid = (_a = request.auth) === null || _a === void 0 ? void 0 : _a.uid;
     if (!uid)
         throw new functions.https.HttpsError("unauthenticated", "Musíš být přihlášen/a.");
@@ -127,15 +127,28 @@ exports.joinByInviteCode = functions.https.onCall(async (request) => {
     }
     // Security checks
     if (eventData.securityEnabled) {
-        // PIN verification
-        if (eventData.eventPin && eventData.eventPin !== pin) {
-            throw new functions.https.HttpsError("permission-denied", "Nesprávný PIN.");
+        // PIN se čte z private/security — v dokumentu akce by ho viděl každý
+        // účastník. Starší akce ho ještě mají u sebe, proto ta záloha.
+        const secretDoc = await db
+            .collection("events")
+            .doc(eventId)
+            .collection("private")
+            .doc("security")
+            .get();
+        const eventPin = (_f = (_e = (_d = secretDoc.data()) === null || _d === void 0 ? void 0 : _d.pin) !== null && _e !== void 0 ? _e : eventData.eventPin) !== null && _f !== void 0 ? _f : "";
+        if (eventPin) {
+            await assertNotRateLimited(uid, eventId);
+            if (eventPin !== pin) {
+                await recordFailedPin(uid, eventId);
+                throw new functions.https.HttpsError("permission-denied", "Nesprávný PIN.");
+            }
+            await clearFailedPins(uid, eventId);
         }
         // Approval required
         if (eventData.requireApproval) {
             // Create a join request instead of adding directly
             const userDoc = await db.collection("users").doc(uid).get();
-            const userName = ((_d = userDoc.data()) === null || _d === void 0 ? void 0 : _d.displayName) || "";
+            const userName = ((_g = userDoc.data()) === null || _g === void 0 ? void 0 : _g.displayName) || "";
             await db.collection("joinRequests").add({
                 eventId,
                 userId: uid,
@@ -148,8 +161,8 @@ exports.joinByInviteCode = functions.https.onCall(async (request) => {
     }
     // Add as participant
     const userDoc = await db.collection("users").doc(uid).get();
-    const userName = ((_e = userDoc.data()) === null || _e === void 0 ? void 0 : _e.displayName) || "";
-    const userAvatar = ((_f = userDoc.data()) === null || _f === void 0 ? void 0 : _f.avatarUrl) || "";
+    const userName = ((_h = userDoc.data()) === null || _h === void 0 ? void 0 : _h.displayName) || "";
+    const userAvatar = ((_j = userDoc.data()) === null || _j === void 0 ? void 0 : _j.avatarUrl) || "";
     await db
         .collection("events")
         .doc(eventId)
@@ -162,9 +175,49 @@ exports.joinByInviteCode = functions.https.onCall(async (request) => {
         role: "PARTICIPANT",
         rsvp: "ACCEPTED",
         joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        // Dopisujeme i tahle dvě pole, ať mají účastníci jednotný tvar bez
+        // ohledu na to, jestli je přidal pořadatel, nebo přišli přes pozvánku.
+        isManual: false,
+        linkedUserId: null,
     });
     return { eventId, status: "joined", eventName: eventData.name };
 });
+/**
+ * Ochrana proti hádání PINu. Čtyřmístný PIN má jen 10 000 kombinací, takže
+ * bez omezení by ho stačilo zkoušet dost dlouho. Po pěti chybách je dvojice
+ * uživatel–akce na 15 minut zablokovaná, počítáno od posledního pokusu.
+ */
+const MAX_PIN_ATTEMPTS = 5;
+const PIN_LOCKOUT_MS = 15 * 60 * 1000;
+const attemptRef = (uid, eventId) => db.collection("pinAttempts").doc(`${uid}_${eventId}`);
+async function assertNotRateLimited(uid, eventId) {
+    var _a, _b, _c, _d;
+    const snap = await attemptRef(uid, eventId).get();
+    const data = snap.data();
+    if (!data)
+        return;
+    const lastAttempt = (_c = (_b = (_a = data.lastAttemptAt) === null || _a === void 0 ? void 0 : _a.toMillis) === null || _b === void 0 ? void 0 : _b.call(_a)) !== null && _c !== void 0 ? _c : 0;
+    // Okno se počítá od posledního pokusu, takže hádání nejde protahovat
+    const expired = Date.now() - lastAttempt > PIN_LOCKOUT_MS;
+    if (expired) {
+        await attemptRef(uid, eventId).delete();
+        return;
+    }
+    if (((_d = data.count) !== null && _d !== void 0 ? _d : 0) >= MAX_PIN_ATTEMPTS) {
+        throw new functions.https.HttpsError("resource-exhausted", "Příliš mnoho pokusů o PIN. Zkus to znovu za 15 minut.");
+    }
+}
+async function recordFailedPin(uid, eventId) {
+    await attemptRef(uid, eventId).set({
+        count: admin.firestore.FieldValue.increment(1),
+        lastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
+        uid,
+        eventId,
+    }, { merge: true });
+}
+async function clearFailedPins(uid, eventId) {
+    await attemptRef(uid, eventId).delete().catch(() => undefined);
+}
 /**
  * Generate a random 6-character alphanumeric invite code.
  */

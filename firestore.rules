@@ -22,7 +22,22 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if false;
-      allow write: if isSignedIn() && request.auth.uid == userId;
+
+      /**
+       * Pole o tarifu píše jen webhook z RevenueCatu pod admin právy. Kdyby si
+       * je uživatel směl přepsat sám, byla by kontrola tarifu k ničemu —
+       * stačilo by si do profilu napsat BUSINESS.
+       */
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && !request.resource.data.keys().hasAny(TIER_FIELDS());
+
+      allow update: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasAny(TIER_FIELDS()) == false;
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
     // =========================================================
@@ -36,14 +51,17 @@ service cloud.firestore {
       );
 
       // Zakladatel musí být ten, kdo píše — jinak by šlo založit akci
-      // podepsanou cizím uživatelem.
+      // podepsanou cizím uživatelem. Prémiové moduly a PIN se hlídají i tady,
+      // protože limity v aplikaci obejde upravený klient.
       allow create: if isSignedIn()
-                    && request.resource.data.createdBy == request.auth.uid;
+                    && request.resource.data.createdBy == request.auth.uid
+                    && modulesAllowed(request.resource.data.get('enabledModules', []));
 
       // Vlastnictví akce se nepřevádí, takže createdBy musí zůstat beze změny.
       allow update: if isSignedIn()
                     && isEventOrganizer(eventId)
-                    && request.resource.data.createdBy == resource.data.createdBy;
+                    && request.resource.data.createdBy == resource.data.createdBy
+                    && modulesAllowed(request.resource.data.get('enabledModules', []));
       allow delete: if isSignedIn() && isEventOrganizer(eventId);
 
       /**
@@ -341,6 +359,32 @@ service cloud.firestore {
 
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    /** Pole, která smí měnit jen server. */
+    function TIER_FIELDS() {
+      return ['tier', 'tierExpiresAt', 'tierUpdatedAt', 'tierSource'];
+    }
+
+    /**
+     * Tarif zapisuje výhradně webhook z RevenueCatu pod admin právy — proto
+     * se mu dá věřit. Chybějící pole znamená FREE, což je bezpečná výchozí
+     * hodnota pro každého, kdo si nic nekoupil.
+     */
+    function tierOf() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('tier', 'FREE')
+        : 'FREE';
+    }
+
+    function isPaid() {
+      return tierOf() == 'PRO' || tierOf() == 'BUSINESS';
+    }
+
+    /** Catering, ubytování a spolujízda jsou od PRO, rozpočet až od BUSINESS. */
+    function modulesAllowed(modules) {
+      return !(modules.hasAny(['CATERING', 'ROOMS', 'CARPOOL']) && !isPaid())
+          && !(modules.hasAny(['BUDGET']) && tierOf() != 'BUSINESS');
     }
 
     function isEventParticipant(eventId) {

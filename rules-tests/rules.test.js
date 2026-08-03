@@ -354,3 +354,58 @@ describe('skrytý rozpočet', () => {
     await assertSucceeds(getDoc(doc(as(ORGANIZER), 'events', EVENT, 'budgetCategories', 'k1')));
   });
 });
+
+describe('tarif si uživatel nenastaví sám', () => {
+  it('do profilu si tier nezapíše', async () => {
+    await seed();
+    await assertFails(
+      setDoc(doc(as(MEMBER), 'users', MEMBER), { displayName: 'Ucastnik', tier: 'BUSINESS' })
+    );
+    await assertFails(updateDoc(doc(as(MEMBER), 'users', MEMBER), { tier: 'BUSINESS' }));
+  });
+
+  it('ostatní údaje v profilu měnit může', async () => {
+    await seed();
+    await assertSucceeds(updateDoc(doc(as(MEMBER), 'users', MEMBER), { phone: '+420000111222' }));
+  });
+
+  it('prémiový modul si bez tarifu k akci nepřidá', async () => {
+    await seed();
+    await assertFails(
+      setDoc(doc(as(OUTSIDER), 'events', 'akce_pro'), {
+        createdBy: OUTSIDER,
+        name: 'placene moduly',
+        enabledModules: ['CARPOOL'],
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(as(OUTSIDER), 'events', 'akce_free'), {
+        createdBy: OUTSIDER,
+        name: 'bezplatne moduly',
+        enabledModules: ['CHAT', 'TASKS'],
+      })
+    );
+  });
+
+  it('se zaplaceným tarifem prémiový modul projde', async () => {
+    await seed();
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'users', OUTSIDER), { tier: 'PRO' });
+    });
+    await assertSucceeds(
+      setDoc(doc(as(OUTSIDER), 'events', 'akce_pro2'), {
+        createdBy: OUTSIDER,
+        name: 'placene moduly',
+        enabledModules: ['CARPOOL'],
+      })
+    );
+    // Rozpočet je až od BUSINESS
+    await assertFails(
+      setDoc(doc(as(OUTSIDER), 'events', 'akce_budget'), {
+        createdBy: OUTSIDER,
+        name: 'rozpocet',
+        enabledModules: ['BUDGET'],
+      })
+    );
+  });
+});

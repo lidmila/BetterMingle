@@ -1,20 +1,28 @@
 <cs-CZ>
 Co je nového v 1.5.4:
 
-• Oprava nahrávání profilové fotky — nahrání dřív skončilo chybou
-• Stravovací preference se sdílejí jen v rámci akce, ke které patří
-• Mazání zpráv v chatu a úprava rozpočtových kategorií
+• Úvodní obrazovky mají nové ilustrace
+• Po opětovném přihlášení se vrátí jméno, avatar i kontakty — dřív zůstaly prázdné
+• Aktivita akce konečně zaznamenává, co se v ní děje
+• Oprava nahrávání profilové fotky, dřív skončilo chybou
 • Přepnutí jazyka se okamžitě projeví v celé aplikaci
-• Přihlášení do akce funguje i bez připojení a odmítnutí je nově vidět
-• Drobné opravy textů a chování
+• Mazání zpráv v chatu a úprava rozpočtových kategorií
+• Zápisy fungují i bez připojení a odmítnutou změnu je nově vidět
+• Po odhlášení už na zařízení nechodí oznámení k původnímu účtu
+• Stravovací preference se sdílejí jen v rámci akce, ke které patří
+• Obnova nákupů má konečně srozumitelný popisek
 </cs-CZ>
 <en-US>
 What's new in 1.5.4:
 
-• Fixed profile photo upload — it previously failed with an error
-• Dietary preferences are now shared only within the event they belong to
-• Deleting chat messages and editing budget categories
-• Switching language now updates the whole app immediately
-• Joining an event works offline and rejections are now visible
-• Minor text and behaviour fixes
+• New illustrations on the intro screens
+• Signing back in restores your name, avatar and contacts — they used to come back empty
+• The activity feed finally records what happens in an event
+• Fixed profile photo upload, which used to fail with an error
+• Switching language now applies across the whole app at once
+• Delete chat messages and edit budget categories
+• Changes save offline, and a refused change is now visible
+• Signing out stops notifications for that account on the device
+• Dietary preferences are shared only within the event they belong to
+• The restore purchases button is finally labelled for what it does
 </en-US>

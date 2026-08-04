@@ -1,0 +1,20 @@
+<cs-CZ>
+Co je nového v 1.5.4:
+
+• Oprava nahrávání profilové fotky — nahrání dřív skončilo chybou
+• Stravovací preference se sdílejí jen v rámci akce, ke které patří
+• Mazání zpráv v chatu a úprava rozpočtových kategorií
+• Přepnutí jazyka se okamžitě projeví v celé aplikaci
+• Přihlášení do akce funguje i bez připojení a odmítnutí je nově vidět
+• Drobné opravy textů a chování
+</cs-CZ>
+<en-US>
+What's new in 1.5.4:
+
+• Fixed profile photo upload — it previously failed with an error
+• Dietary preferences are now shared only within the event they belong to
+• Deleting chat messages and editing budget categories
+• Switching language now updates the whole app immediately
+• Joining an event works offline and rejections are now visible
+• Minor text and behaviour fixes
+</en-US>

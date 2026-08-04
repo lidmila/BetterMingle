@@ -1,5 +1,5 @@
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { onDocumentWritten } from "firebase-functions/v2/firestore";
 
 const db = admin.firestore();
 
@@ -29,22 +29,30 @@ async function recount(uid: string): Promise<void> {
   await db.collection("users").doc(uid).set({ activeEventCount: active }, { merge: true });
 }
 
-export const onEventWritten = functions.firestore
-  .document("events/{eventId}")
-  .onWrite(async (change) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    // Majitel se nepřevádí, ale při smazání zůstane jen ta předchozí verze
-    const owners = new Set<string>();
-    if (typeof before?.createdBy === "string") owners.add(before.createdBy);
-    if (typeof after?.createdBy === "string") owners.add(after.createdBy);
+/**
+ * Musí to být funkce 2. generace: databáze leží v multiregionu `eur3`, který
+ * Firestore triggery 1. generace neumí obsloužit ani v evropském regionu.
+ * Starší triggery v projektu běží v us-central1 ještě z doby před migrací.
+ */
+export const onEventWritten = onDocumentWritten(
+  { document: "events/{eventId}", region: "europe-west1" },
+  async (event) => {
+    const before = event.data?.before;
+    const after = event.data?.after;
 
     // Přepočítávat po každé úpravě akce by bylo zbytečně drahé — na počet
     // má vliv jen vznik, zánik a změna stavu.
-    const statusChanged = before?.status !== after?.status;
-    const existenceChanged = change.before.exists !== change.after.exists;
+    const statusChanged = before?.data()?.status !== after?.data()?.status;
+    const existenceChanged = (before?.exists ?? false) !== (after?.exists ?? false);
     if (!statusChanged && !existenceChanged) return;
 
+    // Majitel se nepřevádí, ale při smazání zůstane jen ta předchozí verze
+    const owners = new Set<string>();
+    for (const snap of [before, after]) {
+      const uid = snap?.data()?.createdBy;
+      if (typeof uid === "string") owners.add(uid);
+    }
+
     await Promise.all([...owners].map(recount));
-  });
+  }
+);

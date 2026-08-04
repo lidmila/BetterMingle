@@ -34,8 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onEventWritten = void 0;
-const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const firestore_1 = require("firebase-functions/v2/firestore");
 const db = admin.firestore();
 /**
  * Počet živých akcí uživatele v `users/{uid}.activeEventCount`.
@@ -62,23 +62,28 @@ async function recount(uid) {
     }).length;
     await db.collection("users").doc(uid).set({ activeEventCount: active }, { merge: true });
 }
-exports.onEventWritten = functions.firestore
-    .document("events/{eventId}")
-    .onWrite(async (change) => {
-    const before = change.before.data();
-    const after = change.after.data();
-    // Majitel se nepřevádí, ale při smazání zůstane jen ta předchozí verze
-    const owners = new Set();
-    if (typeof (before === null || before === void 0 ? void 0 : before.createdBy) === "string")
-        owners.add(before.createdBy);
-    if (typeof (after === null || after === void 0 ? void 0 : after.createdBy) === "string")
-        owners.add(after.createdBy);
+/**
+ * Musí to být funkce 2. generace: databáze leží v multiregionu `eur3`, který
+ * Firestore triggery 1. generace neumí obsloužit ani v evropském regionu.
+ * Starší triggery v projektu běží v us-central1 ještě z doby před migrací.
+ */
+exports.onEventWritten = (0, firestore_1.onDocumentWritten)({ document: "events/{eventId}", region: "europe-west1" }, async (event) => {
+    var _a, _b, _c, _d, _e, _f, _g;
+    const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before;
+    const after = (_b = event.data) === null || _b === void 0 ? void 0 : _b.after;
     // Přepočítávat po každé úpravě akce by bylo zbytečně drahé — na počet
     // má vliv jen vznik, zánik a změna stavu.
-    const statusChanged = (before === null || before === void 0 ? void 0 : before.status) !== (after === null || after === void 0 ? void 0 : after.status);
-    const existenceChanged = change.before.exists !== change.after.exists;
+    const statusChanged = ((_c = before === null || before === void 0 ? void 0 : before.data()) === null || _c === void 0 ? void 0 : _c.status) !== ((_d = after === null || after === void 0 ? void 0 : after.data()) === null || _d === void 0 ? void 0 : _d.status);
+    const existenceChanged = ((_e = before === null || before === void 0 ? void 0 : before.exists) !== null && _e !== void 0 ? _e : false) !== ((_f = after === null || after === void 0 ? void 0 : after.exists) !== null && _f !== void 0 ? _f : false);
     if (!statusChanged && !existenceChanged)
         return;
+    // Majitel se nepřevádí, ale při smazání zůstane jen ta předchozí verze
+    const owners = new Set();
+    for (const snap of [before, after]) {
+        const uid = (_g = snap === null || snap === void 0 ? void 0 : snap.data()) === null || _g === void 0 ? void 0 : _g.createdBy;
+        if (typeof uid === "string")
+            owners.add(uid);
+    }
     await Promise.all([...owners].map(recount));
 });
 //# sourceMappingURL=eventCounter.js.map

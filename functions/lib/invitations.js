@@ -38,6 +38,29 @@ const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const db = admin.firestore();
 /**
+ * Kolik účastníků pustí tarif pořadatele. Musí odpovídat `maxParticipants()`
+ * v aplikaci (src/core/tiers.ts na webu, src/tiers.ts v mobilu) — kdyby se to
+ * rozešlo, uživatel narazí na strop, o kterém se nikde nedočetl.
+ *
+ * Tarif se čte z `users/{uid}.tier`, kam ho píše jen webhook z RevenueCatu
+ * pod admin právy. Chybějící hodnota znamená FREE, což je bezpečný výchozí
+ * stav pro každého, kdo si nic nekoupil.
+ */
+async function participantCapOf(ownerUid) {
+    var _a;
+    if (!ownerUid)
+        return 20;
+    const snap = await db.collection("users").doc(ownerUid).get();
+    switch ((_a = snap.data()) === null || _a === void 0 ? void 0 : _a.tier) {
+        case "BUSINESS":
+            return Number.MAX_SAFE_INTEGER;
+        case "PRO":
+            return 100;
+        default:
+            return 20;
+    }
+}
+/**
  * Generate a shareable invite link for an event.
  * Called by the app when user wants to share an event.
  */
@@ -113,15 +136,25 @@ exports.joinByInviteCode = functions.https.onCall(async (request) => {
     if (!existingParticipant.empty) {
         return { eventId, status: "already_joined", eventName: eventData.name };
     }
-    // Check max participants
-    if (eventData.maxParticipants > 0) {
+    /**
+     * Kapacita akce. Pole `maxParticipants` si nastavuje klient, takže se na něj
+     * samo o sobě spolehnout nedá — upravená aplikace by si tam napsala cokoli
+     * a limit tarifu obešla. Rozhoduje proto přísnější ze dvou čísel: přání
+     * pořadatele a strop jeho tarifu.
+     */
+    const tierCap = await participantCapOf(eventData.createdBy);
+    const wanted = typeof eventData.maxParticipants === "number" && eventData.maxParticipants > 0
+        ? eventData.maxParticipants
+        : Number.MAX_SAFE_INTEGER;
+    const cap = Math.min(wanted, tierCap);
+    if (cap < Number.MAX_SAFE_INTEGER) {
         const participantCount = await db
             .collection("events")
             .doc(eventId)
             .collection("participants")
             .count()
             .get();
-        if (participantCount.data().count >= eventData.maxParticipants) {
+        if (participantCount.data().count >= cap) {
             throw new functions.https.HttpsError("resource-exhausted", "Akce je plná.");
         }
     }

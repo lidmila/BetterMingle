@@ -342,6 +342,58 @@ describe('PIN akce', () => {
   });
 });
 
+describe('limit počtu akcí', () => {
+  /** Nastaví profil tak, jak ho vidí pravidla — tarif i počítadlo píše server. */
+  async function profile(uid, fields) {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'users', uid), fields, { merge: true });
+    });
+  }
+
+  const zaloz = (uid, id) =>
+    setDoc(doc(as(uid), 'events', id), { createdBy: uid, name: 'Dalsi akce' });
+
+  it('zdarma projde první akce, druhá ne', async () => {
+    await seed();
+    await profile(OUTSIDER, { activeEventCount: 0 });
+    await assertSucceeds(zaloz(OUTSIDER, 'akce_prvni'));
+
+    await profile(OUTSIDER, { activeEventCount: 1 });
+    await assertFails(zaloz(OUTSIDER, 'akce_druha'));
+  });
+
+  it('Pro pustí tři, čtvrtou ne', async () => {
+    await seed();
+    await profile(OUTSIDER, { tier: 'PRO', activeEventCount: 2 });
+    await assertSucceeds(zaloz(OUTSIDER, 'akce_treti'));
+
+    await profile(OUTSIDER, { tier: 'PRO', activeEventCount: 3 });
+    await assertFails(zaloz(OUTSIDER, 'akce_ctvrta'));
+  });
+
+  it('Business limit prakticky nemá', async () => {
+    await seed();
+    await profile(OUTSIDER, { tier: 'BUSINESS', activeEventCount: 500 });
+    await assertSucceeds(zaloz(OUTSIDER, 'akce_pet_set'));
+  });
+
+  it('bez počítadla se zakládání nezablokuje', async () => {
+    await seed();
+    // Uživatel z doby před počítadlem nebo trigger, který ještě neproběhl.
+    // Pustit o akci navíc je menší škoda než zablokovat platícího zákazníka.
+    await profile(OUTSIDER, { displayName: 'Bez pocitadla' });
+    await assertSucceeds(zaloz(OUTSIDER, 'akce_bez_pocitadla'));
+  });
+
+  it('počítadlo si uživatel nepřepíše', async () => {
+    await seed();
+    await profile(OUTSIDER, { activeEventCount: 5 });
+    await assertFails(
+      updateDoc(doc(as(OUTSIDER), 'users', OUTSIDER), { activeEventCount: 0 })
+    );
+  });
+});
+
 describe('spolupořadatel', () => {
   /** Povýší účastníka na spolupořadatele mimo pravidla, jako by to udělal pořadatel. */
   async function promote(uid, role = 'CO_ORGANIZER') {

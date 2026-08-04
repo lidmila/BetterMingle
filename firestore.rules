@@ -59,7 +59,8 @@ service cloud.firestore {
       // protože limity v aplikaci obejde upravený klient.
       allow create: if isSignedIn()
                     && request.resource.data.createdBy == request.auth.uid
-                    && modulesAllowed(request.resource.data.get('enabledModules', []));
+                    && modulesAllowed(request.resource.data.get('enabledModules', []))
+                    && underEventLimit();
 
       // Vlastnictví akce se nepřevádí, takže createdBy musí zůstat beze změny.
       allow update: if isSignedIn()
@@ -367,7 +368,27 @@ service cloud.firestore {
 
     /** Pole, která smí měnit jen server. */
     function TIER_FIELDS() {
-      return ['tier', 'tierExpiresAt', 'tierUpdatedAt', 'tierSource'];
+      return ['tier', 'tierExpiresAt', 'tierUpdatedAt', 'tierSource', 'activeEventCount'];
+    }
+
+    /**
+     * Limit počtu živých akcí.
+     *
+     * Pravidla neumí počítat dokumenty, takže číslo udržuje trigger
+     * `onEventWritten` v `users/{uid}.activeEventCount`.
+     *
+     * Když pole chybí — uživatel z doby před zavedením počítadla, nebo trigger
+     * ještě neproběhl — pravidlo pustí. Pustit o akci navíc je menší škoda než
+     * zablokovat zakládání někomu, kdo si zaplatil.
+     */
+    function underEventLimit() {
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          || !('activeEventCount' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.activeEventCount < maxEventsForTier();
+    }
+
+    function maxEventsForTier() {
+      return tierOf() == 'BUSINESS' ? 9999 : (tierOf() == 'PRO' ? 3 : 1);
     }
 
     /**

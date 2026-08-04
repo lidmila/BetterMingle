@@ -6,3 +6,4 @@ export { onNewMessage, onNewPoll, onNewExpense, onEventUpdated } from "./notific
 export { generateInviteLink, joinByInviteCode } from "./invitations";
 export { revenueCatWebhook, expireStaleTiers } from "./entitlements";
 export { reconcileTiers } from "./reconcileTiers";
+export { onEventWritten } from "./eventCounter";

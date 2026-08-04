@@ -396,8 +396,25 @@ service cloud.firestore {
           || get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
     }
 
+    /**
+     * Pořadatel je zakladatel akce — a taky ten, komu roli předal.
+     *
+     * Spolupořadatelé jsou placená funkce od tarifu Pro a aplikace jim ovládání
+     * pořadatele ukazuje, jenže pravidla znala jen `createdBy`, takže jim server
+     * každý zápis odmítl. Platilo se za funkci, která nefungovala.
+     *
+     * Sám se nikdo nepovýší: roli mění jen pořadatel a pravidlo `participants`
+     * běžnému účastníkovi úpravu vlastní role zakazuje.
+     */
     function isEventOrganizer(eventId) {
-      return get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
+      return get(/databases/$(database)/documents/events/$(eventId)).data.createdBy == request.auth.uid
+          || participantRole(eventId) in ['ORGANIZER', 'CO_ORGANIZER'];
+    }
+
+    function participantRole(eventId) {
+      return exists(/databases/$(database)/documents/events/$(eventId)/participants/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/events/$(eventId)/participants/$(request.auth.uid)).data.get('role', '')
+        : '';
     }
 
     function hidesFinancials(eventId) {

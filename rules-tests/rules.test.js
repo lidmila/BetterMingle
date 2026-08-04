@@ -342,6 +342,58 @@ describe('PIN akce', () => {
   });
 });
 
+describe('spolupořadatel', () => {
+  /** Povýší účastníka na spolupořadatele mimo pravidla, jako by to udělal pořadatel. */
+  async function promote(uid, role = 'CO_ORGANIZER') {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), 'events', EVENT, 'participants', uid),
+        { userId: uid, role },
+        { merge: true }
+      );
+    });
+  }
+
+  it('smí měnit akci, běžný účastník ne', async () => {
+    await seed();
+    await assertFails(setDoc(doc(as(MEMBER), 'events', EVENT), { name: 'Cizi' }, { merge: true }));
+    await promote(MEMBER);
+    await assertSucceeds(setDoc(doc(as(MEMBER), 'events', EVENT), { name: 'Nove' }, { merge: true }));
+  });
+
+  it('dostane se k PINu, na kterém stojí připojení do akce', async () => {
+    await seed();
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'events', EVENT, 'private', 'security'), { pin: '1234' });
+    });
+    await promote(MEMBER);
+    await assertSucceeds(getDoc(doc(as(MEMBER), 'events', EVENT, 'private', 'security')));
+  });
+
+  it('sám se na spolupořadatele nepovýší', async () => {
+    await seed();
+    // Tohle je celá podmínka bezpečnosti té změny: roli rozdává pořadatel,
+    // účastník si ji nenastaví, a tím pádem si nevyrobí ani práva pořadatele.
+    await assertFails(
+      updateDoc(doc(as(MEMBER), 'events', EVENT, 'participants', MEMBER), {
+        role: 'CO_ORGANIZER',
+      })
+    );
+    await assertFails(getDoc(doc(as(MEMBER), 'events', EVENT, 'private', 'security')));
+  });
+
+  it('ani spolupořadatel akci nepřevede na sebe', async () => {
+    await seed();
+    await promote(MEMBER);
+    await assertFails(updateDoc(doc(as(MEMBER), 'events', EVENT), { createdBy: MEMBER }));
+  });
+
+  it('cizí mimo akci se spolupořadatelem nestane', async () => {
+    await seed();
+    await assertFails(setDoc(doc(as(OUTSIDER), 'events', EVENT), { name: 'Cizi' }, { merge: true }));
+  });
+});
+
 describe('vlastnictví akce', () => {
   it('akci nejde založit pod cizím jménem', async () => {
     await seed();

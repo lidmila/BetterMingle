@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.expireStaleTiers = exports.revenueCatWebhook = exports.joinByInviteCode = exports.generateInviteLink = exports.onEventUpdated = exports.onNewExpense = exports.onNewPoll = exports.onNewMessage = void 0;
+exports.reconcileTiers = exports.expireStaleTiers = exports.revenueCatWebhook = exports.joinByInviteCode = exports.generateInviteLink = exports.onEventUpdated = exports.onNewExpense = exports.onNewPoll = exports.onNewMessage = void 0;
 const admin = __importStar(require("firebase-admin"));
 admin.initializeApp();
 var notifications_1 = require("./notifications");
@@ -47,4 +47,6 @@ Object.defineProperty(exports, "joinByInviteCode", { enumerable: true, get: func
 var entitlements_1 = require("./entitlements");
 Object.defineProperty(exports, "revenueCatWebhook", { enumerable: true, get: function () { return entitlements_1.revenueCatWebhook; } });
 Object.defineProperty(exports, "expireStaleTiers", { enumerable: true, get: function () { return entitlements_1.expireStaleTiers; } });
+var reconcileTiers_1 = require("./reconcileTiers");
+Object.defineProperty(exports, "reconcileTiers", { enumerable: true, get: function () { return reconcileTiers_1.reconcileTiers; } });
 //# sourceMappingURL=index.js.map

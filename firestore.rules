@@ -14,13 +14,17 @@ service cloud.firestore {
     // =========================================================
 
     /**
-     * `get` ano, `list` ne. Aplikace potřebuje přečíst profil konkrétního
-     * spoluúčastníka (jméno, stravovací preference do cateringu), ale nikdo
-     * nesmí projít celou kolekci — byly by to e-maily, telefony a alergie
-     * všech uživatelů naráz.
+     * Profil čte jen jeho vlastník. Jsou v něm telefon, e-mail a alergie —
+     * tedy i zdravotní údaj, u kterého GDPR nesnese, aby ho viděl kdokoli
+     * přihlášený.
+     *
+     * Catering dřív kvůli preferencím sahal do cizích profilů. Dnes je má
+     * u sebe účastník akce (`participants/{uid}.dietaryPreferences`), kam je
+     * při každém uložení profilu rozešle `syncDietaryPreferences()` — a tam
+     * je vidí jen lidé z té konkrétní akce, nikoli celý svět.
      */
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && request.auth.uid == userId;
       allow list: if false;
 
       /**

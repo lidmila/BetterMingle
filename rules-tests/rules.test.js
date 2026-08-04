@@ -200,9 +200,16 @@ describe('profily uživatelů', () => {
     await assertFails(setDoc(doc(as(ORGANIZER), 'users', MEMBER), { displayName: 'Podvrh' }));
   });
 
-  it('spoluúčastník profil přečte', async () => {
+  it('svůj profil přečte vlastník', async () => {
     await seed();
-    await assertSucceeds(getDoc(doc(as(ORGANIZER), 'users', MEMBER)));
+    await assertSucceeds(getDoc(doc(as(MEMBER), 'users', MEMBER)));
+  });
+
+  it('spoluúčastník do cizího profilu nevidí', async () => {
+    await seed();
+    // Ani organizátor akce ne — na catering mu stačí preference uložené
+    // u účastníka, do telefonu a e-mailu druhých mu nic není.
+    await assertFails(getDoc(doc(as(ORGANIZER), 'users', MEMBER)));
   });
 
   it('celou kolekci uživatelů nikdo nevylistuje', async () => {
@@ -211,12 +218,27 @@ describe('profily uživatelů', () => {
     await assertFails(getDocs(collection(as(OUTSIDER), 'users')));
   });
 
-  it('konkrétní profil přečte kdokoli přihlášený — potřebuje to catering', async () => {
+  it('cizí se k telefonu ani alergiím nedostane', async () => {
     await seed();
-    // Tenhle test popisuje SOUČASNÝ stav, ne žádoucí. Až se pravidlo zpřísní,
-    // musí se přepsat na assertFails — viz poznámka v firestore.rules.
-    const snap = await assertSucceeds(getDoc(doc(as(OUTSIDER), 'users', MEMBER)));
-    assert.equal(snap.data().phone, '+420111222333');
+    // Dřív tudy šlo přečíst telefon a zdravotní údaje kohokoli, komu se
+    // uhodlo uid — stačilo být přihlášený.
+    await assertFails(getDoc(doc(as(OUTSIDER), 'users', MEMBER)));
+  });
+
+  it('preference pro catering se čtou od účastníka akce', async () => {
+    await seed();
+    // Náhrada za čtení cizího profilu: preference leží u účastníka, takže
+    // je organizátor vidí, ale jen v rámci své akce.
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), 'events', EVENT, 'participants', MEMBER),
+        { userId: MEMBER, role: 'PARTICIPANT', dietaryPreferences: ['dietary_nuts'] }
+      );
+    });
+    const snap = await assertSucceeds(
+      getDoc(doc(as(ORGANIZER), 'events', EVENT, 'participants', MEMBER))
+    );
+    assert.deepEqual(snap.data().dietaryPreferences, ['dietary_nuts']);
   });
 });
 

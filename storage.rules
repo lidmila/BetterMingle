@@ -2,13 +2,24 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Event photos - participants can read/write
-    match /events/{eventId}/photos/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.size < 10 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
+    /**
+     * Fotky akcí a účtenky tu měly svá pravidla, ale povolovala číst i zapisovat
+     * komukoli přihlášenému do libovolné akce — u účtenek dokonce jakýkoli soubor
+     * do 10 MB bez kontroly typu. Byl to volný souborový prostor pro každého,
+     * kdo si založí účet, a u účtenek i vystavené účetní doklady cizích lidí.
+     *
+     * Žádný klient ty cesty nepoužívá — ověřeno ve webové aplikaci, v Expo
+     * projektu i ve staré nativní aplikaci — takže pravidla mizí a zápis sem
+     * spadne pod výchozí zákaz.
+     *
+     * Až ta funkce vznikne, pravidlo musí omezit přístup na účastníky dané akce.
+     * Pravidla Storage umí sáhnout do Firestore, takže se to dá ověřit takhle:
+     *
+     *   allow read, write: if request.auth != null && firestore.exists(
+     *     /databases/(default)/documents/events/$(eventId)/participants/$(request.auth.uid));
+     *
+     * a u zápisu k tomu přidat limit velikosti a kontrolu contentType.
+     */
 
     // User avatars
     match /users/{userId}/avatar/{allPaths=**} {
@@ -17,13 +28,6 @@ service firebase.storage {
                    && request.auth.uid == userId
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
-    }
-
-    // Expense receipts
-    match /events/{eventId}/receipts/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-                   && request.resource.size < 10 * 1024 * 1024;
     }
   }
 }

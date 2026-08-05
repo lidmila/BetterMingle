@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onEventWritten = exports.reconcileTiers = exports.expireStaleTiers = exports.revenueCatWebhook = exports.joinByInviteCode = exports.generateInviteLink = exports.onEventUpdated = exports.onNewExpense = exports.onNewPoll = exports.onNewMessage = void 0;
+exports.onProfileDietaryWritten = exports.onEventWritten = exports.reconcileTiers = exports.expireStaleTiers = exports.revenueCatWebhook = exports.joinByInviteCode = exports.generateInviteLink = exports.onEventUpdated = exports.onNewExpense = exports.onNewPoll = exports.onNewMessage = void 0;
 const admin = __importStar(require("firebase-admin"));
 admin.initializeApp();
 var notifications_1 = require("./notifications");
@@ -51,4 +51,6 @@ var reconcileTiers_1 = require("./reconcileTiers");
 Object.defineProperty(exports, "reconcileTiers", { enumerable: true, get: function () { return reconcileTiers_1.reconcileTiers; } });
 var eventCounter_1 = require("./eventCounter");
 Object.defineProperty(exports, "onEventWritten", { enumerable: true, get: function () { return eventCounter_1.onEventWritten; } });
+var dietary_1 = require("./dietary");
+Object.defineProperty(exports, "onProfileDietaryWritten", { enumerable: true, get: function () { return dietary_1.onProfileDietaryWritten; } });
 //# sourceMappingURL=index.js.map

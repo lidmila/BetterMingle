@@ -7,3 +7,4 @@ export { generateInviteLink, joinByInviteCode } from "./invitations";
 export { revenueCatWebhook, expireStaleTiers } from "./entitlements";
 export { reconcileTiers } from "./reconcileTiers";
 export { onEventWritten } from "./eventCounter";
+export { onProfileDietaryWritten } from "./dietary";

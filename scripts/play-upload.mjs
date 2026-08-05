@@ -1,22 +1,19 @@
 /**
- * Povýšení verze z interního testování do produkce, včetně poznámek k vydání.
+ * Nahraje AAB do Google Play a vydá ho ve zvoleném kanálu.
  *
- * Play pracuje s „edity": otevře se rozpracovaná úprava, do ní se zapíše
- * vydání a nakonec se potvrdí. Bez potvrzení se nic nezveřejní, takže
- * `--dry-run` je bezpečné pouštět kdykoli.
+ * Nahrání i vydání proběhne v jedné rozpracované úpravě, takže se nemůže
+ * stát, že by v obchodě zůstal nahraný balíček, který nikam nepatří.
+ * Bez --commit se úprava na konci zahodí a v obchodě se nezmění nic.
  *
- * Použití:
- *   node scripts/play-promote.mjs <versionCode> <souborSPoznamkami> [--name=1.5.5] [--commit]
- *
- * `--name` je jméno vydání v konzoli. Když se neuvede, použije se číslo
- * sestavení — čitelnější je ale verze, pod kterou aplikaci znají uživatelé.
+ *   node scripts/play-upload.mjs <aab> <poznámky.txt> [--track=production] [--commit]
  */
-import { createSign } from 'crypto';
-import { readFileSync } from 'fs';
+import { createSign } from 'node:crypto';
+import { readFileSync, statSync } from 'node:fs';
 
 const KEY_PATH = 'C:/Users/lidmi/Documents/bettermingle-play-key.json';
 const PACKAGE = 'com.bettermingle.app';
-const BASE = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
+const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
+const UPLOAD = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}`;
 
 const b64 = (x) => Buffer.from(x).toString('base64url');
 
@@ -49,12 +46,15 @@ async function accessToken() {
 }
 
 let token = '';
-async function call(path, { method = 'GET', body } = {}) {
+async function call(url, { method = 'GET', body, raw, contentType } = {}) {
   if (!token) token = await accessToken();
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(url, {
     method,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': contentType ?? 'application/json',
+    },
+    body: raw ?? (body ? JSON.stringify(body) : undefined),
   });
   const text = await res.text();
   const json = text ? JSON.parse(text) : {};
@@ -72,42 +72,51 @@ function parseNotes(path) {
   return notes;
 }
 
-const [versionCodeArg, notesPath, ...flags] = process.argv.slice(2);
-if (!versionCodeArg || !notesPath) {
-  console.error('použití: <versionCode> <souborSPoznamkami> [--commit]');
+const [aabPath, notesPath, ...flags] = process.argv.slice(2);
+if (!aabPath || !notesPath) {
+  console.error('použití: <aab> <poznámky.txt> [--track=production] [--commit]');
   process.exit(1);
 }
-const versionCode = String(versionCodeArg);
-const releaseName = (flags.find((f) => f.startsWith('--name=')) ?? `--name=${versionCode}`).split(
-  '='
-)[1];
+
+const track = (flags.find((f) => f.startsWith('--track=')) ?? '--track=production').split('=')[1];
 const releaseNotes = parseNotes(notesPath);
+const megabytes = (statSync(aabPath).size / 1024 / 1024).toFixed(1);
+
+console.log(`balíček : ${aabPath} (${megabytes} MB)`);
+console.log(`kanál   : ${track}`);
 console.log(`poznámky: ${releaseNotes.length} jazyků`);
 
-const edit = await call('/edits', { method: 'POST' });
-console.log('rozpracovaná úprava:', edit.id);
+const edit = await call(`${API}/edits`, { method: 'POST' });
+console.log(`\nrozpracovaná úprava: ${edit.id}`);
 
-await call(`/edits/${edit.id}/tracks/production`, {
+console.log('nahrávám…');
+const bundle = await call(`${UPLOAD}/edits/${edit.id}/bundles?uploadType=media`, {
+  method: 'POST',
+  raw: readFileSync(aabPath),
+  contentType: 'application/octet-stream',
+});
+console.log(`✓ nahráno jako versionCode ${bundle.versionCode}`);
+
+await call(`${API}/edits/${edit.id}/tracks/${track}`, {
   method: 'PUT',
   body: {
-    track: 'production',
+    track,
     releases: [
       {
-        name: releaseName,
-        versionCodes: [versionCode],
+        name: String(bundle.versionCode),
+        versionCodes: [String(bundle.versionCode)],
         status: 'completed',
         releaseNotes,
       },
     ],
   },
 });
-console.log(`✓ verze ${versionCode} zapsána do produkčního kanálu`);
+console.log(`✓ zapsáno do kanálu ${track}`);
 
 if (flags.includes('--commit')) {
-  await call(`/edits/${edit.id}:commit`, { method: 'POST' });
+  await call(`${API}/edits/${edit.id}:commit`, { method: 'POST' });
   console.log('\nZVEŘEJNĚNO — verze jde k uživatelům');
 } else {
-  await call(`/edits/${edit.id}`, { method: 'DELETE' }).catch(() => undefined);
+  await call(`${API}/edits/${edit.id}`, { method: 'DELETE' }).catch(() => undefined);
   console.log('\n[zkouška] úprava zahozena, v obchodě se nic nezměnilo');
-  console.log('Zveřejníš přidáním --commit');
 }

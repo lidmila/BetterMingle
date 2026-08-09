@@ -31,15 +31,26 @@
             </intent-filter>
 
             <!-- Deep Links for event invitations -->
+            <!--
+                Deklarujeme jen apex `bettermingle.app`, nikdy `www`.
+
+                Vercel přesměrovává `www` na apex stavem 308, takže na
+                `https://www.bettermingle.app/.well-known/assetlinks.json`
+                nelze soubor načíst bez přesměrování – a ověřování App Links
+                přesměrování nenásleduje. Host se proto nikdy neověří.
+
+                Na Androidu 11 a starším tím padá ověření celého intent-filtru
+                včetně apexu, takže neotevřel odkaz vůbec nikdo.
+
+                Odkazy s `www` navíc nic negeneruje: appka i Cloud Functions
+                posílají výhradně https://bettermingle.app/...
+            -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
                       android:host="bettermingle.app"
-                      android:pathPattern="/invite/.*" />
-                <data android:scheme="https"
-                      android:host="www.bettermingle.app"
                       android:pathPattern="/invite/.*" />
             </intent-filter>
 
@@ -51,9 +62,6 @@
                 <data android:scheme="https"
                       android:host="bettermingle.app"
                       android:pathPattern="/event/.*" />
-                <data android:scheme="https"
-                      android:host="www.bettermingle.app"
-                      android:pathPattern="/event/.*" />
             </intent-filter>
 
             <!-- Deep Link for email sign-in -->
@@ -63,9 +71,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
                       android:host="bettermingle.app"
-                      android:pathPrefix="/emailSignIn" />
-                <data android:scheme="https"
-                      android:host="www.bettermingle.app"
                       android:pathPrefix="/emailSignIn" />
             </intent-filter>
         </activity>
